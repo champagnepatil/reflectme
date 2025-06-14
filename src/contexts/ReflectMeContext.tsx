@@ -90,19 +90,29 @@ export const useReflectMe = () => {
   return context;
 };
 
-// Initialize Google Gemini
+// Initialize Google Gemini with better error handling
 const initializeGemini = () => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  
+  console.log('🔍 Gemini API Key Check:', {
+    exists: !!apiKey,
+    length: apiKey?.length || 0,
+    startsWithAI: apiKey?.startsWith('AIza') || false,
+    isPlaceholder: apiKey === 'your_gemini_api_key_here'
+  });
+  
   if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-    console.warn('Gemini API key not configured. Using fallback responses.');
+    console.warn('⚠️ Gemini API key not configured. Using fallback responses.');
     return null;
   }
   
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    return genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    console.log('✅ Gemini model initialized successfully');
+    return model;
   } catch (error) {
-    console.error('Failed to initialize Gemini:', error);
+    console.error('❌ Failed to initialize Gemini:', error);
     return null;
   }
 };
@@ -389,14 +399,17 @@ export const ReflectMeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const generateAIResponse = async (userMessage: string) => {
+    console.log('🚀 Starting AI response generation for:', userMessage);
     setIsGeneratingResponse(true);
     
     try {
       // Analyze emotional context
       const emotionalContext = analyzeEmotionalContext(userMessage);
+      console.log('🧠 Emotional context analyzed:', emotionalContext);
       
       // Find relevant therapist notes
       const relevantNotes = findRelevantTherapistNotes(emotionalContext, userMessage);
+      console.log('📝 Relevant therapist notes found:', relevantNotes.length);
       
       let response = '';
       let metadata: ChatMessage['metadata'] = {
@@ -406,6 +419,8 @@ export const ReflectMeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       };
       
       if (geminiModel) {
+        console.log('🤖 Using Gemini AI for response generation...');
+        
         // Construct detailed structured prompt for Gemini
         const prompt = `
 You are ReflectMe, a compassionate AI therapy companion. You provide support between therapy sessions by understanding emotional context and referencing past therapeutic work.
@@ -447,9 +462,11 @@ INSTRUCTIONS:
 Respond as their supportive therapy companion:`;
 
         try {
+          console.log('📤 Sending request to Gemini...');
           const result = await geminiModel.generateContent(prompt);
           const generatedResponse = result.response;
           response = generatedResponse.text();
+          console.log('✅ Gemini response received:', response.substring(0, 100) + '...');
           
           // Suggest coping tools based on emotional context
           if (emotionalContext.emotions.includes('anxiety')) {
@@ -461,10 +478,12 @@ Respond as their supportive therapy companion:`;
           }
           
         } catch (geminiError) {
-          console.error('Gemini API error:', geminiError);
+          console.error('❌ Gemini API error:', geminiError);
+          console.log('🔄 Falling back to structured response...');
           response = generateStructuredFallbackResponse(emotionalContext, relevantNotes, userMessage);
         }
       } else {
+        console.log('⚠️ No Gemini model available, using fallback response...');
         response = generateStructuredFallbackResponse(emotionalContext, relevantNotes, userMessage);
       }
       
@@ -477,10 +496,11 @@ Respond as their supportive therapy companion:`;
         metadata
       };
       
+      console.log('💬 Adding AI message to chat:', aiMessage.content.substring(0, 50) + '...');
       setChatHistory(prev => [...prev, aiMessage]);
       
     } catch (error) {
-      console.error('Error generating AI response:', error);
+      console.error('💥 Error generating AI response:', error);
       
       // Fallback error response
       const errorMessage: ChatMessage = {
@@ -492,6 +512,7 @@ Respond as their supportive therapy companion:`;
       
       setChatHistory(prev => [...prev, errorMessage]);
     } finally {
+      console.log('🏁 AI response generation completed');
       setIsGeneratingResponse(false);
     }
   };
