@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Heart, Lightbulb, TrendingUp } from 'lucide-react';
+import { Send, Heart, Lightbulb, TrendingUp, Sparkles } from 'lucide-react';
 import { useReflectMe } from '../contexts/ReflectMeContext';
-import { useAuth } from '../contexts/AuthContext';
 
 const Chat: React.FC = () => {
-  const { user } = useAuth();
   const { chatHistory, addMessage, getRecommendedTools } = useReflectMe();
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -60,22 +58,22 @@ const Chat: React.FC = () => {
   const recommendedTools = getRecommendedTools().slice(0, 2);
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50">
+    <div className="h-screen flex flex-col bg-neutral-50">
       {/* Chat Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+      <div className="bg-white border-b border-neutral-200 px-6 py-6">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center mr-3">
-            <Heart className="w-6 h-6 text-white" />
+          <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center mr-4 shadow-soft">
+            <Heart className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">ReflectMe Assistant</h2>
-            <p className="text-sm text-slate-600">Your personalized therapy companion</p>
+            <h2 className="text-xl font-semibold text-neutral-800">ReflectMe Assistant</h2>
+            <p className="text-neutral-600">Your personalized therapy companion</p>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-grow overflow-y-auto px-6 py-4 space-y-4">
+      <div className="flex-grow overflow-y-auto px-6 py-6 space-y-6">
         {chatHistory.map((message) => (
           <motion.div
             key={message.id}
@@ -83,30 +81,30 @@ const Chat: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className="flex flex-col max-w-[80%]">
+            <div className="flex flex-col max-w-[85%]">
               <div
-                className={`rounded-2xl px-4 py-3 ${
+                className={`chat-bubble ${
                   message.sender === 'user'
-                    ? 'bg-blue-600 text-white'
+                    ? 'chat-bubble-user'
                     : message.sender === 'system'
-                    ? 'bg-slate-100 text-slate-800 border border-slate-200'
-                    : 'bg-white text-slate-900 border border-slate-200 shadow-sm'
+                    ? 'chat-bubble-system'
+                    : 'chat-bubble-assistant'
                 }`}
               >
-                <p className="text-sm leading-relaxed">{message.content}</p>
+                <p className="leading-relaxed">{message.content}</p>
                 
                 {/* Show coping tool suggestion if present */}
                 {message.metadata?.copingToolSuggested && (
-                  <div className="mt-3 pt-3 border-t border-slate-200">
-                    <div className="flex items-center text-blue-600">
+                  <div className="mt-4 pt-4 border-t border-primary-200">
+                    <div className="flex items-center text-primary-700">
                       <Lightbulb className="w-4 h-4 mr-2" />
-                      <span className="text-xs font-medium">Suggested: {message.metadata.copingToolSuggested}</span>
+                      <span className="text-sm font-medium">Suggested: {message.metadata.copingToolSuggested}</span>
                     </div>
                   </div>
                 )}
               </div>
               
-              <span className={`text-xs mt-1 text-slate-500 ${
+              <span className={`text-xs mt-2 text-neutral-500 ${
                 message.sender === 'user' ? 'text-right' : 'text-left'
               }`}>
                 {formatTimestamp(message.timestamp)}
@@ -124,11 +122,11 @@ const Chat: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               className="flex justify-start"
             >
-              <div className="bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-sm">
+              <div className="chat-bubble-assistant">
                 <div className="flex space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
               </div>
             </motion.div>
@@ -140,30 +138,33 @@ const Chat: React.FC = () => {
 
       {/* Quick Actions */}
       {chatHistory.length <= 1 && (
-        <div className="px-6 py-4 bg-white border-t border-slate-200">
-          <h3 className="text-sm font-medium text-slate-900 mb-3">Quick check-ins:</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="px-6 py-6 bg-white border-t border-neutral-200">
+          <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center">
+            <Sparkles className="w-5 h-5 mr-2 text-primary-500" />
+            Quick check-ins:
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={() => handleQuickResponse("I'm feeling anxious about work today")}
-              className="text-left p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-sm"
+              className="text-left p-4 bg-neutral-50 hover:bg-primary-50 hover:border-primary-200 border border-neutral-200 rounded-2xl transition-all text-sm font-medium"
             >
               I'm feeling anxious about work
             </button>
             <button
               onClick={() => handleQuickResponse("I had a good day and want to share")}
-              className="text-left p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-sm"
+              className="text-left p-4 bg-neutral-50 hover:bg-primary-50 hover:border-primary-200 border border-neutral-200 rounded-2xl transition-all text-sm font-medium"
             >
               I had a good day today
             </button>
             <button
               onClick={() => handleQuickResponse("I'm feeling overwhelmed and need support")}
-              className="text-left p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-sm"
+              className="text-left p-4 bg-neutral-50 hover:bg-primary-50 hover:border-primary-200 border border-neutral-200 rounded-2xl transition-all text-sm font-medium"
             >
               I'm feeling overwhelmed
             </button>
             <button
               onClick={() => handleQuickResponse("Can you help me practice a coping technique?")}
-              className="text-left p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-sm"
+              className="text-left p-4 bg-neutral-50 hover:bg-primary-50 hover:border-primary-200 border border-neutral-200 rounded-2xl transition-all text-sm font-medium"
             >
               Help me practice coping techniques
             </button>
@@ -173,20 +174,20 @@ const Chat: React.FC = () => {
 
       {/* Recommended Tools */}
       {recommendedTools.length > 0 && chatHistory.length > 1 && (
-        <div className="px-6 py-4 bg-blue-50 border-t border-blue-200">
-          <h3 className="text-sm font-medium text-blue-900 mb-3 flex items-center">
-            <TrendingUp className="w-4 h-4 mr-2" />
+        <div className="px-6 py-6 bg-gradient-to-r from-primary-50 to-secondary-50 border-t border-primary-200">
+          <h3 className="text-lg font-semibold text-primary-800 mb-4 flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2" />
             Recommended for you:
           </h3>
-          <div className="flex space-x-3 overflow-x-auto">
+          <div className="flex space-x-4 overflow-x-auto">
             {recommendedTools.map((tool) => (
               <button
                 key={tool.id}
                 onClick={() => handleQuickResponse(`Can you guide me through ${tool.title}?`)}
-                className="flex-shrink-0 p-3 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-colors"
+                className="flex-shrink-0 p-4 bg-white rounded-2xl border border-primary-200 hover:border-primary-300 hover:shadow-soft transition-all"
               >
-                <p className="text-sm font-medium text-slate-900">{tool.title}</p>
-                <p className="text-xs text-slate-600 mt-1">{tool.duration}</p>
+                <p className="font-semibold text-neutral-800">{tool.title}</p>
+                <p className="text-sm text-neutral-600 mt-1">{tool.duration}</p>
               </button>
             ))}
           </div>
@@ -194,21 +195,21 @@ const Chat: React.FC = () => {
       )}
 
       {/* Message Input */}
-      <div className="bg-white border-t border-slate-200 px-6 py-4">
-        <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
+      <div className="bg-white border-t border-neutral-200 px-6 py-6">
+        <form onSubmit={handleSendMessage} className="flex items-center space-x-4">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="How are you feeling today?"
-            className="flex-grow px-4 py-3 border border-slate-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-grow input input-soft"
           />
           <button
             type="submit"
             disabled={!inputValue.trim()}
-            className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-14 h-14 bg-primary-500 text-white rounded-2xl flex items-center justify-center hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-soft"
           >
-            <Send className="w-5 h-5" />
+            <Send className="w-6 h-6" />
           </button>
         </form>
       </div>

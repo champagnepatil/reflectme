@@ -15,19 +15,19 @@ const AppLayout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-neutral-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-4 py-3">
+      <header className="bg-white/95 backdrop-blur-sm border-b border-neutral-200 px-4 py-4 sticky top-0 z-40">
         <div className="flex items-center justify-between">
-          <Link to="/app" className="flex items-center">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3">
-              <Heart className="w-5 h-5 text-white" />
+          <Link to="/app" className="flex items-center group">
+            <div className="w-10 h-10 gradient-primary rounded-2xl flex items-center justify-center shadow-soft">
+              <Heart className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-xl font-semibold text-slate-900">ReflectMe</h1>
+            <h1 className="text-2xl font-bold text-neutral-800 ml-3 group-hover:text-primary-600 transition-colors">ReflectMe</h1>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path || 
@@ -37,13 +37,9 @@ const AppLayout: React.FC = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
+                  className={`nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`}
                 >
-                  <Icon className="w-4 h-4 mr-2" />
+                  <Icon className="w-5 h-5 mr-2" />
                   {item.label}
                 </Link>
               );
@@ -53,9 +49,9 @@ const AppLayout: React.FC = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+            className="md:hidden p-3 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 rounded-2xl transition-colors"
           >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
@@ -66,7 +62,7 @@ const AppLayout: React.FC = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden mt-4 pt-4 border-t border-slate-200"
+              className="md:hidden mt-4 pt-4 border-t border-neutral-200"
             >
               <div className="space-y-2">
                 {navItems.map((item) => {
@@ -79,13 +75,9 @@ const AppLayout: React.FC = () => {
                       key={item.path}
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                        isActive
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
+                      className={`nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`}
                     >
-                      <Icon className="w-4 h-4 mr-3" />
+                      <Icon className="w-5 h-5 mr-3" />
                       {item.label}
                     </Link>
                   );
