@@ -69,7 +69,6 @@ const Login: React.FC = () => {
     try {
       setError('');
       setDemoLoading(role);
-      
       await login(demoEmail, demoPassword);
       
       // Navigation will happen automatically when user state updates
@@ -95,7 +94,7 @@ const Login: React.FC = () => {
         >
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-neutral-900">Welcome Back</h1>
-            <p className="text-neutral-600 mt-2">Sign in to continue to MindTwin</p>
+            <p className="text-neutral-600 mt-2">Sign in to continue to ReflectMe</p>
           </div>
           
           {error && (

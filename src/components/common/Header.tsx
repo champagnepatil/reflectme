@@ -8,7 +8,7 @@ interface HeaderProps {
   title?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ title = 'MindTwin' }) => {
+const Header: React.FC<HeaderProps> = ({ title = 'ReflectMe' }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);

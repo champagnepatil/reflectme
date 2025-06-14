@@ -283,12 +283,12 @@ const Demo: React.FC = () => {
           <div className="mt-8 text-center">
             <p className="text-slate-700 mb-4">Ready to start your personalized mental health journey?</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/register" className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all">
-                Get Started Free
-              </Link>
-              <Link to="/login" className="px-8 py-3 border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:border-slate-400 transition-colors">
-                Sign In
-              </Link>
+              <button 
+                onClick={() => window.location.href = '/'}
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all"
+              >
+                Try Demo
+              </button>
             </div>
           </div>
         </div>

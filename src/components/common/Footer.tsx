@@ -15,9 +15,9 @@ const Footer: React.FC = () => {
                   <path d="M12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8ZM12 10C13.1046 10 14 10.8954 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954 10 12 10Z" fill="white"/>
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-neutral-900 ml-2">MindTwin</h2>
+              <h2 className="text-xl font-semibold text-neutral-900 ml-2">ReflectMe</h2>
             </Link>
-            <p className="text-neutral-600 text-sm mb-4">Bridging the gap between therapy sessions with personalized digital support.</p>
+            <p className="text-neutral-600 text-sm mb-4">Your personalized digital therapy companion, providing empathetic support between sessions.</p>
             <div className="flex items-center text-neutral-500 text-sm">
               <Heart className="w-4 h-4 mr-2 text-error-500" />
               <span>Made with care for mental health</span>
@@ -61,7 +61,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="border-t border-neutral-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-neutral-500 text-sm">&copy; {new Date().getFullYear()} MindTwin Health. All rights reserved.</p>
+          <p className="text-neutral-500 text-sm">&copy; {new Date().getFullYear()} ReflectMe Health. All rights reserved.</p>
           <div className="flex items-center mt-4 md:mt-0">
             <Link to="/help" className="text-neutral-500 hover:text-primary-600 flex items-center mr-6">
               <HelpCircle className="w-4 h-4 mr-1" />
