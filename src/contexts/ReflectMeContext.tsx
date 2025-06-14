@@ -15,6 +15,16 @@ export interface ChatMessage {
     copingToolSuggested?: string;
     emotionalContext?: string;
     therapistNotesUsed?: string[];
+    responseElements?: {
+      validation?: string;
+      therapyReference?: string;
+      microInsight?: string;
+      actionSuggestion?: string;
+      choice?: string;
+      progressCallout?: string;
+      patternNoticing?: string;
+      followUp?: string;
+    };
   };
 }
 
@@ -304,12 +314,14 @@ export const ReflectMeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     // Detect emotional patterns and triggers
     const emotionalIndicators = {
-      anxiety: ['worried', 'nervous', 'scared', 'panic', 'overwhelmed', 'stressed', 'can\'t stop thinking'],
-      depression: ['sad', 'down', 'hopeless', 'empty', 'worthless', 'tired', 'no point'],
-      selfCriticism: ['mess up', 'stupid', 'failure', 'wrong', 'shouldn\'t have', 'always do this'],
+      anxiety: ['worried', 'nervous', 'scared', 'panic', 'overwhelmed', 'stressed', 'can\'t stop thinking', 'anxious', 'anxiety'],
+      depression: ['sad', 'down', 'hopeless', 'empty', 'worthless', 'tired', 'no point', 'depressed'],
+      selfCriticism: ['mess up', 'stupid', 'failure', 'wrong', 'shouldn\'t have', 'always do this', 'not good enough'],
       socialAnxiety: ['embarrassed', 'judging', 'what they think', 'awkward', 'said something wrong'],
       rumination: ['keep thinking', 'can\'t stop', 'over and over', 'replaying', 'what if'],
-      perfectionism: ['not good enough', 'should be better', 'disappointed', 'failed', 'standards']
+      perfectionism: ['not good enough', 'should be better', 'disappointed', 'failed', 'standards'],
+      frustration: ['annoying', 'frustrated', 'irritated', 'angry', 'fed up'],
+      loneliness: ['alone', 'lonely', 'isolated', 'no one understands', 'by myself']
     };
     
     const detectedEmotions = [];
@@ -330,6 +342,9 @@ export const ReflectMeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     if (lowerMessage.includes('relationship') || lowerMessage.includes('friend') || lowerMessage.includes('partner')) {
       detectedTriggers.push('relationships');
+    }
+    if (lowerMessage.includes('family') || lowerMessage.includes('parent') || lowerMessage.includes('mom') || lowerMessage.includes('dad')) {
+      detectedTriggers.push('family');
     }
     
     return {
@@ -391,7 +406,7 @@ export const ReflectMeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       };
       
       if (geminiModel) {
-        // Construct detailed prompt for Gemini
+        // Construct detailed structured prompt for Gemini
         const prompt = `
 You are ReflectMe, a compassionate AI therapy companion. You provide support between therapy sessions by understanding emotional context and referencing past therapeutic work.
 
@@ -409,14 +424,25 @@ ${relevantNotes.map(note => `
 - Tags: ${note.tags.join(', ')}
 `).join('\n') || 'No specific notes found for this context.'}
 
+RESPONSE STRUCTURE REQUIREMENTS:
+Your response should include these elements (not all must be present every time, but use when appropriate):
+
+1. VALIDATION: Acknowledge and name the user's feeling or situation
+2. THERAPY REFERENCE: If relevant, link back to past discussions, therapist suggestions, or patterns
+3. MICRO-INSIGHT: Share a small psychoeducational insight or perspective
+4. ACTION SUGGESTION: Propose a simple, specific next step (journaling prompt, reflection, coping exercise, or thought reframing)
+5. CHOICE/COLLABORATION: Give the user agency—offer options
+6. PROGRESS CALLOUT: If present, celebrate any small positive changes
+7. PATTERN NOTICING: If the issue is recurring, gently point it out
+8. GENTLE FOLLOW-UP: End with a question or open the door for more reflection
+
 INSTRUCTIONS:
-1. Respond with empathy and understanding, acknowledging the user's emotional state
-2. Reference relevant insights or techniques from the therapist notes when applicable
-3. Suggest specific coping strategies that align with their therapeutic work
-4. Keep responses warm, supportive, and actionable (2-3 sentences max)
-5. If the user seems to be in distress, gently guide them toward grounding techniques
-6. Never diagnose or provide medical advice
-7. If no relevant notes exist, provide general supportive guidance
+- Keep responses warm, supportive, and actionable (3-4 sentences max)
+- Reference specific therapy techniques when relevant notes exist
+- Suggest specific coping strategies that align with their therapeutic work
+- Never diagnose or provide medical advice
+- If the user seems in distress, gently guide toward grounding techniques
+- Use a conversational, empathetic tone
 
 Respond as their supportive therapy companion:`;
 
@@ -436,10 +462,10 @@ Respond as their supportive therapy companion:`;
           
         } catch (geminiError) {
           console.error('Gemini API error:', geminiError);
-          response = generateFallbackResponse(emotionalContext, relevantNotes);
+          response = generateStructuredFallbackResponse(emotionalContext, relevantNotes, userMessage);
         }
       } else {
-        response = generateFallbackResponse(emotionalContext, relevantNotes);
+        response = generateStructuredFallbackResponse(emotionalContext, relevantNotes, userMessage);
       }
       
       // Add AI response to chat
@@ -470,32 +496,76 @@ Respond as their supportive therapy companion:`;
     }
   };
 
-  const generateFallbackResponse = (emotionalContext: any, relevantNotes: any[]) => {
-    // Generate contextual responses based on detected emotions and available notes
-    if (emotionalContext.emotions.includes('anxiety')) {
-      if (relevantNotes.length > 0) {
-        return "I can sense you're feeling anxious right now. Remember what we've worked on in your sessions - breathing techniques can be really helpful in moments like this. Would you like to try the 4-7-8 breathing exercise we've practiced?";
-      }
-      return "I can hear that you're feeling anxious. That's completely understandable. Let's try to ground yourself in this moment. Can you take a slow, deep breath with me and notice 5 things you can see around you?";
-    }
+  const generateStructuredFallbackResponse = (emotionalContext: any, relevantNotes: any[], userMessage: string) => {
+    const lowerMessage = userMessage.toLowerCase();
     
+    // Self-criticism pattern
     if (emotionalContext.emotions.includes('selfCriticism')) {
-      if (relevantNotes.length > 0) {
-        return "I notice that inner critic is being harsh with you again. Remember the thought challenging techniques we've discussed - what would you say to a friend who was being this hard on themselves?";
-      }
-      return "It sounds like you're being really hard on yourself right now. That inner critic can be so loud sometimes. What would you tell a good friend if they were in your situation?";
+      const validation = "I can hear that inner critic being really harsh with you right now.";
+      const therapyRef = relevantNotes.length > 0 
+        ? "Remember the thought challenging techniques we've discussed in your sessions—" 
+        : "";
+      const microInsight = "That critical voice often gets louder when we're stressed or tired.";
+      const action = "What would you say to a close friend who was being this hard on themselves?";
+      const choice = "Want to try reframing that thought together, or just talk more about what's behind it?";
+      
+      return `${validation} ${therapyRef}${microInsight} ${action} ${choice}`;
     }
     
+    // Anxiety pattern
+    if (emotionalContext.emotions.includes('anxiety')) {
+      const validation = "That sounds really overwhelming—I can see why you'd feel anxious about this.";
+      const therapyRef = relevantNotes.length > 0 
+        ? "Your therapist mentioned that breathing exercises have been helpful for you before. " 
+        : "";
+      const microInsight = "Anxiety often shows up when our mind is trying to solve problems that haven't happened yet.";
+      const action = "Let's try grounding yourself in this moment—can you name 3 things you can see right now?";
+      const followUp = "How does that feel?";
+      
+      return `${validation} ${therapyRef}${microInsight} ${action} ${followUp}`;
+    }
+    
+    // Rumination pattern
+    if (emotionalContext.emotions.includes('rumination') || lowerMessage.includes('keep thinking') || lowerMessage.includes('over and over')) {
+      const validation = "It sounds like your mind is stuck on repeat with this—that's exhausting.";
+      const patternNoticing = "I'm noticing this kind of thinking loop has come up before. ";
+      const microInsight = "Sometimes our brain thinks if we just think about it enough, we can control the outcome.";
+      const action = "What if we tried the 5-4-3-2-1 grounding technique to interrupt this cycle?";
+      const choice = "Want to try that now, or would it help to talk through what's driving the worry?";
+      
+      return `${validation} ${patternNoticing}${microInsight} ${action} ${choice}`;
+    }
+    
+    // Work/presentation stress
+    if (emotionalContext.triggers.includes('work stress') || emotionalContext.triggers.includes('public speaking')) {
+      const validation = "Work situations can definitely trigger that fight-or-flight response.";
+      const therapyRef = relevantNotes.length > 0 
+        ? "Remember, you've handled challenging presentations before, and your therapist noted your progress with anxiety management. " 
+        : "";
+      const microInsight = "It's normal for perfectionism to show up at work, especially under stress.";
+      const action = "What's one thing that's actually within your control right now?";
+      const followUp = "How does focusing on that feel?";
+      
+      return `${validation} ${therapyRef}${microInsight} ${action} ${followUp}`;
+    }
+    
+    // Depression/low mood
     if (emotionalContext.emotions.includes('depression')) {
-      return "I hear that you're struggling right now, and I want you to know that these feelings are valid. Even small steps matter. Is there one tiny thing that might bring you a moment of comfort today?";
+      const validation = "I hear that you're really struggling right now, and I want you to know these feelings are completely valid.";
+      const microInsight = "Depression can make everything feel heavier, even small tasks.";
+      const action = "Is there one tiny thing that might bring you a moment of comfort today—maybe a warm drink or a few minutes outside?";
+      const choice = "Want to brainstorm some gentle options together, or just talk more about what you're experiencing?";
+      
+      return `${validation} ${microInsight} ${action} ${choice}`;
     }
     
-    if (emotionalContext.triggers.includes('work stress')) {
-      return "Work situations can definitely feel overwhelming. Remember that you've handled challenging situations before. What's one thing that's within your control right now?";
-    }
+    // General supportive response
+    const validation = "Thank you for sharing what's on your mind—I can sense this is important to you.";
+    const action = "What feels most pressing for you right now?";
+    const choice = "Would it help to talk through it more, or would you like to try a coping technique together?";
+    const followUp = "I'm here either way.";
     
-    // Default empathetic response
-    return "Thank you for sharing what's on your mind. I'm here to listen and support you. Your feelings are completely valid. Is there anything specific you'd like to talk through or work on together right now?";
+    return `${validation} ${action} ${choice} ${followUp}`;
   };
 
   const getRecommendedTools = (): CopingTool[] => {
