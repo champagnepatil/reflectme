@@ -1,11 +1,23 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
-import { Heart, MessageCircle, Brain, Shield, Clock, Users } from 'lucide-react';
+import { Heart, MessageCircle, Brain, Shield, Clock, Users, X } from 'lucide-react';
 
 const Home: React.FC = () => {
+  const [showDemoModal, setShowDemoModal] = useState(false);
+  const navigate = useNavigate();
+
+  const handleDemoSelection = (role: 'patient' | 'therapist') => {
+    setShowDemoModal(false);
+    if (role === 'patient') {
+      navigate('/app');
+    } else {
+      navigate('/therapist');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -36,12 +48,12 @@ const Home: React.FC = () => {
               >
                 Get Started Free
               </Link>
-              <Link 
-                to="/demo"
+              <button 
+                onClick={() => setShowDemoModal(true)}
                 className="px-8 py-4 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition-colors"
               >
                 Try Demo
-              </Link>
+              </button>
             </div>
           </motion.div>
         </div>
@@ -182,15 +194,75 @@ const Home: React.FC = () => {
             >
               Start Your Journey
             </Link>
-            <Link 
-              to="/demo"
+            <button 
+              onClick={() => setShowDemoModal(true)}
               className="px-8 py-4 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
             >
               Try Demo First
-            </Link>
+            </button>
           </div>
         </div>
       </section>
+
+      {/* Demo Selection Modal */}
+      <AnimatePresence>
+        {showDemoModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-2xl p-8 max-w-md w-full"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-slate-900">Choose Demo Experience</h3>
+                <button
+                  onClick={() => setShowDemoModal(false)}
+                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              
+              <p className="text-slate-600 mb-8">
+                Select which perspective you'd like to experience:
+              </p>
+              
+              <div className="space-y-4">
+                <button
+                  onClick={() => handleDemoSelection('patient')}
+                  className="w-full p-6 border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
+                >
+                  <div className="flex items-center mb-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                      <Heart className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-slate-900">As Patient</h4>
+                  </div>
+                  <p className="text-slate-600">
+                    Experience the ReflectMe chat interface, coping tools, and session insights from a patient's perspective.
+                  </p>
+                </button>
+                
+                <button
+                  onClick={() => handleDemoSelection('therapist')}
+                  className="w-full p-6 border-2 border-green-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all text-left"
+                >
+                  <div className="flex items-center mb-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                      <Users className="w-6 h-6 text-green-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-slate-900">As Therapist</h4>
+                  </div>
+                  <p className="text-slate-600">
+                    Explore the therapist portal with client management, case histories, and monitoring tools.
+                  </p>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>

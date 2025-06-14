@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Bell, Shield, Save, LogOut, Heart, Calendar, TrendingUp } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { User, Bell, Shield, Save, LogOut, Heart, Calendar, TrendingUp, ArrowLeft } from 'lucide-react';
 import { useReflectMe } from '../contexts/ReflectMeContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Profile: React.FC = () => {
-  const { user, logout } = useAuth();
   const { sessionRecaps, moodEntries } = useReflectMe();
   const navigate = useNavigate();
   
-  const [name, setName] = useState(user?.name || '');
+  const [name, setName] = useState('Demo Patient');
   const [notifications, setNotifications] = useState({
     dailyCheckins: true,
     sessionReminders: true,
@@ -23,13 +21,8 @@ const Profile: React.FC = () => {
     console.log('Saving profile:', { name, notifications });
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  const handleLogout = () => {
+    navigate('/');
   };
 
   const totalSessions = sessionRecaps.length;
@@ -42,9 +35,14 @@ const Profile: React.FC = () => {
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Profile & Settings</h1>
-          <p className="text-slate-600">Manage your account and preferences</p>
+        <div className="mb-8 flex items-center">
+          <Link to="/app" className="p-2 rounded-full hover:bg-slate-200 mr-3">
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Profile & Settings</h1>
+            <p className="text-slate-600">Manage your account and preferences</p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -63,13 +61,13 @@ const Profile: React.FC = () => {
 
               <div className="flex items-center mb-6">
                 <img 
-                  src={user?.avatar || `https://api.dicebear.com/7.x/personas/svg?seed=${user?.email}`}
-                  alt={user?.name}
+                  src="https://api.dicebear.com/7.x/personas/svg?seed=demo-patient"
+                  alt="Demo Patient"
                   className="w-16 h-16 rounded-full mr-4"
                 />
                 <div>
-                  <h3 className="text-lg font-medium text-slate-900">{user?.name}</h3>
-                  <p className="text-slate-600">{user?.email}</p>
+                  <h3 className="text-lg font-medium text-slate-900">Demo Patient</h3>
+                  <p className="text-slate-600">patient@demo.com</p>
                 </div>
               </div>
 
@@ -88,11 +86,11 @@ const Profile: React.FC = () => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                   <input
                     type="email"
-                    value={user?.email || ''}
+                    value="patient@demo.com"
                     disabled
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-500"
                   />
-                  <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
+                  <p className="text-xs text-slate-500 mt-1">Email cannot be changed in demo mode</p>
                 </div>
 
                 <button
@@ -229,14 +227,14 @@ const Profile: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="bg-white rounded-xl border border-slate-200 p-6"
             >
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Account</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Demo Account</h2>
               
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center px-4 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
+                Exit Demo
               </button>
             </motion.div>
           </div>

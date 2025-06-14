@@ -1,35 +1,11 @@
 import React from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { MessageCircle, Heart, FileText, User, LogOut, Menu, X } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import { MessageCircle, Heart, FileText, User, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AppLayout: React.FC = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  
-  React.useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    } else if (user.role === 'therapist') {
-      navigate('/therapist');
-    }
-  }, [user, navigate]);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  if (!user || user.role !== 'patient') {
-    return null; // Will redirect via useEffect
-  }
 
   const navItems = [
     { path: '/app/chat', label: 'Chat', icon: MessageCircle },
@@ -74,32 +50,13 @@ const AppLayout: React.FC = () => {
             })}
           </nav>
 
-          {/* User Menu */}
-          <div className="flex items-center space-x-3">
-            <div className="hidden md:flex items-center">
-              <img 
-                src={user.avatar || `https://api.dicebear.com/7.x/personas/svg?seed=${user.email}`}
-                alt={user.name}
-                className="w-8 h-8 rounded-full mr-2"
-              />
-              <span className="text-sm font-medium text-slate-700">{user.name}</span>
-            </div>
-            
-            <button
-              onClick={handleLogout}
-              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-            >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
 
         {/* Mobile Navigation */}
