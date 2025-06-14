@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Clock, Star, Play, Filter, Search, Sparkles } from 'lucide-react';
+import { Heart, Clock, Star, Play, Filter, Search, Sparkles, ArrowLeft } from 'lucide-react';
 import { useReflectMe } from '../contexts/ReflectMeContext';
+import { Link } from 'react-router-dom';
 
 const CopingTools: React.FC = () => {
   const { copingTools, getRecommendedTools } = useReflectMe();
@@ -41,9 +42,14 @@ const CopingTools: React.FC = () => {
     <div className="min-h-screen bg-neutral-50">
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold text-neutral-800 mb-3">Coping Tools</h1>
-          <p className="text-xl text-neutral-600">Personalized techniques approved by your therapist</p>
+        <div className="mb-10 flex items-center">
+          <Link to="/app" className="p-2 rounded-full hover:bg-neutral-200 mr-3 transition-colors">
+            <ArrowLeft className="w-5 h-5 text-neutral-600" />
+          </Link>
+          <div>
+            <h1 className="text-4xl font-bold text-neutral-800 mb-3">Coping Tools</h1>
+            <p className="text-xl text-neutral-600">Personalized techniques approved by your therapist</p>
+          </div>
         </div>
 
         {/* Search and Filter */}

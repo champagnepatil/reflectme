@@ -1,8 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { MessageSquare, LineChart, BookOpen, Settings, LogOut, BarChart3 } from 'lucide-react';
+import { MessageSquare, LineChart, BookOpen, Settings, LogOut, BarChart3, ArrowLeft, Heart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import Header from '../components/common/Header';
 
 const PatientLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -32,7 +31,22 @@ const PatientLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      <Header title="MindTwin Companion" />
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Link to="/" className="p-2 rounded-full hover:bg-slate-100 mr-3 transition-colors">
+              <ArrowLeft className="w-5 h-5 text-slate-600" />
+            </Link>
+            <Link to="/patient" className="flex items-center group">
+              <div className="w-10 h-10 gradient-primary rounded-2xl flex items-center justify-center shadow-soft">
+                <Heart className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-xl font-semibold text-slate-900 ml-3 group-hover:text-primary-600 transition-colors">ReflectMe Companion</h1>
+            </Link>
+          </div>
+        </div>
+      </header>
       
       <div className="flex flex-grow">
         {/* Sidebar */}

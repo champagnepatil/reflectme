@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Users, FileText, BarChart2, Settings, ClipboardList, Activity, ArrowLeft } from 'lucide-react';
+import { Users, FileText, BarChart2, Settings, ClipboardList, Activity, ArrowLeft, Heart } from 'lucide-react';
 
 const TherapistLayout: React.FC = () => {
   const location = useLocation();
@@ -11,10 +11,15 @@ const TherapistLayout: React.FC = () => {
       <header className="bg-white border-b border-slate-200 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Link to="/" className="p-2 rounded-full hover:bg-slate-100 mr-3">
+            <Link to="/" className="p-2 rounded-full hover:bg-slate-100 mr-3 transition-colors">
               <ArrowLeft className="w-5 h-5 text-slate-600" />
             </Link>
-            <h1 className="text-xl font-semibold text-slate-900">Therapist Portal</h1>
+            <Link to="/therapist" className="flex items-center group">
+              <div className="w-10 h-10 gradient-primary rounded-2xl flex items-center justify-center shadow-soft">
+                <Heart className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-xl font-semibold text-slate-900 ml-3 group-hover:text-primary-600 transition-colors">ReflectMe Therapist Portal</h1>
+            </Link>
           </div>
         </div>
       </header>

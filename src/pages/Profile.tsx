@@ -32,16 +32,16 @@ const Profile: React.FC = () => {
     : 'N/A';
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-neutral-50">
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8 flex items-center">
-          <Link to="/app" className="p-2 rounded-full hover:bg-slate-200 mr-3">
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
+          <Link to="/app" className="p-2 rounded-full hover:bg-neutral-200 mr-3 transition-colors">
+            <ArrowLeft className="w-5 h-5 text-neutral-600" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Profile & Settings</h1>
-            <p className="text-slate-600">Manage your account and preferences</p>
+            <h1 className="text-3xl font-bold text-neutral-900 mb-2">Profile & Settings</h1>
+            <p className="text-neutral-600">Manage your account and preferences</p>
           </div>
         </div>
 
@@ -52,50 +52,50 @@ const Profile: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl border border-slate-200 p-6"
+              className="card p-6"
             >
               <div className="flex items-center mb-6">
-                <User className="w-5 h-5 text-blue-600 mr-2" />
-                <h2 className="text-xl font-semibold text-slate-900">Profile Information</h2>
+                <User className="w-5 h-5 text-primary-600 mr-2" />
+                <h2 className="text-xl font-semibold text-neutral-900">Profile Information</h2>
               </div>
 
               <div className="flex items-center mb-6">
                 <img 
                   src="https://api.dicebear.com/7.x/personas/svg?seed=demo-patient"
                   alt="Demo Patient"
-                  className="w-16 h-16 rounded-full mr-4"
+                  className="w-16 h-16 rounded-2xl mr-4"
                 />
                 <div>
-                  <h3 className="text-lg font-medium text-slate-900">Demo Patient</h3>
-                  <p className="text-slate-600">patient@demo.com</p>
+                  <h3 className="text-lg font-medium text-neutral-900">Demo Patient</h3>
+                  <p className="text-neutral-600">patient@demo.com</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                  <label className="label">Name</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                  <label className="label">Email</label>
                   <input
                     type="email"
                     value="patient@demo.com"
                     disabled
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-500"
+                    className="input bg-neutral-100 text-neutral-500"
                   />
-                  <p className="text-xs text-slate-500 mt-1">Email cannot be changed in demo mode</p>
+                  <p className="text-xs text-neutral-500 mt-1">Email cannot be changed in demo mode</p>
                 </div>
 
                 <button
                   onClick={handleSave}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="btn btn-primary"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Save Changes
@@ -108,24 +108,24 @@ const Profile: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-xl border border-slate-200 p-6"
+              className="card p-6"
             >
               <div className="flex items-center mb-6">
-                <Bell className="w-5 h-5 text-blue-600 mr-2" />
-                <h2 className="text-xl font-semibold text-slate-900">Notification Preferences</h2>
+                <Bell className="w-5 h-5 text-primary-600 mr-2" />
+                <h2 className="text-xl font-semibold text-neutral-900">Notification Preferences</h2>
               </div>
 
               <div className="space-y-4">
                 {Object.entries(notifications).map(([key, value]) => (
                   <div key={key} className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-slate-900">
+                      <h3 className="font-medium text-neutral-900">
                         {key === 'dailyCheckins' && 'Daily Check-ins'}
                         {key === 'sessionReminders' && 'Session Reminders'}
                         {key === 'copingToolSuggestions' && 'Coping Tool Suggestions'}
                         {key === 'progressUpdates' && 'Progress Updates'}
                       </h3>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-neutral-600">
                         {key === 'dailyCheckins' && 'Gentle reminders to check in with ReflectMe'}
                         {key === 'sessionReminders' && 'Notifications about upcoming therapy sessions'}
                         {key === 'copingToolSuggestions' && 'Personalized coping tool recommendations'}
@@ -139,7 +139,7 @@ const Profile: React.FC = () => {
                         onChange={(e) => setNotifications(prev => ({ ...prev, [key]: e.target.checked }))}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                     </label>
                   </div>
                 ))}
@@ -151,30 +151,30 @@ const Profile: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-xl border border-slate-200 p-6"
+              className="card p-6"
             >
               <div className="flex items-center mb-6">
-                <Shield className="w-5 h-5 text-blue-600 mr-2" />
-                <h2 className="text-xl font-semibold text-slate-900">Privacy & Security</h2>
+                <Shield className="w-5 h-5 text-primary-600 mr-2" />
+                <h2 className="text-xl font-semibold text-neutral-900">Privacy & Security</h2>
               </div>
 
               <div className="space-y-4">
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h3 className="font-medium text-green-900 mb-2">Your Data is Secure</h3>
-                  <p className="text-sm text-green-800">
+                <div className="p-4 bg-success-50 border border-success-200 rounded-2xl">
+                  <h3 className="font-medium text-success-900 mb-2">Your Data is Secure</h3>
+                  <p className="text-sm text-success-800">
                     All your conversations and data are encrypted and stored securely. 
                     Only you and your therapist have access to your information.
                   </p>
                 </div>
 
-                <button className="w-full p-3 text-left border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
-                  <h3 className="font-medium text-slate-900">Download My Data</h3>
-                  <p className="text-sm text-slate-600">Export all your ReflectMe data</p>
+                <button className="w-full p-4 text-left border border-neutral-300 rounded-2xl hover:bg-neutral-50 transition-colors">
+                  <h3 className="font-medium text-neutral-900">Download My Data</h3>
+                  <p className="text-sm text-neutral-600">Export all your ReflectMe data</p>
                 </button>
 
-                <button className="w-full p-3 text-left border border-red-300 rounded-lg hover:bg-red-50 transition-colors text-red-700">
+                <button className="w-full p-4 text-left border border-error-300 rounded-2xl hover:bg-error-50 transition-colors text-error-700">
                   <h3 className="font-medium">Delete Account</h3>
-                  <p className="text-sm text-red-600">Permanently delete your account and all data</p>
+                  <p className="text-sm text-error-600">Permanently delete your account and all data</p>
                 </button>
               </div>
             </motion.div>
@@ -186,36 +186,36 @@ const Profile: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-xl border border-slate-200 p-6"
+              className="card p-6"
             >
-              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-                <TrendingUp className="w-5 h-5 text-blue-600 mr-2" />
+              <h2 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center">
+                <TrendingUp className="w-5 h-5 text-primary-600 mr-2" />
                 Your Progress
               </h2>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Calendar className="w-4 h-4 text-slate-500 mr-2" />
-                    <span className="text-sm text-slate-600">Total Sessions</span>
+                    <Calendar className="w-4 h-4 text-neutral-500 mr-2" />
+                    <span className="text-sm text-neutral-600">Total Sessions</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{totalSessions}</span>
+                  <span className="font-semibold text-neutral-900">{totalSessions}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Heart className="w-4 h-4 text-slate-500 mr-2" />
-                    <span className="text-sm text-slate-600">Mood Entries</span>
+                    <Heart className="w-4 h-4 text-neutral-500 mr-2" />
+                    <span className="text-sm text-neutral-600">Mood Entries</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{totalMoodEntries}</span>
+                  <span className="font-semibold text-neutral-900">{totalMoodEntries}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <TrendingUp className="w-4 h-4 text-slate-500 mr-2" />
-                    <span className="text-sm text-slate-600">Average Mood</span>
+                    <TrendingUp className="w-4 h-4 text-neutral-500 mr-2" />
+                    <span className="text-sm text-neutral-600">Average Mood</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{averageMood}</span>
+                  <span className="font-semibold text-neutral-900">{averageMood}</span>
                 </div>
               </div>
             </motion.div>
@@ -225,13 +225,13 @@ const Profile: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-xl border border-slate-200 p-6"
+              className="card p-6"
             >
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Demo Account</h2>
+              <h2 className="text-lg font-semibold text-neutral-900 mb-4">Demo Account</h2>
               
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center px-4 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                className="w-full btn btn-soft hover:bg-neutral-800 hover:text-white transition-all"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Exit Demo

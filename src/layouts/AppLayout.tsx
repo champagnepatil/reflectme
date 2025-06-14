@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { MessageCircle, Heart, FileText, User, Menu, X } from 'lucide-react';
+import { MessageCircle, Heart, FileText, User, Menu, X, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AppLayout: React.FC = () => {
@@ -19,12 +19,17 @@ const AppLayout: React.FC = () => {
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-sm border-b border-neutral-200 px-4 py-4 sticky top-0 z-40">
         <div className="flex items-center justify-between">
-          <Link to="/app" className="flex items-center group">
-            <div className="w-10 h-10 gradient-primary rounded-2xl flex items-center justify-center shadow-soft">
-              <Heart className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-neutral-800 ml-3 group-hover:text-primary-600 transition-colors">ReflectMe</h1>
-          </Link>
+          <div className="flex items-center">
+            <Link to="/" className="p-2 rounded-full hover:bg-neutral-100 mr-3 transition-colors">
+              <ArrowLeft className="w-5 h-5 text-neutral-600" />
+            </Link>
+            <Link to="/app" className="flex items-center group">
+              <div className="w-10 h-10 gradient-primary rounded-2xl flex items-center justify-center shadow-soft">
+                <Heart className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-neutral-800 ml-3 group-hover:text-primary-600 transition-colors">ReflectMe</h1>
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-2">
