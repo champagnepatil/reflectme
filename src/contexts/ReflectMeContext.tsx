@@ -108,7 +108,7 @@ const initializeGemini = () => {
   
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
     console.log('✅ Gemini model initialized successfully');
     return model;
   } catch (error) {
