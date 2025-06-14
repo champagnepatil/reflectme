@@ -4,17 +4,16 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Heart } from 'lucide-react';
 
 const Register: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'therapist' | 'patient'>('patient');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState<'patient' | 'therapist' | null>(null);
+  const [demoLoading, setDemoLoading] = useState<'demo' | null>(null);
   const { register, login } = useAuth();
   const navigate = useNavigate();
 
@@ -39,13 +38,13 @@ const Register: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      await register(name, email, password, role);
+      await register(name, email, password, 'patient'); // Default to patient role
       
       // Try to sign in after registration
       await login(email, password);
       
-      // Redirect based on user role
-      navigate(`/${role}`);
+      // Redirect to app
+      navigate('/app');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create an account');
       console.error(err);
@@ -54,24 +53,19 @@ const Register: React.FC = () => {
     }
   };
 
-  const handleDemoLogin = async (role: 'patient' | 'therapist') => {
-    const demoCredentials = {
-      patient: { email: 'patient@mindtwin.demo', password: 'demo123456' },
-      therapist: { email: 'therapist@mindtwin.demo', password: 'demo123456' }
-    };
-
-    const { email: demoEmail, password: demoPassword } = demoCredentials[role];
+  const handleDemoLogin = async () => {
+    const demoCredentials = { email: 'demo@reflectme.app', password: 'demo123456' };
     
     try {
       setError('');
-      setDemoLoading(role);
-      await login(demoEmail, demoPassword);
-      navigate(`/${role}`);
+      setDemoLoading('demo');
+      await login(demoCredentials.email, demoCredentials.password);
+      navigate('/app');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Demo login failed';
       
       if (errorMessage.includes('created but sign-in failed')) {
-        setError(`Demo ${role} account created! Please try the demo login button again.`);
+        setError('Demo account created! Please try the demo login button again.');
       } else {
         setError(`Demo login failed: ${errorMessage}`);
       }
@@ -83,74 +77,65 @@ const Register: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <div className="flex-grow flex items-center justify-center px-4 py-12">
+      <div className="flex-grow flex items-center justify-center px-4 py-12 bg-slate-50">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="card p-8 w-full max-w-md"
+          className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md"
         >
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-neutral-900">Create Your Account</h1>
-            <p className="text-neutral-600 mt-2">Join MindTwin to begin your mental health journey</p>
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                <Heart className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">Join ReflectMe</h1>
+            <p className="text-slate-600 mt-2">Start your personalized mental health journey</p>
           </div>
           
           {error && (
-            <div className="bg-error-50 border border-error-200 text-error-700 p-4 rounded-md mb-6 flex items-start">
+            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6 flex items-start">
               <AlertCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
               <span className="text-sm">{error}</span>
             </div>
           )}
 
-          {/* Demo Login Buttons */}
-          <div className="mb-6 space-y-3">
-            <div className="text-center text-sm text-neutral-600 mb-3">Try the demo:</div>
+          {/* Demo Login Button */}
+          <div className="mb-6">
+            <div className="text-center text-sm text-slate-600 mb-3">Try ReflectMe first:</div>
             <button
-              onClick={() => handleDemoLogin('patient')}
+              onClick={handleDemoLogin}
               disabled={loading || demoLoading !== null}
-              className="w-full btn bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full btn bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              {demoLoading === 'patient' ? (
+              {demoLoading === 'demo' ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Setting up demo...
                 </>
               ) : (
-                'Demo as Patient'
-              )}
-            </button>
-            <button
-              onClick={() => handleDemoLogin('therapist')}
-              disabled={loading || demoLoading !== null}
-              className="w-full btn bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {demoLoading === 'therapist' ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Setting up demo...
-                </>
-              ) : (
-                'Demo as Therapist'
+                'Try Demo Account'
               )}
             </button>
           </div>
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-neutral-300" />
+              <div className="w-full border-t border-slate-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-neutral-500">Or create a new account</span>
+              <span className="px-2 bg-white text-slate-500">Or create a new account</span>
             </div>
           </div>
           
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
-              <label htmlFor="name" className="label">Full Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
               <input
                 type="text"
                 id="name"
-                className="input"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="John Doe"
@@ -160,11 +145,11 @@ const Register: React.FC = () => {
             </div>
             
             <div className="mb-6">
-              <label htmlFor="email" className="label">Email Address</label>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
               <input
                 type="email"
                 id="email"
-                className="input"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
@@ -174,11 +159,11 @@ const Register: React.FC = () => {
             </div>
             
             <div className="mb-6">
-              <label htmlFor="password" className="label">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">Password</label>
               <input
                 type="password"
                 id="password"
-                className="input"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -186,15 +171,15 @@ const Register: React.FC = () => {
                 minLength={6}
                 disabled={demoLoading !== null}
               />
-              <p className="text-xs text-neutral-500 mt-1">Must be at least 6 characters</p>
+              <p className="text-xs text-slate-500 mt-1">Must be at least 6 characters</p>
             </div>
             
-            <div className="mb-6">
-              <label htmlFor="confirmPassword" className="label">Confirm Password</label>
+            <div className="mb-8">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
               <input
                 type="password"
                 id="confirmPassword"
-                className="input"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
@@ -203,40 +188,9 @@ const Register: React.FC = () => {
               />
             </div>
             
-            <div className="mb-8">
-              <label className="label">I am a:</label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  className={`p-4 rounded-md border transition-all ${
-                    role === 'patient' 
-                      ? 'border-primary-600 bg-primary-50 text-primary-700' 
-                      : 'border-neutral-300 text-neutral-700 hover:border-primary-300'
-                  }`}
-                  onClick={() => setRole('patient')}
-                  disabled={demoLoading !== null}
-                >
-                  <span className="font-medium">Patient</span>
-                </button>
-                
-                <button
-                  type="button"
-                  className={`p-4 rounded-md border transition-all ${
-                    role === 'therapist' 
-                      ? 'border-primary-600 bg-primary-50 text-primary-700' 
-                      : 'border-neutral-300 text-neutral-700 hover:border-primary-300'
-                  }`}
-                  onClick={() => setRole('therapist')}
-                  disabled={demoLoading !== null}
-                >
-                  <span className="font-medium">Therapist</span>
-                </button>
-              </div>
-            </div>
-            
             <button
               type="submit"
-              className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-slate-900 text-white py-3 rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
               disabled={loading || demoLoading !== null}
             >
               {loading ? (
@@ -250,9 +204,9 @@ const Register: React.FC = () => {
             </button>
           </form>
           
-          <p className="text-center mt-6 text-neutral-600">
+          <p className="text-center mt-6 text-slate-600">
             Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
               Sign in
             </Link>
           </p>

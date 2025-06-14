@@ -3,13 +3,12 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
-import { SplineSceneBasic } from '../components/ui/SplineSceneBasic';
-import { MessageSquare, FileText, BarChart2, AlarmClock, Bell, Shield } from 'lucide-react';
+import { MessageCircle, Heart, FileText, Send, Play, Star, TrendingUp } from 'lucide-react';
 
 const Demo: React.FC = () => {
-  const [activeView, setActiveView] = useState<'patient' | 'therapist'>('patient');
+  const [activeDemo, setActiveDemo] = useState<'chat' | 'tools' | 'insights'>('chat');
   const [messages, setMessages] = useState<{id: number; text: string; sender: 'bot' | 'user'}[]>([
-    { id: 1, text: "Hi there! I'm your MindLink companion. How are you feeling today?", sender: 'bot' },
+    { id: 1, text: "Hi! I'm ReflectMe, your digital therapy companion. I understand you've been working on anxiety management with your therapist. How are you feeling today?", sender: 'bot' },
   ]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -37,13 +36,13 @@ const Demo: React.FC = () => {
       let botResponse = '';
       
       if (inputValue.toLowerCase().includes('anxious') || inputValue.toLowerCase().includes('anxiety')) {
-        botResponse = "I notice you're feeling anxious. Your therapist has noted that box breathing helps you in these situations. Would you like to try that technique now?";
-      } else if (inputValue.toLowerCase().includes('sad') || inputValue.toLowerCase().includes('depressed')) {
-        botResponse = "I'm sorry to hear you're feeling down. Your therapist recommended behavioral activation exercises for these moments. Would you like me to suggest a small activity that might help lift your mood?";
-      } else if (inputValue.toLowerCase().includes('yes') || inputValue.toLowerCase().includes('please')) {
-        botResponse = "Great! Let's try this box breathing exercise:\n\n1. Find a comfortable position\n2. Breathe in slowly through your nose for 4 counts\n3. Hold your breath for 4 counts\n4. Exhale slowly through your mouth for 4 counts\n5. Hold your breath for 4 counts\n\nRepeat this cycle 4 times. I'll check in with you afterward.";
+        botResponse = "I can hear that you're feeling anxious. Based on your recent therapy sessions, I know that breathing exercises have been helpful for you. Would you like me to guide you through the 4-7-8 breathing technique that Dr. Smith recommended?";
+      } else if (inputValue.toLowerCase().includes('overwhelmed') || inputValue.toLowerCase().includes('stressed')) {
+        botResponse = "It sounds like you're feeling overwhelmed. Your therapist mentioned that grounding techniques work well for you. Let's try the 5-4-3-2-1 technique: Can you name 5 things you can see right now?";
+      } else if (inputValue.toLowerCase().includes('better') || inputValue.toLowerCase().includes('good')) {
+        botResponse = "That's wonderful to hear! I'm glad you're feeling better. What do you think contributed to this positive change? Your therapist will be interested to hear about this progress.";
       } else {
-        botResponse = "Thank you for sharing that with me. Based on your therapy goals, would it be helpful to practice one of your coping strategies right now?";
+        botResponse = "Thank you for sharing that with me. I'm here to support you using the strategies you've learned in therapy. Is there a particular coping technique you'd like to practice, or would you like to talk through what you're experiencing?";
       }
       
       const newBotMessage = { id: messages.length + 2, text: botResponse, sender: 'bot' as const };
@@ -51,11 +50,32 @@ const Demo: React.FC = () => {
     }, 1000);
   };
 
+  const copingTools = [
+    {
+      title: '4-7-8 Breathing',
+      description: 'Calm your nervous system with this proven breathing technique',
+      duration: '3 minutes',
+      recommended: true,
+    },
+    {
+      title: '5-4-3-2-1 Grounding',
+      description: 'Use your senses to anchor yourself in the present moment',
+      duration: '5 minutes',
+      recommended: true,
+    },
+    {
+      title: 'Progressive Muscle Relaxation',
+      description: 'Release physical tension through systematic muscle relaxation',
+      duration: '15 minutes',
+      recommended: false,
+    },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <div className="flex-grow flex flex-col items-center px-4 py-12 bg-neutral-50">
+      <div className="flex-grow flex flex-col items-center px-4 py-12 bg-slate-50">
         <div className="w-full max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -63,245 +83,211 @@ const Demo: React.FC = () => {
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">MindLink Demo</h1>
-            <p className="text-lg text-neutral-600 max-w-3xl mx-auto">
-              Experience how MindLink bridges the gap between therapy sessions with personalized support.
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mr-4">
+                <Heart className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold text-slate-900">ReflectMe Demo</h1>
+            </div>
+            <p className="text-lg text-slate-600 max-w-3xl mx-auto">
+              Experience how ReflectMe provides personalized support between therapy sessions using AI and your therapy history.
             </p>
             
             <div className="flex justify-center mt-8">
-              <div className="inline-flex bg-white rounded-lg p-1 shadow-sm">
+              <div className="inline-flex bg-white rounded-lg p-1 shadow-sm border border-slate-200">
                 <button
-                  onClick={() => setActiveView('patient')}
-                  className={`px-4 py-2 rounded-md transition-all ${
-                    activeView === 'patient' 
-                      ? 'bg-primary-100 text-primary-800' 
-                      : 'text-neutral-600 hover:bg-neutral-100'
+                  onClick={() => setActiveDemo('chat')}
+                  className={`px-4 py-2 rounded-md transition-all flex items-center ${
+                    activeDemo === 'chat' 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  Patient View
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Chat Support
                 </button>
                 <button
-                  onClick={() => setActiveView('therapist')}
-                  className={`px-4 py-2 rounded-md transition-all ${
-                    activeView === 'therapist' 
-                      ? 'bg-primary-100 text-primary-800' 
-                      : 'text-neutral-600 hover:bg-neutral-100'
+                  onClick={() => setActiveDemo('tools')}
+                  className={`px-4 py-2 rounded-md transition-all flex items-center ${
+                    activeDemo === 'tools' 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  Therapist View
+                  <Heart className="w-4 h-4 mr-2" />
+                  Coping Tools
+                </button>
+                <button
+                  onClick={() => setActiveDemo('insights')}
+                  className={`px-4 py-2 rounded-md transition-all flex items-center ${
+                    activeDemo === 'insights' 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Session Insights
                 </button>
               </div>
             </div>
           </motion.div>
 
-          {/* 3D Interactive Section */}
+          {/* Demo Content */}
           <motion.div
+            key={activeDemo}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-12"
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-2xl shadow-xl overflow-hidden"
           >
-            <SplineSceneBasic />
-          </motion.div>
-
-          {activeView === 'patient' ? (
-            <div className="card overflow-hidden">
-              <div className="bg-white border-b border-neutral-200 p-4 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <h2 className="font-medium text-neutral-900">MindLink Companion</h2>
-                    <p className="text-xs text-neutral-500">Always here to support you</p>
+            {activeDemo === 'chat' && (
+              <div className="h-[600px] flex flex-col">
+                {/* Chat Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4">
+                  <div className="flex items-center">
+                    <Heart className="w-6 h-6 mr-3" />
+                    <div>
+                      <h3 className="font-semibold">ReflectMe Assistant</h3>
+                      <p className="text-sm text-blue-100">Personalized support based on your therapy history</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex">
-                  <button className="p-2 rounded-full hover:bg-neutral-100">
-                    <Bell className="w-5 h-5 text-neutral-500" />
-                  </button>
-                  <button className="p-2 rounded-full hover:bg-neutral-100">
-                    <Shield className="w-5 h-5 text-neutral-500" />
-                  </button>
+                
+                {/* Messages */}
+                <div className="flex-grow overflow-y-auto p-4 space-y-4">
+                  {messages.map((message) => (
+                    <div 
+                      key={message.id}
+                      className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div 
+                        className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                          message.sender === 'user' 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-slate-100 text-slate-900'
+                        }`}
+                      >
+                        {message.text}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+                
+                {/* Input */}
+                <div className="border-t border-slate-200 p-4">
+                  <form onSubmit={handleSendMessage} className="flex items-center">
+                    <input
+                      type="text"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      placeholder="Try typing: 'I'm feeling anxious about work'"
+                      className="flex-grow px-4 py-2 border border-slate-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Send className="w-5 h-5" />
+                    </button>
+                  </form>
                 </div>
               </div>
-              
-              <div className="bg-neutral-50 p-4 h-96 overflow-y-auto flex flex-col">
-                {messages.map(message => (
-                  <div 
-                    key={message.id}
-                    className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div 
-                      className={`chat-bubble ${
-                        message.sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'
+            )}
+
+            {activeDemo === 'tools' && (
+              <div className="p-8">
+                <h3 className="text-2xl font-bold text-slate-900 mb-6">Therapist-Approved Coping Tools</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {copingTools.map((tool, index) => (
+                    <motion.div
+                      key={tool.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`p-6 rounded-xl border-2 transition-all hover:shadow-lg ${
+                        tool.recommended 
+                          ? 'border-blue-200 bg-blue-50' 
+                          : 'border-slate-200 bg-white'
                       }`}
                     >
-                      {message.text.split('\n').map((line, i) => (
-                        <React.Fragment key={i}>
-                          {line}
-                          {i !== message.text.split('\n').length - 1 && <br />}
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
+                      <div className="flex items-start justify-between mb-4">
+                        <h4 className="font-semibold text-slate-900">{tool.title}</h4>
+                        {tool.recommended && (
+                          <div className="flex items-center text-blue-600">
+                            <Star className="w-4 h-4 mr-1" />
+                            <span className="text-xs font-medium">Recommended</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-slate-600 mb-4">{tool.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500">{tool.duration}</span>
+                        <button className="flex items-center px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors">
+                          <Play className="w-4 h-4 mr-2" />
+                          Try Now
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-              
-              <div className="bg-white border-t border-neutral-200 p-4">
-                <form onSubmit={handleSendMessage} className="flex items-center">
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Type how you're feeling..."
-                    className="flex-grow px-4 py-2 border border-neutral-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-primary-600 text-white px-4 py-2 rounded-r-md hover:bg-primary-700"
-                  >
-                    Send
-                  </button>
-                </form>
-                <p className="text-xs text-neutral-500 mt-2">
-                  Try typing: "I'm feeling anxious about my presentation tomorrow"
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="card overflow-hidden">
-              <div className="bg-white border-b border-neutral-200 p-4">
-                <h2 className="font-medium text-neutral-900 flex items-center">
-                  <FileText className="w-5 h-5 mr-2 text-primary-600" />
-                  Therapist Dashboard
-                </h2>
-              </div>
-              
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="bg-white p-4 rounded-lg border border-neutral-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium text-neutral-900">Active Clients</h3>
-                      <Users className="w-5 h-5 text-primary-600" />
-                    </div>
-                    <p className="text-3xl font-bold text-neutral-900">24</p>
-                    <p className="text-sm text-neutral-500">+3 this month</p>
+            )}
+
+            {activeDemo === 'insights' && (
+              <div className="p-8">
+                <h3 className="text-2xl font-bold text-slate-900 mb-6">Session Recaps & Progress</h3>
+                
+                {/* Progress Chart Placeholder */}
+                <div className="bg-slate-50 rounded-xl p-6 mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-slate-900">Mood Progress</h4>
+                    <TrendingUp className="w-5 h-5 text-green-600" />
                   </div>
-                  
-                  <div className="bg-white p-4 rounded-lg border border-neutral-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium text-neutral-900">Avg. Mood Score</h3>
-                      <BarChart2 className="w-5 h-5 text-primary-600" />
-                    </div>
-                    <p className="text-3xl font-bold text-success-600">3.8/5</p>
-                    <p className="text-sm text-success-600">+0.4 improvement</p>
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded-lg border border-neutral-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium text-neutral-900">Time Saved</h3>
-                      <AlarmClock className="w-5 h-5 text-primary-600" />
-                    </div>
-                    <p className="text-3xl font-bold text-neutral-900">6.5 hrs</p>
-                    <p className="text-sm text-neutral-500">This week</p>
+                  <div className="h-32 bg-gradient-to-r from-blue-200 to-green-200 rounded-lg flex items-end justify-center">
+                    <span className="text-slate-600 mb-4">📈 Steady improvement over the last month</span>
                   </div>
                 </div>
-                
-                <div className="bg-white p-4 rounded-lg border border-neutral-200 shadow-sm mb-6">
-                  <h3 className="font-medium text-neutral-900 mb-4">Client Interactions</h3>
+
+                {/* Recent Session */}
+                <div className="border border-slate-200 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-slate-900">Latest Session: Anxiety Management</h4>
+                    <span className="text-sm text-slate-500">January 15, 2024</span>
+                  </div>
+                  
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
-                      <div className="flex items-center">
-                        <img 
-                          src="https://api.dicebear.com/7.x/personas/svg?seed=Sarah" 
-                          alt="Sarah J." 
-                          className="w-10 h-10 rounded-full mr-3"
-                        />
-                        <div>
-                          <p className="font-medium text-neutral-900">Sarah Johnson</p>
-                          <p className="text-xs text-neutral-500">Last active: 10 minutes ago</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="text-sm font-medium text-error-600 mr-2">Anxiety Detected</span>
-                        <span className="inline-block w-3 h-3 bg-error-500 rounded-full"></span>
-                      </div>
+                    <div>
+                      <h5 className="font-medium text-slate-900 mb-2">Key Takeaways:</h5>
+                      <ul className="space-y-1 text-slate-700">
+                        <li>• Identified work presentations as a major anxiety trigger</li>
+                        <li>• Learned about the connection between thoughts and physical sensations</li>
+                        <li>• Practiced breathing techniques during the session</li>
+                      </ul>
                     </div>
                     
-                    <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
-                      <div className="flex items-center">
-                        <img 
-                          src="https://api.dicebear.com/7.x/personas/svg?seed=Michael" 
-                          alt="Michael C." 
-                          className="w-10 h-10 rounded-full mr-3"
-                        />
-                        <div>
-                          <p className="font-medium text-neutral-900">Michael Chen</p>
-                          <p className="text-xs text-neutral-500">Last active: 2 hours ago</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="text-sm font-medium text-success-600 mr-2">Mood Improved</span>
-                        <span className="inline-block w-3 h-3 bg-success-500 rounded-full"></span>
-                      </div>
+                    <div>
+                      <h5 className="font-medium text-slate-900 mb-2">Action Items:</h5>
+                      <ul className="space-y-1 text-slate-700">
+                        <li>• Practice 4-7-8 breathing twice daily</li>
+                        <li>• Use grounding techniques when feeling overwhelmed</li>
+                        <li>• Complete thought record worksheet</li>
+                      </ul>
                     </div>
-                    
-                    <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
-                      <div className="flex items-center">
-                        <img 
-                          src="https://api.dicebear.com/7.x/personas/svg?seed=Jessica" 
-                          alt="Jessica R." 
-                          className="w-10 h-10 rounded-full mr-3"
-                        />
-                        <div>
-                          <p className="font-medium text-neutral-900">Jessica Rodriguez</p>
-                          <p className="text-xs text-neutral-500">Last active: Yesterday</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="text-sm font-medium text-neutral-600 mr-2">Stable</span>
-                        <span className="inline-block w-3 h-3 bg-neutral-500 rounded-full"></span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white p-4 rounded-lg border border-neutral-200 shadow-sm">
-                  <h3 className="font-medium text-neutral-900 mb-3">Ready for Review</h3>
-                  <p className="text-neutral-600 text-sm mb-4">
-                    These auto-generated progress notes are ready for your review and signature.
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <button className="w-full text-left p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">Sarah Johnson - Session Notes</span>
-                        <span className="text-xs text-neutral-500">June 14, 2023</span>
-                      </div>
-                    </button>
-                    
-                    <button className="w-full text-left p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">Michael Chen - Session Notes</span>
-                        <span className="text-xs text-neutral-500">June 12, 2023</span>
-                      </div>
-                    </button>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </motion.div>
           
           <div className="mt-8 text-center">
-            <p className="text-neutral-700 mb-4">Ready to experience MindLink for yourself?</p>
+            <p className="text-slate-700 mb-4">Ready to start your personalized mental health journey?</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/register" className="btn btn-primary">
-                Sign Up Now
+              <Link to="/register" className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all">
+                Get Started Free
               </Link>
-              <Link to="/contact" className="btn btn-outline">
-                Contact Sales
+              <Link to="/login" className="px-8 py-3 border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:border-slate-400 transition-colors">
+                Sign In
               </Link>
             </div>
           </div>
@@ -310,29 +296,6 @@ const Demo: React.FC = () => {
       
       <Footer />
     </div>
-  );
-};
-
-// Component not found in JSX
-const Users: React.FC<{ className?: string }> = ({ className }) => {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-      <circle cx="9" cy="7" r="4"></circle>
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-    </svg>
   );
 };
 

@@ -3,247 +3,194 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
-import HeroSection from '../components/ui/dynamic-animated-hero-section-with-gradient';
-import { CTASection } from '../components/ui/cta-with-glow';
-import { Shield, Brain, Users, Clock, BarChart2, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, Brain, Shield, Clock, Users } from 'lucide-react';
 
 const Home: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      {/* Dynamic Animated Hero Section */}
-      <HeroSection />
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white py-20 px-6">
+        <div className="max-w-6xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-2xl flex items-center justify-center mr-4">
+                <Heart className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-5xl md:text-6xl font-bold">ReflectMe</h1>
+            </div>
+            
+            <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
+              Your personalized digital therapy companion, providing empathetic support between sessions using AI and your therapy history.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link 
+                to="/register"
+                className="px-8 py-4 bg-white text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+              >
+                Get Started Free
+              </Link>
+              <Link 
+                to="/demo"
+                className="px-8 py-4 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition-colors"
+              >
+                Try Demo
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Features Section */}
       <section className="py-20 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">How MindTwin Works</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">How ReflectMe Supports Your Journey</h2>
             <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-              Our platform creates a secure bridge between therapy sessions, providing personalized support based on your unique therapeutic journey.
+              Bridging the gap between therapy sessions with personalized, AI-powered support that understands your unique therapeutic journey.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <motion.div 
               whileHover={{ y: -5 }}
-              className="card p-6"
+              className="text-center p-6"
             >
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <Brain className="w-6 h-6 text-blue-600" />
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Digital Twin Technology</h3>
+              <h3 className="text-xl font-semibold mb-3">Personalized Chat Support</h3>
               <p className="text-slate-600">
-                Creates a personalized profile that grows with each therapy session, ensuring advice is tailored to your unique needs.
+                Chat with an AI companion that knows your therapy history and provides contextual support when you need it most.
               </p>
             </motion.div>
 
             <motion.div 
               whileHover={{ y: -5 }}
-              className="card p-6"
+              className="text-center p-6"
             >
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <Clock className="w-6 h-6 text-blue-600" />
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-8 h-8 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">24/7 Support</h3>
+              <h3 className="text-xl font-semibold mb-3">Therapist-Approved Tools</h3>
               <p className="text-slate-600">
-                Access personalized coping strategies and exercises anytime, bridging the gap between weekly therapy sessions.
+                Access a library of coping techniques and exercises specifically recommended by your therapist for your unique needs.
               </p>
             </motion.div>
 
             <motion.div 
               whileHover={{ y: -5 }}
-              className="card p-6"
+              className="text-center p-6"
             >
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-blue-600" />
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Brain className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Privacy & Security</h3>
+              <h3 className="text-xl font-semibold mb-3">Session Insights</h3>
               <p className="text-slate-600">
-                Built with HIPAA compliance and end-to-end encryption, ensuring your mental health data stays private and secure.
+                Review key takeaways from your therapy sessions and track your progress over time with visual insights.
               </p>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* For Therapists Section */}
+      {/* Benefits Section */}
       <section className="py-20 px-6 bg-slate-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="md:w-1/2 mb-10 md:mb-0 md:pr-12">
-              <h2 className="text-3xl font-bold text-slate-900 mb-6">For Mental Health Professionals</h2>
-              <p className="text-lg text-slate-600 mb-6">
-                MindTwin extends your therapeutic impact beyond the session room, while reducing administrative burden.
-              </p>
-              
-              <div className="space-y-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-bold text-slate-900 mb-6">Always There When You Need Support</h2>
+              <div className="space-y-6">
                 <div className="flex items-start">
-                  <div className="w-6 h-6 bg-success-100 rounded-full flex items-center justify-center mt-1 mr-3">
-                    <svg className="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-4 mt-1">
+                    <Clock className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-slate-900">Enhanced Client Outcomes</h3>
-                    <p className="text-slate-600">Support clients between sessions with personalized coping strategies and exercises.</p>
+                    <h3 className="font-semibold text-slate-900 mb-2">24/7 Availability</h3>
+                    <p className="text-slate-600">Get support whenever you need it, not just during therapy hours.</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start">
-                  <div className="w-6 h-6 bg-success-100 rounded-full flex items-center justify-center mt-1 mr-3">
-                    <svg className="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-4 mt-1">
+                    <Brain className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-slate-900">Reduced Administrative Burden</h3>
-                    <p className="text-slate-600">Automated note drafting and documentation saves you time for what matters most.</p>
+                    <h3 className="font-semibold text-slate-900 mb-2">Contextual Understanding</h3>
+                    <p className="text-slate-600">AI that remembers your therapy sessions and provides relevant, personalized guidance.</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start">
-                  <div className="w-6 h-6 bg-success-100 rounded-full flex items-center justify-center mt-1 mr-3">
-                    <svg className="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-4 mt-1">
+                    <Shield className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-slate-900">Data-Driven Insights</h3>
-                    <p className="text-slate-600">Gain valuable insights into client progress between sessions.</p>
+                    <h3 className="font-semibold text-slate-900 mb-2">Privacy & Security</h3>
+                    <p className="text-slate-600">Your conversations and data are encrypted and completely confidential.</p>
                   </div>
                 </div>
               </div>
-              
-              <Link to="/register" className="btn btn-primary mt-8 inline-block">
-                Join as a Therapist
-              </Link>
             </div>
             
-            <div className="md:w-1/2">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-xl shadow-md overflow-hidden"
-              >
-                <img 
-                  src="https://images.pexels.com/photos/7176319/pexels-photo-7176319.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
-                  alt="Therapist using MindTwin" 
-                  className="w-full h-64 object-cover"
-                />
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold">Therapist Dashboard</h3>
-                    <div className="flex items-center">
-                      <BarChart2 className="w-5 h-5 text-blue-600 mr-2" />
-                      <span className="text-sm text-blue-600 font-medium">Analytics</span>
-                    </div>
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3 mt-1">
+                    <Heart className="w-5 h-5 text-white" />
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-slate-700">Active Clients</p>
-                      <p className="font-medium">24</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-slate-700">Mood Improvement</p>
-                      <p className="font-medium text-success-600">+18%</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-slate-700">Weekly Sessions</p>
-                      <p className="font-medium">32</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-slate-700">Time Saved</p>
-                      <p className="font-medium">6.5 hrs/week</p>
-                    </div>
+                  <div className="bg-blue-50 rounded-lg p-3 flex-grow">
+                    <p className="text-sm text-blue-900">I'm feeling anxious about my presentation tomorrow...</p>
                   </div>
                 </div>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Trusted by Professionals & Patients</h2>
-            <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-              See how MindTwin is transforming mental healthcare for both providers and patients.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="card p-8">
-              <div className="flex items-center mb-6">
-                <img 
-                  src="https://api.dicebear.com/7.x/personas/svg?seed=Dr.Williams" 
-                  alt="Dr. Williams" 
-                  className="w-12 h-12 rounded-full mr-4"
-                />
-                <div>
-                  <h3 className="font-semibold text-slate-900">Dr. Rebecca Williams</h3>
-                  <p className="text-sm text-slate-500">Clinical Psychologist</p>
+                
+                <div className="flex items-start">
+                  <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center mr-3 mt-1">
+                    <MessageCircle className="w-5 h-5 text-slate-600" />
+                  </div>
+                  <div className="bg-slate-100 rounded-lg p-3 flex-grow">
+                    <p className="text-sm text-slate-800">I understand that presentations trigger your anxiety. Based on your recent sessions, the 4-7-8 breathing technique has been helpful. Would you like to practice it together?</p>
+                  </div>
                 </div>
-              </div>
-              <p className="text-slate-700 mb-4">
-                "MindTwin has revolutionized my practice. My clients have better outcomes with the continuous support, and I save hours each week on documentation. The digital twin technology ensures the guidance is truly personalized to each client's therapy journey."
-              </p>
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <svg key={star} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                  </svg>
-                ))}
-              </div>
-            </div>
-
-            <div className="card p-8">
-              <div className="flex items-center mb-6">
-                <img 
-                  src="https://api.dicebear.com/7.x/personas/svg?seed=Jamie" 
-                  alt="Jamie Chen" 
-                  className="w-12 h-12 rounded-full mr-4"
-                />
-                <div>
-                  <h3 className="font-semibold text-slate-900">Jamie Chen</h3>
-                  <p className="text-sm text-slate-500">MindTwin User</p>
+                
+                <div className="text-center">
+                  <span className="text-xs text-slate-500">Personalized support based on your therapy history</span>
                 </div>
-              </div>
-              <p className="text-slate-700 mb-4">
-                "Having MindTwin between my therapy sessions has been life-changing. During a panic attack at work, the app guided me through the exact breathing technique my therapist had taught me. It feels like having my therapist's wisdom available 24/7."
-              </p>
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <svg key={star} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                  </svg>
-                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section with Dual Buttons */}
-      <CTASection
-        title="Ready to Transform Mental Healthcare?"
-        actions={{
-          primary: {
-            text: "Join as Patient",
-            href: "/login?role=patient",
-            variant: "glow"
-          },
-          secondary: {
-            text: "Join as Therapist", 
-            href: "/login?role=therapist",
-            variant: "outline"
-          }
-        }}
-        className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white"
-      />
+      {/* CTA Section */}
+      <section className="py-20 px-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Mental Health Journey?</h2>
+          <p className="text-xl text-blue-100 mb-8">
+            Join thousands who are already experiencing the benefits of personalized digital therapy support.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link 
+              to="/register"
+              className="px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+            >
+              Start Your Journey
+            </Link>
+            <Link 
+              to="/demo"
+              className="px-8 py-4 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+            >
+              Try Demo First
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </div>
