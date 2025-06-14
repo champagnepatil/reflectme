@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Heart, Lightbulb, TrendingUp, Sparkles } from 'lucide-react';
+import { Send, Heart, Lightbulb, TrendingUp, Sparkles, Loader2 } from 'lucide-react';
 import { useReflectMe } from '../contexts/ReflectMeContext';
 
 const Chat: React.FC = () => {
-  const { chatHistory, addMessage, getRecommendedTools } = useReflectMe();
+  const { chatHistory, addMessage, getRecommendedTools, isGeneratingResponse } = useReflectMe();
   const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -15,12 +14,12 @@ const Chat: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [chatHistory]);
+  }, [chatHistory, isGeneratingResponse]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isGeneratingResponse) return;
     
     addMessage({
       sender: 'user',
@@ -29,25 +28,16 @@ const Chat: React.FC = () => {
     });
     
     setInputValue('');
-    setIsTyping(true);
-    
-    // Hide typing indicator after AI response
-    setTimeout(() => {
-      setIsTyping(false);
-    }, 1500);
   };
 
   const handleQuickResponse = (message: string) => {
+    if (isGeneratingResponse) return;
+    
     addMessage({
       sender: 'user',
       content: message,
       timestamp: new Date().toISOString(),
     });
-    
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-    }, 1500);
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -93,13 +83,27 @@ const Chat: React.FC = () => {
               >
                 <p className="leading-relaxed">{message.content}</p>
                 
-                {/* Show coping tool suggestion if present */}
-                {message.metadata?.copingToolSuggested && (
-                  <div className="mt-4 pt-4 border-t border-primary-200">
-                    <div className="flex items-center text-primary-700">
-                      <Lightbulb className="w-4 h-4 mr-2" />
-                      <span className="text-sm font-medium">Suggested: {message.metadata.copingToolSuggested}</span>
-                    </div>
+                {/* Show metadata if present */}
+                {message.metadata && (
+                  <div className="mt-4 pt-4 border-t border-primary-200 space-y-2">
+                    {message.metadata.emotionalContext && (
+                      <div className="flex items-center text-primary-700">
+                        <Heart className="w-4 h-4 mr-2" />
+                        <span className="text-sm">Detected: {message.metadata.emotionalContext}</span>
+                      </div>
+                    )}
+                    {message.metadata.copingToolSuggested && (
+                      <div className="flex items-center text-primary-700">
+                        <Lightbulb className="w-4 h-4 mr-2" />
+                        <span className="text-sm font-medium">Suggested: {message.metadata.copingToolSuggested}</span>
+                      </div>
+                    )}
+                    {message.metadata.therapistNotesUsed && message.metadata.therapistNotesUsed.length > 0 && (
+                      <div className="flex items-center text-primary-700">
+                        <TrendingUp className="w-4 h-4 mr-2" />
+                        <span className="text-sm">Referenced: {message.metadata.therapistNotesUsed.join(', ')}</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -113,9 +117,9 @@ const Chat: React.FC = () => {
           </motion.div>
         ))}
         
-        {/* Typing Indicator */}
+        {/* AI Typing Indicator */}
         <AnimatePresence>
-          {isTyping && (
+          {isGeneratingResponse && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -123,10 +127,9 @@ const Chat: React.FC = () => {
               className="flex justify-start"
             >
               <div className="chat-bubble-assistant">
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary-600" />
+                  <span className="text-sm text-neutral-600">ReflectMe is thinking...</span>
                 </div>
               </div>
             </motion.div>
@@ -137,7 +140,7 @@ const Chat: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      {chatHistory.length <= 1 && (
+      {chatHistory.length <= 1 && !isGeneratingResponse && (
         <div className="px-6 py-6 bg-white border-t border-neutral-200">
           <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center">
             <Sparkles className="w-5 h-5 mr-2 text-primary-500" />
@@ -145,35 +148,35 @@ const Chat: React.FC = () => {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
-              onClick={() => handleQuickResponse("I'm feeling anxious about work today")}
+              onClick={() => handleQuickResponse("I don't know why I always mess these things up")}
               className="text-left p-4 bg-neutral-50 hover:bg-primary-50 hover:border-primary-200 border border-neutral-200 rounded-2xl transition-all text-sm font-medium"
             >
-              I'm feeling anxious about work
+              I don't know why I always mess these things up
             </button>
             <button
-              onClick={() => handleQuickResponse("I had a good day and want to share")}
+              onClick={() => handleQuickResponse("Everything feels off today and I can't shake it")}
               className="text-left p-4 bg-neutral-50 hover:bg-primary-50 hover:border-primary-200 border border-neutral-200 rounded-2xl transition-all text-sm font-medium"
             >
-              I had a good day today
+              Everything feels off today and I can't shake it
             </button>
             <button
-              onClick={() => handleQuickResponse("I'm feeling overwhelmed and need support")}
+              onClick={() => handleQuickResponse("I keep replaying that conversation over and over")}
               className="text-left p-4 bg-neutral-50 hover:bg-primary-50 hover:border-primary-200 border border-neutral-200 rounded-2xl transition-all text-sm font-medium"
             >
-              I'm feeling overwhelmed
+              I keep replaying that conversation over and over
             </button>
             <button
-              onClick={() => handleQuickResponse("Can you help me practice a coping technique?")}
+              onClick={() => handleQuickResponse("I have this presentation tomorrow and I'm dreading it")}
               className="text-left p-4 bg-neutral-50 hover:bg-primary-50 hover:border-primary-200 border border-neutral-200 rounded-2xl transition-all text-sm font-medium"
             >
-              Help me practice coping techniques
+              I have this presentation tomorrow and I'm dreading it
             </button>
           </div>
         </div>
       )}
 
       {/* Recommended Tools */}
-      {recommendedTools.length > 0 && chatHistory.length > 1 && (
+      {recommendedTools.length > 0 && chatHistory.length > 1 && !isGeneratingResponse && (
         <div className="px-6 py-6 bg-gradient-to-r from-primary-50 to-secondary-50 border-t border-primary-200">
           <h3 className="text-lg font-semibold text-primary-800 mb-4 flex items-center">
             <TrendingUp className="w-5 h-5 mr-2" />
@@ -203,15 +206,30 @@ const Chat: React.FC = () => {
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="How are you feeling today?"
             className="flex-grow input input-soft"
+            disabled={isGeneratingResponse}
           />
           <button
             type="submit"
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || isGeneratingResponse}
             className="w-14 h-14 bg-primary-500 text-white rounded-2xl flex items-center justify-center hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-soft"
           >
-            <Send className="w-6 h-6" />
+            {isGeneratingResponse ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <Send className="w-6 h-6" />
+            )}
           </button>
         </form>
+        
+        {/* API Status */}
+        <div className="mt-3 text-center">
+          <p className="text-xs text-neutral-500">
+            {import.meta.env.VITE_GEMINI_API_KEY && import.meta.env.VITE_GEMINI_API_KEY !== 'your_gemini_api_key_here' 
+              ? '🤖 Powered by Google Gemini AI' 
+              : '⚠️ Using fallback responses - Add Gemini API key for full AI capabilities'
+            }
+          </p>
+        </div>
       </div>
     </div>
   );

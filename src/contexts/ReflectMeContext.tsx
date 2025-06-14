@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { useAuth } from './AuthContext';
+import { useTherapy } from './TherapyContext';
 
 // Types
 export interface ChatMessage {
@@ -11,6 +13,8 @@ export interface ChatMessage {
     triggerDetected?: string;
     moodDetected?: number;
     copingToolSuggested?: string;
+    emotionalContext?: string;
+    therapistNotesUsed?: string[];
   };
 }
 
@@ -49,6 +53,7 @@ interface ReflectMeContextType {
   // Chat
   chatHistory: ChatMessage[];
   addMessage: (message: Omit<ChatMessage, 'id'>) => ChatMessage;
+  isGeneratingResponse: boolean;
   
   // Coping Tools
   copingTools: CopingTool[];
@@ -73,6 +78,23 @@ export const useReflectMe = () => {
     throw new Error('useReflectMe must be used within a ReflectMeProvider');
   }
   return context;
+};
+
+// Initialize Google Gemini
+const initializeGemini = () => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+    console.warn('Gemini API key not configured. Using fallback responses.');
+    return null;
+  }
+  
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    return genAI.getGenerativeModel({ model: "gemini-pro" });
+  } catch (error) {
+    console.error('Failed to initialize Gemini:', error);
+    return null;
+  }
 };
 
 // Mock data
@@ -243,10 +265,23 @@ const mockChatHistory: ChatMessage[] = [
 
 export const ReflectMeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  const { clients } = useTherapy();
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>(mockChatHistory);
   const [copingTools] = useState<CopingTool[]>(mockCopingTools);
   const [sessionRecaps] = useState<SessionRecap[]>(mockSessionRecaps);
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
+  const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
+  const [geminiModel] = useState(() => initializeGemini());
+
+  // Get therapist notes for the current user (assuming one therapist-patient relationship)
+  const getTherapistNotes = () => {
+    if (!user || user.role !== 'patient') return [];
+    
+    // For demo purposes, we'll use the first client's notes from the therapy context
+    // In a real app, this would be based on the actual therapist-patient relationship
+    const patientData = clients.find(client => client.email === user.email) || clients[0];
+    return patientData?.notes || [];
+  };
 
   const addMessage = (message: Omit<ChatMessage, 'id'>): ChatMessage => {
     const newMessage: ChatMessage = {
@@ -258,49 +293,209 @@ export const ReflectMeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     // If it's a user message, generate AI response
     if (message.sender === 'user') {
-      setTimeout(() => {
-        const aiResponse = generateAIResponse(message.content);
-        setChatHistory(prev => [...prev, aiResponse]);
-      }, 1000);
+      generateAIResponse(message.content);
     }
     
     return newMessage;
   };
 
-  const generateAIResponse = (userMessage: string): ChatMessage => {
+  const analyzeEmotionalContext = (userMessage: string) => {
     const lowerMessage = userMessage.toLowerCase();
-    let response = '';
-    let metadata: ChatMessage['metadata'] = {};
-
-    // Detect triggers and emotions
-    if (lowerMessage.includes('anxious') || lowerMessage.includes('anxiety')) {
-      response = "I can hear that you're feeling anxious right now. That must be difficult. Based on your therapy sessions, breathing exercises have been helpful for you. Would you like me to guide you through the 4-7-8 breathing technique?";
-      metadata.triggerDetected = 'anxiety';
-      metadata.copingToolSuggested = '4-7-8 Breathing';
-    } else if (lowerMessage.includes('overwhelmed') || lowerMessage.includes('stressed')) {
-      response = "It sounds like you're feeling overwhelmed. That's completely understandable. Your therapist suggested grounding techniques for moments like this. The 5-4-3-2-1 technique can help bring you back to the present moment. Would you like to try it?";
-      metadata.triggerDetected = 'overwhelm';
-      metadata.copingToolSuggested = '5-4-3-2-1 Grounding';
-    } else if (lowerMessage.includes('sad') || lowerMessage.includes('down') || lowerMessage.includes('depressed')) {
-      response = "I'm sorry you're feeling this way. Your feelings are valid, and it's okay to have difficult days. From your recent sessions, we know that gentle movement and mindfulness can help. Would you like to try a brief body scan meditation?";
-      metadata.triggerDetected = 'sadness';
-      metadata.copingToolSuggested = 'Mindful Body Scan';
-    } else if (lowerMessage.includes('work') || lowerMessage.includes('presentation') || lowerMessage.includes('meeting')) {
-      response = "Work situations can definitely trigger anxiety, especially presentations as we've discussed in your sessions. Remember the strategies we've practiced - breathing techniques before the event and grounding yourself if you feel overwhelmed during it.";
-      metadata.triggerDetected = 'work stress';
-    } else if (lowerMessage.includes('better') || lowerMessage.includes('good') || lowerMessage.includes('great')) {
-      response = "I'm so glad to hear you're feeling better! It's wonderful when the strategies we practice start to make a difference. What do you think contributed to feeling better today?";
-    } else {
-      response = "Thank you for sharing that with me. I'm here to listen and support you. Is there anything specific you'd like to talk about or work through together?";
-    }
-
-    return {
-      id: Math.random().toString(36).substring(2, 11),
-      sender: 'assistant',
-      content: response,
-      timestamp: new Date().toISOString(),
-      metadata,
+    
+    // Detect emotional patterns and triggers
+    const emotionalIndicators = {
+      anxiety: ['worried', 'nervous', 'scared', 'panic', 'overwhelmed', 'stressed', 'can\'t stop thinking'],
+      depression: ['sad', 'down', 'hopeless', 'empty', 'worthless', 'tired', 'no point'],
+      selfCriticism: ['mess up', 'stupid', 'failure', 'wrong', 'shouldn\'t have', 'always do this'],
+      socialAnxiety: ['embarrassed', 'judging', 'what they think', 'awkward', 'said something wrong'],
+      rumination: ['keep thinking', 'can\'t stop', 'over and over', 'replaying', 'what if'],
+      perfectionism: ['not good enough', 'should be better', 'disappointed', 'failed', 'standards']
     };
+    
+    const detectedEmotions = [];
+    const detectedTriggers = [];
+    
+    for (const [emotion, keywords] of Object.entries(emotionalIndicators)) {
+      if (keywords.some(keyword => lowerMessage.includes(keyword))) {
+        detectedEmotions.push(emotion);
+      }
+    }
+    
+    // Detect specific triggers
+    if (lowerMessage.includes('work') || lowerMessage.includes('job') || lowerMessage.includes('boss')) {
+      detectedTriggers.push('work stress');
+    }
+    if (lowerMessage.includes('presentation') || lowerMessage.includes('meeting') || lowerMessage.includes('speak')) {
+      detectedTriggers.push('public speaking');
+    }
+    if (lowerMessage.includes('relationship') || lowerMessage.includes('friend') || lowerMessage.includes('partner')) {
+      detectedTriggers.push('relationships');
+    }
+    
+    return {
+      emotions: detectedEmotions,
+      triggers: detectedTriggers,
+      intensity: lowerMessage.includes('really') || lowerMessage.includes('very') || lowerMessage.includes('extremely') ? 'high' : 'moderate'
+    };
+  };
+
+  const findRelevantTherapistNotes = (emotionalContext: any, userMessage: string) => {
+    const therapistNotes = getTherapistNotes();
+    const relevantNotes = [];
+    
+    for (const note of therapistNotes) {
+      const noteContent = note.content.toLowerCase();
+      const noteTitle = note.title.toLowerCase();
+      
+      // Check if note is relevant to detected emotions or triggers
+      const isRelevant = 
+        emotionalContext.emotions.some((emotion: string) => 
+          noteContent.includes(emotion) || noteTitle.includes(emotion)
+        ) ||
+        emotionalContext.triggers.some((trigger: string) => 
+          noteContent.includes(trigger) || noteTitle.includes(trigger)
+        ) ||
+        note.tags.some(tag => 
+          emotionalContext.emotions.includes(tag) || 
+          emotionalContext.triggers.includes(tag)
+        );
+      
+      if (isRelevant) {
+        relevantNotes.push({
+          title: note.title,
+          content: note.content.substring(0, 300) + (note.content.length > 300 ? '...' : ''),
+          tags: note.tags,
+          date: note.date
+        });
+      }
+    }
+    
+    return relevantNotes.slice(0, 3); // Limit to top 3 most relevant notes
+  };
+
+  const generateAIResponse = async (userMessage: string) => {
+    setIsGeneratingResponse(true);
+    
+    try {
+      // Analyze emotional context
+      const emotionalContext = analyzeEmotionalContext(userMessage);
+      
+      // Find relevant therapist notes
+      const relevantNotes = findRelevantTherapistNotes(emotionalContext, userMessage);
+      
+      let response = '';
+      let metadata: ChatMessage['metadata'] = {
+        emotionalContext: emotionalContext.emotions.join(', '),
+        triggerDetected: emotionalContext.triggers.join(', '),
+        therapistNotesUsed: relevantNotes.map(note => note.title)
+      };
+      
+      if (geminiModel) {
+        // Construct detailed prompt for Gemini
+        const prompt = `
+You are ReflectMe, a compassionate AI therapy companion. You provide support between therapy sessions by understanding emotional context and referencing past therapeutic work.
+
+USER MESSAGE: "${userMessage}"
+
+EMOTIONAL CONTEXT DETECTED:
+- Emotions: ${emotionalContext.emotions.join(', ') || 'neutral'}
+- Triggers: ${emotionalContext.triggers.join(', ') || 'none detected'}
+- Intensity: ${emotionalContext.intensity}
+
+RELEVANT THERAPIST NOTES:
+${relevantNotes.map(note => `
+- Session: ${note.title} (${note.date})
+- Content: ${note.content}
+- Tags: ${note.tags.join(', ')}
+`).join('\n') || 'No specific notes found for this context.'}
+
+INSTRUCTIONS:
+1. Respond with empathy and understanding, acknowledging the user's emotional state
+2. Reference relevant insights or techniques from the therapist notes when applicable
+3. Suggest specific coping strategies that align with their therapeutic work
+4. Keep responses warm, supportive, and actionable (2-3 sentences max)
+5. If the user seems to be in distress, gently guide them toward grounding techniques
+6. Never diagnose or provide medical advice
+7. If no relevant notes exist, provide general supportive guidance
+
+Respond as their supportive therapy companion:`;
+
+        try {
+          const result = await geminiModel.generateContent(prompt);
+          const generatedResponse = result.response;
+          response = generatedResponse.text();
+          
+          // Suggest coping tools based on emotional context
+          if (emotionalContext.emotions.includes('anxiety')) {
+            metadata.copingToolSuggested = '4-7-8 Breathing';
+          } else if (emotionalContext.emotions.includes('rumination')) {
+            metadata.copingToolSuggested = '5-4-3-2-1 Grounding';
+          } else if (emotionalContext.emotions.includes('selfCriticism')) {
+            metadata.copingToolSuggested = 'Thought Challenging';
+          }
+          
+        } catch (geminiError) {
+          console.error('Gemini API error:', geminiError);
+          response = generateFallbackResponse(emotionalContext, relevantNotes);
+        }
+      } else {
+        response = generateFallbackResponse(emotionalContext, relevantNotes);
+      }
+      
+      // Add AI response to chat
+      const aiMessage: ChatMessage = {
+        id: Math.random().toString(36).substring(2, 11),
+        sender: 'assistant',
+        content: response,
+        timestamp: new Date().toISOString(),
+        metadata
+      };
+      
+      setChatHistory(prev => [...prev, aiMessage]);
+      
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      
+      // Fallback error response
+      const errorMessage: ChatMessage = {
+        id: Math.random().toString(36).substring(2, 11),
+        sender: 'assistant',
+        content: "I'm here to listen and support you. While I'm having trouble accessing my full capabilities right now, I want you to know that your feelings are valid. Would you like to try one of your coping techniques, or would you prefer to talk more about what's on your mind?",
+        timestamp: new Date().toISOString(),
+      };
+      
+      setChatHistory(prev => [...prev, errorMessage]);
+    } finally {
+      setIsGeneratingResponse(false);
+    }
+  };
+
+  const generateFallbackResponse = (emotionalContext: any, relevantNotes: any[]) => {
+    // Generate contextual responses based on detected emotions and available notes
+    if (emotionalContext.emotions.includes('anxiety')) {
+      if (relevantNotes.length > 0) {
+        return "I can sense you're feeling anxious right now. Remember what we've worked on in your sessions - breathing techniques can be really helpful in moments like this. Would you like to try the 4-7-8 breathing exercise we've practiced?";
+      }
+      return "I can hear that you're feeling anxious. That's completely understandable. Let's try to ground yourself in this moment. Can you take a slow, deep breath with me and notice 5 things you can see around you?";
+    }
+    
+    if (emotionalContext.emotions.includes('selfCriticism')) {
+      if (relevantNotes.length > 0) {
+        return "I notice that inner critic is being harsh with you again. Remember the thought challenging techniques we've discussed - what would you say to a friend who was being this hard on themselves?";
+      }
+      return "It sounds like you're being really hard on yourself right now. That inner critic can be so loud sometimes. What would you tell a good friend if they were in your situation?";
+    }
+    
+    if (emotionalContext.emotions.includes('depression')) {
+      return "I hear that you're struggling right now, and I want you to know that these feelings are valid. Even small steps matter. Is there one tiny thing that might bring you a moment of comfort today?";
+    }
+    
+    if (emotionalContext.triggers.includes('work stress')) {
+      return "Work situations can definitely feel overwhelming. Remember that you've handled challenging situations before. What's one thing that's within your control right now?";
+    }
+    
+    // Default empathetic response
+    return "Thank you for sharing what's on your mind. I'm here to listen and support you. Your feelings are completely valid. Is there anything specific you'd like to talk through or work on together right now?";
   };
 
   const getRecommendedTools = (): CopingTool[] => {
@@ -336,6 +531,7 @@ export const ReflectMeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const value = {
     chatHistory,
     addMessage,
+    isGeneratingResponse,
     copingTools,
     getRecommendedTools,
     sessionRecaps,
