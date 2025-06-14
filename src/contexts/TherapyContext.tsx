@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { useAuth } from './AuthContext';
 
 // Types
 export interface Client {
@@ -7,13 +8,20 @@ export interface Client {
   name: string;
   email: string;
   avatar: string;
+  age: number;
+  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  therapistEmail: string;
   lastSessionDate: string;
   nextSessionDate: string;
-  mood: 'good' | 'neutral' | 'bad';
+  mood: number; // Changed from 'good' | 'neutral' | 'bad' to number (1-5 scale)
   moodHistory: { date: string; value: number }[];
   notes: TherapyNote[];
   triggers: string[];
   copingStrategies: CopingStrategy[];
+  medicalHistory: string;
+  familyHistory: string;
+  developmentalHistory: string;
+  safetyNotes: string;
 }
 
 export interface TherapyNote {
@@ -93,98 +101,179 @@ const generateMoodHistory = () => {
   return moodHistory;
 };
 
-// Mock data
+// Mock data - Sarah Johnson with detailed therapy information
 const mockClients: Client[] = [
   {
     id: '1',
     name: 'Sarah Johnson',
-    email: 'sarah.j@example.com',
+    email: 'sarah.johnson@mindtwin.demo',
     avatar: 'https://api.dicebear.com/7.x/personas/svg?seed=Sarah',
-    lastSessionDate: '2023-06-10',
-    nextSessionDate: '2023-06-17',
-    mood: 'neutral',
+    age: 28,
+    gender: 'female',
+    therapistEmail: 'therapist@mindtwin.demo', // Links to Dr. Abigail Jones
+    lastSessionDate: '2024-01-15',
+    nextSessionDate: '2024-01-22',
+    mood: 3, // Current mood on 1-5 scale
     moodHistory: generateMoodHistory(),
+    medicalHistory: 'No significant medical concerns reported. Generally healthy with occasional stress-related headaches.',
+    familyHistory: 'Family background includes some pressure around achievement and high expectations. Parents are both professionals who emphasized academic and career success.',
+    developmentalHistory: 'No significant developmental concerns reported. Met all major milestones appropriately. High achiever throughout school.',
+    safetyNotes: 'If feeling overwhelmed or in crisis, follow the pre-identified coping protocol (grounding techniques, breathing exercises). Reach out to therapist or crisis helpline (988) if needed. Regularly review boundaries to ensure safety in therapy and daily life.',
     notes: [
       {
         id: '101',
-        date: '2023-06-10',
-        title: 'Initial Assessment',
-        content: 'Sarah reports experiencing anxiety in social situations, particularly at work meetings. She describes physical symptoms including increased heart rate, sweating, and difficulty concentrating. We discussed potential triggers and began exploring coping strategies.',
-        tags: ['anxiety', 'social', 'work'],
+        date: '2024-01-15',
+        title: 'Perfectionism and Self-Criticism Patterns',
+        content: `Sarah continues to report challenges with perfectionism and negative self-judgment, particularly in work and social settings. She identifies outcome-focused thinking and heightened anxiety before/after key interactions.
+
+BEHAVIORAL OBSERVATIONS:
+Alert, engaged, but shows signs of self-doubt when discussing setbacks. Occasionally dismisses small wins, focuses on perceived failures. Good eye contact maintained throughout session.
+
+PRIMARY PATTERNS/TRIGGERS IDENTIFIED:
+- Rigid standards ("must/should" thinking)
+- Outcome obsession - focuses heavily on results rather than process
+- Tendency to interpret others' opinions as absolute fact
+- Social-interaction anxiety, especially in professional settings
+- Negative self-talk and harsh self-criticism
+
+COPING TOOLS/EXERCISES ASSIGNED:
+- Evidence chart for negative thoughts (cognitive restructuring)
+- Box breathing (4-4-4-4 method) for anxiety management
+- Small-goal planning (breaking big tasks into daily actions)
+- Fact vs. opinion separation exercises
+
+PROGRESS SINCE LAST SESSION:
+Partial progress in recognizing self-critical thoughts. Practiced box breathing technique and successfully set two small daily goals last week. Still struggling with "all-or-nothing" thinking patterns.
+
+THERAPY GOALS:
+1. Build flexible thinking patterns
+2. Practice confident, assertive communication
+3. Reduce outcome-obsession by valuing process and effort
+4. Embrace vulnerability in social contexts
+5. Develop self-compassion practices
+
+HOMEWORK/PLAN:
+- Continue daily evidence-charting for any harsh self-talk
+- Acknowledge one small win per day in journal
+- Attempt one "vulnerability experiment" (e.g., share a worry with a trusted friend)
+- Practice box breathing before stressful situations`,
+        tags: ['perfectionism', 'self-criticism', 'anxiety', 'cognitive-restructuring', 'breathing-exercises'],
       },
       {
         id: '102',
-        date: '2023-06-03',
-        title: 'CBT Session',
-        content: 'Worked on identifying negative thought patterns. Sarah recognized catastrophizing when preparing for presentations. We practiced reframing techniques and breathing exercises to manage acute anxiety symptoms.',
-        tags: ['CBT', 'thought patterns', 'breathing'],
+        date: '2024-01-08',
+        title: 'Social Anxiety and Vulnerability Challenges',
+        content: `Explored Sarah's difficulty with social interactions and fear of judgment. She reports significant anxiety around being perceived negatively by others, particularly in work contexts.
+
+KEY INSIGHTS:
+- Fear of vulnerability stems from early experiences of criticism
+- Tends to over-prepare for social interactions to avoid "mistakes"
+- Physical symptoms include rapid heartbeat, sweating before meetings
+- Avoids speaking up in group settings due to fear of saying "wrong" thing
+
+INTERVENTIONS USED:
+- Discussed connection between thoughts, feelings, and behaviors
+- Introduced concept of "good enough" vs. perfect
+- Practiced grounding techniques during session
+- Explored past positive social experiences
+
+COPING STRATEGIES DEVELOPED:
+- 5-4-3-2-1 grounding technique for social anxiety
+- Pre-meeting self-talk scripts
+- "Fact vs. story" questioning for social situations
+
+PROGRESS NOTES:
+Sarah showed good insight into her patterns. Willing to try homework assignments. Expressed relief at normalizing her experiences.`,
+        tags: ['social-anxiety', 'vulnerability', 'grounding', 'self-talk', 'insight'],
+      },
+      {
+        id: '103',
+        date: '2024-01-01',
+        title: 'Initial Assessment and Goal Setting',
+        content: `Initial comprehensive assessment session. Sarah presents with perfectionism, social anxiety, and rigid self-standards that are impacting her work performance and relationships.
+
+PRESENTING CONCERNS:
+- Perfectionism with rigid self-standards
+- Negative self-talk and self-criticism
+- Social-interaction anxiety
+- Outcome obsession
+- Difficulty embracing vulnerability
+
+STRENGTHS IDENTIFIED:
+- High level of self-awareness
+- Strong motivation for change
+- Good support system (close friends, family)
+- Professional success despite internal struggles
+- Excellent insight into her patterns
+
+TREATMENT APPROACH:
+Cognitive Behavioral Therapy (CBT) with focus on:
+- Thought challenging and cognitive restructuring
+- Exposure therapy for social situations
+- Mindfulness and grounding techniques
+- Self-compassion practices
+
+INITIAL GOALS ESTABLISHED:
+1. Reduce self-critical thoughts by 50%
+2. Increase comfort with "imperfect" social interactions
+3. Develop daily self-compassion practices
+4. Learn to value process over outcomes`,
+        tags: ['initial-assessment', 'CBT', 'goals', 'perfectionism', 'social-anxiety'],
       },
     ],
-    triggers: ['public speaking', 'large meetings', 'unexpected questions', 'performance reviews'],
+    triggers: [
+      'Work presentations and public speaking',
+      'Receiving feedback or criticism',
+      'Social gatherings with new people',
+      'Making mistakes or "imperfect" performance',
+      'Being the center of attention',
+      'Uncertainty about others\' opinions'
+    ],
     copingStrategies: [
       {
         id: '201',
-        title: 'Box Breathing',
-        description: 'A controlled breathing exercise to reduce acute anxiety',
+        title: 'Box Breathing (4-4-4-4)',
+        description: 'A controlled breathing exercise to reduce acute anxiety and perfectionist panic',
         steps: [
           'Find a quiet place to sit comfortably',
           'Inhale slowly through your nose for 4 counts',
           'Hold your breath for 4 counts',
           'Exhale slowly through your mouth for 4 counts',
-          'Hold your breath for 4 counts',
-          'Repeat for at least 5 cycles',
+          'Hold empty for 4 counts',
+          'Repeat for at least 5 cycles, especially before stressful situations',
         ],
-        tags: ['anxiety', 'immediate relief', 'physical'],
+        tags: ['anxiety', 'breathing', 'immediate-relief'],
         effectiveness: 4,
       },
       {
         id: '202',
-        title: 'Thought Challenging',
-        description: 'Identify and challenge negative thought patterns',
+        title: 'Evidence Chart for Negative Thoughts',
+        description: 'Cognitive restructuring technique to challenge perfectionist and self-critical thoughts',
         steps: [
-          'Notice when you feel anxious',
-          'Write down the automatic thought that occurred',
-          'Identify the cognitive distortion (catastrophizing, mind reading, etc.)',
-          'Challenge the thought with evidence',
-          'Create a more balanced alternative thought',
+          'Notice when you feel anxious or self-critical',
+          'Write down the automatic negative thought',
+          'Ask: "What evidence supports this thought?"',
+          'Ask: "What evidence contradicts this thought?"',
+          'Consider: "What would I tell a friend in this situation?"',
+          'Create a more balanced, realistic alternative thought',
+          'Practice the new thought and notice how it feels',
         ],
-        tags: ['CBT', 'cognitive', 'long-term'],
-        effectiveness: 3,
+        tags: ['CBT', 'cognitive-restructuring', 'self-criticism'],
+        effectiveness: 5,
       },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    email: 'michael.c@example.com',
-    avatar: 'https://api.dicebear.com/7.x/personas/svg?seed=Michael',
-    lastSessionDate: '2023-06-12',
-    nextSessionDate: '2023-06-19',
-    mood: 'good',
-    moodHistory: generateMoodHistory(),
-    notes: [
-      {
-        id: '103',
-        date: '2023-06-12',
-        title: 'Depression Follow-up',
-        content: 'Michael reports improved mood this week. He has been consistently taking his medication and completed the behavioral activation homework. Successfully engaged in two social activities that he had been avoiding. Sleep has improved slightly.',
-        tags: ['depression', 'medication', 'behavioral activation'],
-      },
-    ],
-    triggers: ['social isolation', 'work pressure', 'negative news', 'family conflict'],
-    copingStrategies: [
       {
         id: '203',
-        title: 'Behavioral Activation',
-        description: 'Schedule and engage in positive activities to improve mood',
+        title: '5-4-3-2-1 Grounding for Social Anxiety',
+        description: 'Sensory grounding technique to manage social anxiety and perfectionist overwhelm',
         steps: [
-          'Create a list of enjoyable activities',
-          'Schedule specific times for these activities',
-          'Start with small, achievable goals',
-          'Track your mood before and after each activity',
-          'Gradually increase frequency of activities',
+          'Notice 5 things you can see in your environment',
+          'Notice 4 things you can touch (chair, table, clothing)',
+          'Notice 3 things you can hear (background noise, voices)',
+          'Notice 2 things you can smell',
+          'Notice 1 thing you can taste',
+          'Take three deep breaths and remind yourself: "I am safe and present"',
         ],
-        tags: ['depression', 'behavioral', 'daily practice'],
+        tags: ['grounding', 'social-anxiety', 'mindfulness'],
         effectiveness: 4,
       },
     ],
@@ -195,24 +284,24 @@ const mockClients: Client[] = [
 const mockJournalEntries: JournalEntry[] = [
   {
     id: '1',
-    date: '2023-06-14',
+    date: '2024-01-16',
     mood: 3,
-    content: 'Had a difficult meeting at work today. I felt my anxiety rising when I was asked to present unexpectedly. I used the breathing technique my therapist taught me, which helped somewhat. Still felt shaky afterward.',
-    tags: ['anxiety', 'work', 'coping strategy'],
+    content: 'Had that presentation at work today. I kept thinking everyone was judging my slides, but when I used the evidence chart technique, I realized most people seemed engaged and asked good questions. Still felt that familiar knot in my stomach beforehand though.',
+    tags: ['work', 'presentation', 'evidence-chart', 'anxiety'],
   },
   {
     id: '2',
-    date: '2023-06-13',
+    date: '2024-01-15',
     mood: 4,
-    content: 'Good day overall. Went for a walk in the morning which put me in a positive mindset. Completed all my tasks at work without feeling overwhelmed. Had dinner with a friend and enjoyed the social connection.',
-    tags: ['exercise', 'accomplishment', 'social'],
+    content: 'Therapy session today was helpful. Dr. Jones helped me see how I dismiss my small wins. I did complete that project on time last week, and my manager said it was thorough. Maybe I can acknowledge that instead of focusing on the one typo I found.',
+    tags: ['therapy', 'small-wins', 'self-compassion'],
   },
   {
     id: '3',
-    date: '2023-06-12',
+    date: '2024-01-14',
     mood: 2,
-    content: 'Woke up feeling low energy and dreading the day. Struggled to get out of bed. Cancelled lunch plans because I didn\'t feel up to socializing. Need to discuss this pattern with my therapist.',
-    tags: ['low mood', 'isolation', 'fatigue'],
+    content: 'Ugh, said something awkward at the team meeting and now I can\'t stop replaying it. Used the box breathing technique but still feeling like everyone thinks I\'m weird. Why do I always do this to myself?',
+    tags: ['social-anxiety', 'rumination', 'self-criticism', 'box-breathing'],
   },
 ];
 
@@ -221,54 +310,35 @@ const mockChatHistory: ChatMessage[] = [
   {
     id: '1',
     sender: 'system',
-    content: 'Welcome to MindLink! I\'m your digital companion, here to support you between therapy sessions. How are you feeling today?',
-    timestamp: '2023-06-14T08:00:00Z',
-  },
-  {
-    id: '2',
-    sender: 'user',
-    content: 'I\'m feeling really anxious about my presentation tomorrow.',
-    timestamp: '2023-06-14T08:01:23Z',
-  },
-  {
-    id: '3',
-    sender: 'bot',
-    content: 'I understand that presentations can trigger your anxiety. Your therapist noted that box breathing has been helpful for you in these situations. Would you like to try that technique now?',
-    timestamp: '2023-06-14T08:01:45Z',
-    tags: ['anxiety', 'coping strategy', 'breathing'],
-  },
-  {
-    id: '4',
-    sender: 'user',
-    content: 'Yes, that would be helpful.',
-    timestamp: '2023-06-14T08:02:10Z',
-  },
-  {
-    id: '5',
-    sender: 'bot',
-    content: 'Let\'s practice box breathing together:\n\n1. Find a comfortable position\n2. Inhale slowly through your nose for 4 counts\n3. Hold your breath for 4 counts\n4. Exhale slowly through your mouth for 4 counts\n5. Hold your breath for 4 counts\n\nLet\'s do this for 5 cycles. I\'ll guide you through each step.',
-    timestamp: '2023-06-14T08:02:30Z',
-    tags: ['guided exercise', 'breathing', 'anxiety relief'],
-  },
-  {
-    id: '6',
-    sender: 'user',
-    content: 'That helped calm me down a bit. Thank you.',
-    timestamp: '2023-06-14T08:05:45Z',
-  },
-  {
-    id: '7',
-    sender: 'bot',
-    content: 'I\'m glad it helped. Remember, you\'ve successfully handled presentations before. Your therapist noted that you did well in your last quarterly review despite feeling anxious beforehand. Would you like to review some of the thought challenging exercises you\'ve been working on for situations like this?',
-    timestamp: '2023-06-14T08:06:15Z',
-    tags: ['positive reinforcement', 'CBT', 'anxiety'],
+    content: 'Hi Sarah! I\'m your ReflectMe companion, here to support you between sessions with Dr. Jones. I understand you\'ve been working on perfectionism and social anxiety. How are you feeling today?',
+    timestamp: '2024-01-16T08:00:00Z',
   },
 ];
 
 export const TherapyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [clients, setClients] = useState<Client[]>(mockClients);
+  const { user } = useAuth();
+  const [allClients] = useState<Client[]>(mockClients);
+  const [clients, setClients] = useState<Client[]>([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(mockJournalEntries);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>(mockChatHistory);
+
+  // Filter clients based on user role and email
+  useEffect(() => {
+    if (!user) {
+      setClients([]);
+      return;
+    }
+
+    if (user.role === 'therapist') {
+      // Therapist sees only their assigned clients
+      const therapistClients = allClients.filter(client => client.therapistEmail === user.email);
+      setClients(therapistClients);
+    } else if (user.role === 'patient') {
+      // Patient sees only their own data (as a client record)
+      const patientClient = allClients.find(client => client.email === user.email);
+      setClients(patientClient ? [patientClient] : []);
+    }
+  }, [user, allClients]);
 
   const addClient = (client: Omit<Client, 'id'>) => {
     const newClient = {
@@ -323,7 +393,7 @@ export const TherapyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     setChatHistory([...chatHistory, newMessage as ChatMessage]);
     
-    // If it's a user message, generate a bot response
+    // If it's a user message, generate a bot response based on Sarah's therapy context
     if (message.sender === 'user') {
       // Detect crisis keywords
       const crisisKeywords = ['suicide', 'kill myself', 'end it all', 'want to die'];
@@ -334,7 +404,7 @@ export const TherapyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (isCrisis) {
         const crisisResponse: Omit<ChatMessage, 'id'> = {
           sender: 'bot',
-          content: "I'm concerned about what you're saying. This sounds serious, and I want to make sure you get the help you need right away. Please call the National Suicide Prevention Lifeline at 988 or text HOME to 741741 to reach the Crisis Text Line. Both are available 24/7. Would you like me to connect you with your therapist immediately?",
+          content: "I'm concerned about what you're saying. This sounds serious, and I want to make sure you get the help you need right away. Please call the National Suicide Prevention Lifeline at 988 or text HOME to 741741 to reach the Crisis Text Line. Both are available 24/7. Would you like me to connect you with Dr. Jones immediately?",
           timestamp: new Date().toISOString(),
           tags: ['crisis', 'urgent', 'escalation'],
         };
@@ -348,35 +418,71 @@ export const TherapyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return newCrisisMessage as ChatMessage;
       }
       
-      // Simple response logic - in a real app, this would call an LLM API
+      // Generate contextual response based on Sarah's therapy notes and patterns
       const lowercaseMessage = message.content.toLowerCase();
       let botResponse: Omit<ChatMessage, 'id'>;
       
-      if (lowercaseMessage.includes('anxious') || lowercaseMessage.includes('anxiety')) {
+      // Perfectionism and self-criticism responses
+      if (lowercaseMessage.includes('mess up') || lowercaseMessage.includes('stupid') || lowercaseMessage.includes('failure') || lowercaseMessage.includes('wrong')) {
         botResponse = {
           sender: 'bot',
-          content: "I notice you're feeling anxious. Your therapist has suggested box breathing as a helpful technique for you. Would you like to try that now? Or we could work through some thought challenging exercises that you've been practicing.",
+          content: "I can hear that inner critic being really harsh with you right now. Remember the evidence chart technique you've been practicing with Dr. Jones? What evidence do you actually have that supports this self-critical thought? And what would you say to a close friend who was being this hard on themselves?",
           timestamp: new Date().toISOString(),
-          tags: ['anxiety', 'coping strategy'],
+          tags: ['perfectionism', 'self-criticism', 'evidence-chart'],
         };
-      } else if (lowercaseMessage.includes('sad') || lowercaseMessage.includes('depress')) {
+      }
+      // Social anxiety responses
+      else if (lowercaseMessage.includes('presentation') || lowercaseMessage.includes('meeting') || lowercaseMessage.includes('embarrassed') || lowercaseMessage.includes('judging')) {
         botResponse = {
           sender: 'bot',
-          content: "I'm hearing that you're feeling down right now. Looking at your therapy notes, behavioral activation has been helpful for you in the past. What's one small activity that might bring you a little joy today? Even something as simple as a 10-minute walk or calling a friend can help shift your mood.",
+          content: "Social situations can definitely trigger that perfectionist anxiety. Dr. Jones mentioned that the box breathing technique (4-4-4-4) has been helpful for you before presentations. Would you like to try that now? Remember, most people are focused on their own concerns, not judging your every word.",
           timestamp: new Date().toISOString(),
-          tags: ['depression', 'behavioral activation'],
+          tags: ['social-anxiety', 'box-breathing', 'presentations'],
         };
-      } else if (lowercaseMessage.includes('thank')) {
+      }
+      // Rumination and overthinking
+      else if (lowercaseMessage.includes('keep thinking') || lowercaseMessage.includes('over and over') || lowercaseMessage.includes('replaying')) {
         botResponse = {
           sender: 'bot',
-          content: "You're welcome. I'm here to support you between sessions with your therapist. Is there anything else you'd like to talk about or practice today?",
+          content: "It sounds like your mind is stuck on repeat with this situation. That's exhausting. Let's try the 5-4-3-2-1 grounding technique to interrupt this cycle: Can you name 5 things you can see right now? This can help bring you back to the present moment instead of replaying the past.",
           timestamp: new Date().toISOString(),
+          tags: ['rumination', 'grounding', '5-4-3-2-1'],
         };
-      } else {
+      }
+      // Work stress and outcome obsession
+      else if (lowercaseMessage.includes('work') || lowercaseMessage.includes('project') || lowercaseMessage.includes('deadline')) {
         botResponse = {
           sender: 'bot',
-          content: "Thank you for sharing that with me. Based on what you've told me and your therapy goals, would it be helpful to practice one of your coping strategies right now? Or would you prefer to journal about what you're experiencing?",
+          content: "Work stress can really activate that outcome-focused thinking you've been working on with Dr. Jones. Remember, you've successfully handled challenging projects before. What's one small step you can take today, focusing on the process rather than the perfect outcome?",
           timestamp: new Date().toISOString(),
+          tags: ['work-stress', 'outcome-obsession', 'process-focus'],
+        };
+      }
+      // Anxiety responses
+      else if (lowercaseMessage.includes('anxious') || lowercaseMessage.includes('anxiety') || lowercaseMessage.includes('worried') || lowercaseMessage.includes('nervous')) {
+        botResponse = {
+          sender: 'bot',
+          content: "I can sense you're feeling anxious right now. Your therapy work with Dr. Jones has shown that breathing exercises and grounding techniques work well for you. Would you like to try the box breathing (4-4-4-4) technique, or would the 5-4-3-2-1 grounding exercise feel more helpful right now?",
+          timestamp: new Date().toISOString(),
+          tags: ['anxiety', 'coping-strategies', 'breathing'],
+        };
+      }
+      // Positive progress acknowledgment
+      else if (lowercaseMessage.includes('better') || lowercaseMessage.includes('good') || lowercaseMessage.includes('accomplished')) {
+        botResponse = {
+          sender: 'bot',
+          content: "I'm so glad to hear you're feeling better! This is exactly the kind of small win that Dr. Jones encourages you to acknowledge. Your perfectionist mind might want to dismiss this, but recognizing positive moments is an important part of your healing. What do you think contributed to feeling better today?",
+          timestamp: new Date().toISOString(),
+          tags: ['progress', 'small-wins', 'self-compassion'],
+        };
+      }
+      // General supportive response with therapy context
+      else {
+        botResponse = {
+          sender: 'bot',
+          content: "Thank you for sharing that with me, Sarah. I'm here to support you using the strategies you've been developing with Dr. Jones. Based on your recent work together, would it be helpful to practice one of your coping techniques, or would you prefer to talk through what you're experiencing right now?",
+          timestamp: new Date().toISOString(),
+          tags: ['support', 'therapy-integration'],
         };
       }
       
