@@ -108,8 +108,8 @@ const initializeGemini = () => {
   
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    console.log('✅ Gemini model initialized successfully');
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    console.log('✅ Gemini 2.0 Flash model initialized successfully');
     return model;
   } catch (error) {
     console.error('❌ Failed to initialize Gemini:', error);
@@ -419,7 +419,7 @@ export const ReflectMeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       };
       
       if (geminiModel) {
-        console.log('🤖 Using Gemini AI for response generation...');
+        console.log('🤖 Using Gemini 2.0 Flash for response generation...');
         
         // Construct detailed structured prompt for Gemini
         const prompt = `
@@ -462,11 +462,11 @@ INSTRUCTIONS:
 Respond as their supportive therapy companion:`;
 
         try {
-          console.log('📤 Sending request to Gemini...');
+          console.log('📤 Sending request to Gemini 2.0 Flash...');
           const result = await geminiModel.generateContent(prompt);
           const generatedResponse = result.response;
           response = generatedResponse.text();
-          console.log('✅ Gemini response received:', response.substring(0, 100) + '...');
+          console.log('✅ Gemini 2.0 Flash response received:', response.substring(0, 100) + '...');
           
           // Suggest coping tools based on emotional context
           if (emotionalContext.emotions.includes('anxiety')) {
