@@ -22,7 +22,11 @@ const Login: React.FC = () => {
   // Redirect user if already logged in
   useEffect(() => {
     if (user) {
-      navigate(`/${user.role}`);
+      if (user.role === 'therapist') {
+        navigate('/therapist');
+      } else {
+        navigate('/app');
+      }
     }
   }, [user, navigate]);
 
@@ -46,8 +50,8 @@ const Login: React.FC = () => {
       setLoading(true);
       await login(email, password);
       // Navigation will happen automatically when user state updates
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
       console.error(err);
     } finally {
       setLoading(false);
@@ -69,21 +73,11 @@ const Login: React.FC = () => {
       await login(demoEmail, demoPassword);
       
       // Navigation will happen automatically when user state updates
-      setTimeout(() => {
-        if (!user) {
-          navigate(`/${role}`);
-        }
-      }, 2000);
       
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Demo login failed';
+    } catch (err: any) {
+      const errorMessage = err.message || 'Demo login failed';
       console.error('Demo login error:', errorMessage);
-      
-      if (errorMessage.includes('created but sign-in failed')) {
-        setError(`Demo ${role} account created! Please try the demo login button again.`);
-      } else {
-        setError(`Demo login failed: ${errorMessage}`);
-      }
+      setError(`Demo login failed: ${errorMessage}`);
       setDemoLoading(null);
     }
   };
@@ -216,7 +210,7 @@ const Login: React.FC = () => {
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">Demo Instructions</h4>
             <div className="text-sm text-blue-800 space-y-1">
-              <p>• <strong>Patient Demo:</strong> Experience the wellness tracking and chat features</p>
+              <p>• <strong>Patient Demo:</strong> Experience the ReflectMe chat interface and coping tools</p>
               <p>• <strong>Therapist Demo:</strong> Review client monitoring data and case histories</p>
               <p>• Demo accounts are created automatically on first login</p>
             </div>

@@ -166,99 +166,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         try {
           // First try to sign in
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-
-          if (signInError && signInError.message.includes('Invalid login credentials')) {
+          await signIn(email, password);
+          console.log('Demo account signed in successfully');
+          return;
+        } catch (signInError: any) {
+          console.log('Demo account sign-in failed, attempting to create:', signInError.message);
+          
+          if (signInError.message.includes('Invalid login credentials')) {
             console.log('Demo account not found, creating it...');
             
-            // Create the demo account
-            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-              email,
-              password,
-              options: {
-                data: {
-                  name,
-                  role,
-                },
-                emailRedirectTo: undefined, // Disable email confirmation for demo
-              },
-            });
-
-            // Handle the case where user already exists
-            if (signUpError && signUpError.message.includes('User already registered')) {
-              console.log('Demo user already exists, attempting sign-in...');
+            try {
+              // Create the demo account
+              await signUp(email, password, { name, role });
+              console.log('Demo account created successfully');
               
-              // Try to sign in again since the user exists
-              const { error: retrySignInError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-              });
-
-              if (retrySignInError) {
-                console.error('Retry sign-in failed:', retrySignInError);
-                throw retrySignInError;
+              // Wait a moment for the account to be fully created
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              // Try to sign in again
+              await signIn(email, password);
+              console.log('Demo account signed in after creation');
+              return;
+            } catch (signUpError: any) {
+              console.error('Demo account creation failed:', signUpError);
+              
+              if (signUpError.message.includes('User already registered')) {
+                console.log('Demo user already exists, trying sign-in again...');
+                // Wait a moment and try again
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                await signIn(email, password);
+                return;
               }
               
-              console.log('Successfully signed in existing demo user');
-              return;
-            } else if (signUpError) {
-              console.error('Demo account creation failed:', signUpError);
               throw signUpError;
             }
-
-            if (signUpData.user) {
-              console.log('Demo user created:', signUpData.user.id);
-              
-              // Create profile for the demo user
-              const { error: profileError } = await supabase
-                .from('profiles')
-                .upsert([
-                  {
-                    id: signUpData.user.id,
-                    name,
-                    role,
-                    avatar_url: `https://api.dicebear.com/7.x/personas/svg?seed=${email}`,
-                  },
-                ], { onConflict: 'id' });
-
-              if (profileError) {
-                console.error('Profile creation error:', profileError);
-              }
-
-              // If user was created but not automatically signed in, try to sign in
-              if (!signUpData.session) {
-                console.log('Attempting sign-in after demo account creation...');
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a moment
-                
-                const { error: secondSignInError } = await supabase.auth.signInWithPassword({
-                  email,
-                  password,
-                });
-
-                if (secondSignInError) {
-                  console.error('Second sign-in attempt failed:', secondSignInError);
-                  throw new Error('Demo account created but sign-in failed. Please try logging in again.');
-                }
-              }
-            }
-          } else if (signInError) {
+          } else {
             throw signInError;
           }
-        } catch (demoError) {
-          console.error('Demo account handling error:', demoError);
-          throw demoError;
         }
       } else {
         // Regular account login
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
+        await signIn(email, password);
       }
       
       console.log('Login successful');

@@ -13,6 +13,8 @@ const AppLayout: React.FC = () => {
   React.useEffect(() => {
     if (!user) {
       navigate('/login');
+    } else if (user.role === 'therapist') {
+      navigate('/therapist');
     }
   }, [user, navigate]);
 
@@ -25,7 +27,7 @@ const AppLayout: React.FC = () => {
     }
   };
 
-  if (!user) {
+  if (!user || user.role !== 'patient') {
     return null; // Will redirect via useEffect
   }
 
