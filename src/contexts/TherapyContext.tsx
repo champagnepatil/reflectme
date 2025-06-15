@@ -101,6 +101,21 @@ const generateMoodHistory = () => {
   return moodHistory;
 };
 
+// Generate random session dates
+const generateSessionDates = () => {
+  const today = new Date();
+  const lastSession = new Date();
+  lastSession.setDate(today.getDate() - Math.floor(Math.random() * 7) - 1); // 1-7 days ago
+  
+  const nextSession = new Date();
+  nextSession.setDate(today.getDate() + Math.floor(Math.random() * 7) + 1); // 1-7 days from now
+  
+  return {
+    last: format(lastSession, 'yyyy-MM-dd'),
+    next: format(nextSession, 'yyyy-MM-dd')
+  };
+};
+
 // Mock data - Expanded client list for demo therapist
 const mockClients: Client[] = [
   {
@@ -197,8 +212,10 @@ const mockClients: Client[] = [
     age: 24,
     gender: 'female',
     therapistEmail: 'therapist@mindtwin.demo',
-    lastSessionDate: '2024-01-14',
-    nextSessionDate: '2024-01-21',
+    ...(() => {
+      const dates = generateSessionDates();
+      return { lastSessionDate: dates.last, nextSessionDate: dates.next };
+    })(),
     mood: 2,
     moodHistory: generateMoodHistory(),
     medicalHistory: 'No significant medical history. Some sleep disturbances related to anxiety.',
@@ -225,8 +242,10 @@ const mockClients: Client[] = [
     age: 42,
     gender: 'male',
     therapistEmail: 'therapist@mindtwin.demo',
-    lastSessionDate: '2024-01-13',
-    nextSessionDate: '2024-01-20',
+    ...(() => {
+      const dates = generateSessionDates();
+      return { lastSessionDate: dates.last, nextSessionDate: dates.next };
+    })(),
     mood: 3,
     moodHistory: generateMoodHistory(),
     medicalHistory: 'Hypertension, managed with medication. Some sleep apnea.',
@@ -253,8 +272,10 @@ const mockClients: Client[] = [
     age: 31,
     gender: 'female',
     therapistEmail: 'therapist@mindtwin.demo',
-    lastSessionDate: '2024-01-16',
-    nextSessionDate: '2024-01-23',
+    ...(() => {
+      const dates = generateSessionDates();
+      return { lastSessionDate: dates.last, nextSessionDate: dates.next };
+    })(),
     mood: 4,
     moodHistory: generateMoodHistory(),
     medicalHistory: 'Postpartum depression history. Currently stable. Regular check-ups with OB/GYN.',
@@ -281,8 +302,10 @@ const mockClients: Client[] = [
     age: 29,
     gender: 'male',
     therapistEmail: 'therapist@mindtwin.demo',
-    lastSessionDate: '2024-01-11',
-    nextSessionDate: '2024-01-18',
+    ...(() => {
+      const dates = generateSessionDates();
+      return { lastSessionDate: dates.last, nextSessionDate: dates.next };
+    })(),
     mood: 3,
     moodHistory: generateMoodHistory(),
     medicalHistory: 'ADHD diagnosis. Currently on medication. Some anxiety related to work performance.',
@@ -309,8 +332,10 @@ const mockClients: Client[] = [
     age: 38,
     gender: 'female',
     therapistEmail: 'therapist@mindtwin.demo',
-    lastSessionDate: '2024-01-15',
-    nextSessionDate: '2024-01-22',
+    ...(() => {
+      const dates = generateSessionDates();
+      return { lastSessionDate: dates.last, nextSessionDate: dates.next };
+    })(),
     mood: 2,
     moodHistory: generateMoodHistory(),
     medicalHistory: 'Chronic pain condition (fibromyalgia). Some medication for pain management.',
@@ -337,8 +362,10 @@ const mockClients: Client[] = [
     age: 26,
     gender: 'other',
     therapistEmail: 'therapist@mindtwin.demo',
-    lastSessionDate: '2024-01-14',
-    nextSessionDate: '2024-01-21',
+    ...(() => {
+      const dates = generateSessionDates();
+      return { lastSessionDate: dates.last, nextSessionDate: dates.next };
+    })(),
     mood: 3,
     moodHistory: generateMoodHistory(),
     medicalHistory: 'Transgender, currently on hormone therapy. Regular endocrinologist visits.',
@@ -365,8 +392,10 @@ const mockClients: Client[] = [
     age: 45,
     gender: 'male',
     therapistEmail: 'therapist@mindtwin.demo',
-    lastSessionDate: '2024-01-12',
-    nextSessionDate: '2024-01-19',
+    ...(() => {
+      const dates = generateSessionDates();
+      return { lastSessionDate: dates.last, nextSessionDate: dates.next };
+    })(),
     mood: 4,
     moodHistory: generateMoodHistory(),
     medicalHistory: 'Recovering from alcohol use disorder. 18 months sober. Regular AA attendance.',
@@ -393,8 +422,10 @@ const mockClients: Client[] = [
     age: 33,
     gender: 'female',
     therapistEmail: 'therapist@mindtwin.demo',
-    lastSessionDate: '2024-01-16',
-    nextSessionDate: '2024-01-23',
+    ...(() => {
+      const dates = generateSessionDates();
+      return { lastSessionDate: dates.last, nextSessionDate: dates.next };
+    })(),
     mood: 3,
     moodHistory: generateMoodHistory(),
     medicalHistory: 'Eating disorder history (bulimia). Currently in recovery. Regular nutritionist visits.',
@@ -421,8 +452,10 @@ const mockClients: Client[] = [
     age: 52,
     gender: 'male',
     therapistEmail: 'therapist@mindtwin.demo',
-    lastSessionDate: '2024-01-13',
-    nextSessionDate: '2024-01-20',
+    ...(() => {
+      const dates = generateSessionDates();
+      return { lastSessionDate: dates.last, nextSessionDate: dates.next };
+    })(),
     mood: 2,
     moodHistory: generateMoodHistory(),
     medicalHistory: 'Recent heart attack (6 months ago). Cardiac rehabilitation completed.',
@@ -449,8 +482,10 @@ const mockClients: Client[] = [
     age: 27,
     gender: 'female',
     therapistEmail: 'therapist@mindtwin.demo',
-    lastSessionDate: '2024-01-15',
-    nextSessionDate: '2024-01-22',
+    ...(() => {
+      const dates = generateSessionDates();
+      return { lastSessionDate: dates.last, nextSessionDate: dates.next };
+    })(),
     mood: 4,
     moodHistory: generateMoodHistory(),
     medicalHistory: 'Bipolar II disorder. Stable on medication. Regular psychiatrist visits.',
@@ -513,13 +548,27 @@ export const TherapyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
+    console.log('🔍 Filtering clients for user:', { 
+      email: user.email, 
+      role: user.role,
+      totalClients: allClients.length 
+    });
+
     if (user.role === 'therapist') {
-      // Therapist sees only their assigned clients
-      const therapistClients = allClients.filter(client => client.therapistEmail === user.email);
-      setClients(therapistClients);
+      // For demo therapist, show all clients
+      if (user.email === 'therapist@mindtwin.demo') {
+        console.log('✅ Demo therapist detected - showing all clients');
+        setClients(allClients);
+      } else {
+        // For other therapists, filter by their email
+        const therapistClients = allClients.filter(client => client.therapistEmail === user.email);
+        console.log('📋 Filtered clients for therapist:', therapistClients.length);
+        setClients(therapistClients);
+      }
     } else if (user.role === 'patient') {
       // Patient sees only their own data (as a client record)
       const patientClient = allClients.find(client => client.email === user.email);
+      console.log('👤 Patient client found:', !!patientClient);
       setClients(patientClient ? [patientClient] : []);
     }
   }, [user, allClients]);
