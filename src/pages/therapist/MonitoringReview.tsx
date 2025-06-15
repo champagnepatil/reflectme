@@ -2,8 +2,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TherapistMonitoringReview } from '../../components/monitoring/TherapistMonitoringReview';
 import { BarChart3, Users, TrendingUp, Calendar } from 'lucide-react';
+import { useTherapy } from '../../contexts/TherapyContext';
 
 const MonitoringReview: React.FC = () => {
+  const { clients } = useTherapy();
+
   return (
     <div className="space-y-6">
       {/* Header Stats */}
@@ -16,7 +19,7 @@ const MonitoringReview: React.FC = () => {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-neutral-500 mb-1">Active Clients</p>
-              <h3 className="text-2xl font-bold text-neutral-900">12</h3>
+              <h3 className="text-2xl font-bold text-neutral-900">{clients.length}</h3>
             </div>
             <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
               <Users className="w-5 h-5 text-primary-600" />
