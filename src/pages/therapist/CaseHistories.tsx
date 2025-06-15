@@ -1,57 +1,58 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useCaseHistory } from '../../hooks/useCaseHistory';
+import { useTherapy } from '../../contexts/TherapyContext';
 import { FileText, Plus, Search, Calendar, User, AlertTriangle, Eye, Edit, Trash2 } from 'lucide-react';
 
 const CaseHistories: React.FC = () => {
-  const { caseHistories, loading, error, deleteCaseHistory } = useCaseHistory();
+  const { clients } = useTherapy();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedHistory, setSelectedHistory] = useState<string | null>(null);
+
+  console.log('📋 Case Histories - Clients loaded:', {
+    count: clients.length,
+    clientNames: clients.map(c => c.name)
+  });
+
+  // Convert clients to case history format for display
+  const caseHistories = clients.map(client => ({
+    id: client.id,
+    patient_name: client.name,
+    age: client.age.toString(),
+    gender: client.gender,
+    primary_concerns: client.notes.length > 0 ? client.notes[0].content.substring(0, 200) + '...' : 'No concerns documented yet',
+    management_plan: `Ongoing therapy for ${client.triggers.join(', ').toLowerCase() || 'general wellness'}. Regular sessions scheduled.`,
+    created_at: client.lastSessionDate,
+    updated_at: client.lastSessionDate,
+    mental_status_examination: client.safetyNotes ? { suicidal_ideation: false } : undefined,
+    therapist_notes: client.notes,
+    triggers: client.triggers
+  }));
 
   const filteredHistories = caseHistories.filter(history =>
     history.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     history.primary_concerns?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this case history? This action cannot be undone.')) {
-      try {
-        await deleteCaseHistory(id);
-      } catch (err) {
-        alert('Failed to delete case history');
-      }
-    }
-  };
-
-  const getRiskLevel = (history: any) => {
-    if (history.mental_status_examination?.suicidal_ideation) {
+  const getRiskLevel = (client: any) => {
+    // Check for high-risk indicators
+    if (client.triggers.some((trigger: string) => 
+      trigger.toLowerCase().includes('self-harm') || 
+      trigger.toLowerCase().includes('suicide')
+    )) {
       return { level: 'high', color: 'error', label: 'High Risk' };
     }
-    if (history.primary_concerns?.toLowerCase().includes('depression') || 
-        history.primary_concerns?.toLowerCase().includes('anxiety')) {
+    
+    // Check for medium risk (depression, severe anxiety)
+    if (client.triggers.some((trigger: string) => 
+      trigger.toLowerCase().includes('depression') || 
+      trigger.toLowerCase().includes('panic') ||
+      client.mood <= 2
+    )) {
       return { level: 'medium', color: 'warning', label: 'Medium Risk' };
     }
+    
     return { level: 'low', color: 'success', label: 'Low Risk' };
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="loader"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="card p-6 text-center">
-        <AlertTriangle className="w-12 h-12 text-error-500 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-error-700 mb-2">Error Loading Case Histories</h2>
-        <p className="text-error-600">{error}</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -79,29 +80,48 @@ const CaseHistories: React.FC = () => {
         </div>
       </div>
 
+      {/* Debug Info */}
+      {clients.length === 0 && (
+        <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
+          <div className="flex items-center text-warning-700">
+            <AlertTriangle className="w-5 h-5 mr-2" />
+            <span className="font-medium">No clients loaded</span>
+          </div>
+          <p className="text-warning-600 text-sm mt-1">
+            If you're using the demo account, please refresh the page. The case histories are generated from your client list.
+          </p>
+        </div>
+      )}
+
       {/* Case Histories List */}
-      {filteredHistories.length === 0 ? (
+      {filteredHistories.length === 0 && clients.length > 0 ? (
         <div className="card p-12 text-center">
           <FileText className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-neutral-800 mb-2">
-            {searchTerm ? 'No matching case histories found' : 'No case histories yet'}
+            No matching case histories found
           </h2>
           <p className="text-neutral-600 mb-6">
-            {searchTerm 
-              ? 'Try adjusting your search terms' 
-              : 'Create your first case history to start documenting patient information'}
+            Try adjusting your search terms
           </p>
-          {!searchTerm && (
-            <Link to="/therapist/case-histories/new" className="btn btn-primary mx-auto">
-              <Plus className="w-4 h-4 mr-2" />
-              Create First Case History
-            </Link>
-          )}
+        </div>
+      ) : filteredHistories.length === 0 && clients.length === 0 ? (
+        <div className="card p-12 text-center">
+          <FileText className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-neutral-800 mb-2">No case histories yet</h2>
+          <p className="text-neutral-600 mb-6">
+            Your client case histories will appear here once you have active patients
+          </p>
+          <Link to="/therapist/case-histories/new" className="btn btn-primary mx-auto">
+            <Plus className="w-4 h-4 mr-2" />
+            Create First Case History
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredHistories.map((history, index) => {
-            const risk = getRiskLevel(history);
+            const client = clients.find(c => c.id === history.id);
+            const risk = getRiskLevel(client);
+            
             return (
               <motion.div
                 key={history.id}
@@ -140,59 +160,71 @@ const CaseHistories: React.FC = () => {
                   </div>
 
                   <div className="mb-4">
-                    <h4 className="font-medium text-neutral-900 mb-2">Management Plan</h4>
-                    <p className="text-neutral-700 text-sm line-clamp-2">
-                      {history.management_plan || 'No management plan documented'}
-                    </p>
+                    <h4 className="font-medium text-neutral-900 mb-2">Current Triggers</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {client?.triggers.slice(0, 3).map((trigger, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-neutral-100 text-neutral-700 rounded-full text-xs">
+                          {trigger}
+                        </span>
+                      ))}
+                      {client && client.triggers.length > 3 && (
+                        <span className="px-2 py-1 bg-neutral-100 text-neutral-700 rounded-full text-xs">
+                          +{client.triggers.length - 3} more
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between text-sm text-neutral-500 mb-4">
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-1" />
                       <span>
-                        Created: {new Date(history.created_at).toLocaleDateString()}
+                        Last session: {new Date(history.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    {history.updated_at !== history.created_at && (
-                      <span>
-                        Updated: {new Date(history.updated_at).toLocaleDateString()}
-                      </span>
-                    )}
+                    <span>
+                      {client?.notes.length || 0} session notes
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-neutral-200">
                     <div className="flex space-x-2">
                       <Link
-                        to={`/therapist/case-histories/${history.id}`}
+                        to={`/therapist/client/${history.id}`}
                         className="btn btn-ghost text-sm"
                       >
                         <Eye className="w-4 h-4 mr-1" />
-                        View
+                        View Details
                       </Link>
                       <Link
-                        to={`/therapist/case-histories/${history.id}/edit`}
+                        to={`/therapist/notes/${history.id}`}
                         className="btn btn-ghost text-sm"
                       >
                         <Edit className="w-4 h-4 mr-1" />
-                        Edit
+                        Add Note
                       </Link>
                     </div>
-                    <button
-                      onClick={() => handleDelete(history.id)}
-                      className="btn btn-ghost text-sm text-error-600 hover:bg-error-50"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Delete
-                    </button>
+                    <span className="text-xs text-neutral-500">
+                      Active Patient
+                    </span>
                   </div>
                 </div>
 
                 {/* Risk Indicators */}
-                {history.mental_status_examination?.suicidal_ideation && (
+                {risk.level === 'high' && (
                   <div className="bg-error-50 border-t border-error-200 p-3">
                     <div className="flex items-center text-error-700">
                       <AlertTriangle className="w-4 h-4 mr-2" />
-                      <span className="text-sm font-medium">Suicidal ideation documented</span>
+                      <span className="text-sm font-medium">Requires close monitoring</span>
+                    </div>
+                  </div>
+                )}
+                
+                {risk.level === 'medium' && client?.mood <= 2 && (
+                  <div className="bg-warning-50 border-t border-warning-200 p-3">
+                    <div className="flex items-center text-warning-700">
+                      <AlertTriangle className="w-4 h-4 mr-2" />
+                      <span className="text-sm font-medium">Low mood reported - monitor closely</span>
                     </div>
                   </div>
                 )}

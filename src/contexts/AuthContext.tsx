@@ -68,9 +68,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('🔐 Initial session check:', { 
+        hasSession: !!session, 
+        userEmail: session?.user?.email 
+      });
+      
       setSession(session);
       if (session?.user) {
         const mappedUser = await mapUserWithProfile(session.user);
+        console.log('👤 Mapped user:', { 
+          name: mappedUser?.name, 
+          role: mappedUser?.role, 
+          email: mappedUser?.email 
+        });
         setUser(mappedUser);
       }
       setLoading(false);
@@ -80,10 +90,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
+      console.log('🔄 Auth state change:', { 
+        event, 
+        userEmail: session?.user?.email,
+        hasSession: !!session 
+      });
+      
       setSession(session);
       if (session?.user) {
         const mappedUser = await mapUserWithProfile(session.user);
+        console.log('👤 User mapped after auth change:', { 
+          name: mappedUser?.name, 
+          role: mappedUser?.role 
+        });
         setUser(mappedUser);
       } else {
         setUser(null);
@@ -95,6 +114,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, userData: any) => {
+    console.log('📝 Signing up user:', { email, role: userData.role });
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -129,6 +150,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log('🔑 Signing in user:', email);
+    
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -138,6 +161,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    console.log('🚪 Signing out user');
+    
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setUser(null);
@@ -154,12 +179,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('Attempting login for:', email);
+      console.log('🔐 Attempting login for:', email);
       
       // Check if this is a demo account
       const isDemoAccount = email.includes('@mindtwin.demo');
       
       if (isDemoAccount) {
+        console.log('🎭 Demo account detected:', email);
         // For demo accounts, try to create them if they don't exist
         const role = email.includes('patient@') ? 'patient' : 'therapist';
         const name = role === 'patient' ? 'Demo Patient' : 'Demo Therapist';
@@ -167,31 +193,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           // First try to sign in
           await signIn(email, password);
-          console.log('Demo account signed in successfully');
+          console.log('✅ Demo account signed in successfully');
           return;
         } catch (signInError: any) {
-          console.log('Demo account sign-in failed, attempting to create:', signInError.message);
+          console.log('⚠️ Demo account sign-in failed, attempting to create:', signInError.message);
           
           if (signInError.message.includes('Invalid login credentials')) {
-            console.log('Demo account not found, creating it...');
+            console.log('🔧 Demo account not found, creating it...');
             
             try {
               // Create the demo account
               await signUp(email, password, { name, role });
-              console.log('Demo account created successfully');
+              console.log('✅ Demo account created successfully');
               
               // Wait a moment for the account to be fully created
               await new Promise(resolve => setTimeout(resolve, 1000));
               
               // Try to sign in again
               await signIn(email, password);
-              console.log('Demo account signed in after creation');
+              console.log('✅ Demo account signed in after creation');
               return;
             } catch (signUpError: any) {
-              console.error('Demo account creation failed:', signUpError);
+              console.error('❌ Demo account creation failed:', signUpError);
               
               if (signUpError.message.includes('User already registered')) {
-                console.log('Demo user already exists, trying sign-in again...');
+                console.log('🔄 Demo user already exists, trying sign-in again...');
                 // Wait a moment and try again
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 await signIn(email, password);
@@ -209,9 +235,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await signIn(email, password);
       }
       
-      console.log('Login successful');
+      console.log('✅ Login successful');
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
       throw error;
     }
   };
