@@ -55,6 +55,21 @@ const Home: React.FC = () => {
                 </button>
                 
                 <button 
+                  onClick={() => {
+                    // Scroll to waitlist section
+                    const waitlistSection = document.querySelector('[data-waitlist-section]');
+                    if (waitlistSection) {
+                      waitlistSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="group px-10 py-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-2xl font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all duration-300 shadow-large flex items-center justify-center"
+                >
+                  <Bell className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                  Join the Waitlist
+                  <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                </button>
+                
+                <button 
                   onClick={() => navigate('/therapist')}
                   className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-primary-600 transition-all duration-300 flex items-center justify-center"
                 >
@@ -222,7 +237,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Waitlist Section */}
-      <section className="py-24 px-6 bg-neutral-50">
+      <section className="py-24 px-6 bg-neutral-50" data-waitlist-section>
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
