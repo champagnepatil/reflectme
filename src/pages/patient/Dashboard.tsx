@@ -15,7 +15,9 @@ import {
   Zap,
   Star,
   Smartphone,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Brain,
+  Sparkles
 } from 'lucide-react';
 
 interface QuickStat {
@@ -136,97 +138,202 @@ const PatientDashboard: React.FC = () => {
     }
   };
 
-  const quickActions = [
-    {
-      title: 'Start Chat',
-      subtitle: 'Talk with AI companion',
-      href: '/client/chat',
-      icon: MessageSquare,
-      color: 'bg-blue-500',
-      description: 'Get instant support'
-    },
-    {
-      title: 'Today\'s Plan',
-      subtitle: 'View exercises & goals',
-      href: '/client/plan',
-      icon: Target,
-      color: 'bg-purple-500',
-      description: 'Stay on track'
-    },
-    {
-      title: 'Progress',
-      subtitle: 'Check your insights',
-      href: '/client/insights',
-      icon: TrendingUp,
-      color: 'bg-green-500',
-      description: 'See improvements'
+  const getMoodEmoji = (mood: number) => {
+    switch (mood) {
+      case 1: return '😢';
+      case 2: return '😕';
+      case 3: return '😐';
+      case 4: return '🙂';
+      case 5: return '😊';
+      default: return '😐';
     }
-  ];
+  };
+
+  const getMoodLabel = (mood: number) => {
+    switch (mood) {
+      case 1: return 'Need extra support';
+      case 2: return 'Having a tough time';
+      case 3: return 'Feeling okay';
+      case 4: return 'Doing well';
+      case 5: return 'Feeling great';
+      default: return 'How are you?';
+    }
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Personal Greeting */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center py-8"
+        className="text-center py-6"
       >
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           {greeting}, {user?.name?.split(' ')[0] || 'there'}!
         </h1>
         <p className="text-gray-600 text-lg">
-          How are you feeling today?
+          Ready to check in with yourself today?
         </p>
       </motion.div>
 
-      {/* Quick Mood Check */}
+      {/* PRIMARY ACTION: Chat with AI Companion */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200"
+        className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl p-8 text-white shadow-xl"
       >
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-          Quick Mood Check
-        </h2>
-        {showMoodSuccess ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-4"
-          >
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <CheckCircle className="w-6 h-6 text-green-600" />
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">AI Companion</h2>
+                <p className="text-blue-100">Your therapeutic support is here 24/7</p>
+              </div>
             </div>
-            <p className="text-green-600 font-medium">Mood logged successfully!</p>
-            <p className="text-sm text-gray-500">Thank you for checking in</p>
-          </motion.div>
-        ) : (
-          <>
-            <div className="flex justify-center space-x-4">
-              {[1, 2, 3, 4, 5].map((mood) => (
-                <button
-                  key={mood}
-                  onClick={() => handleMoodSelection(mood)}
-                  className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center text-xl ${
-                    selectedMood === mood
-                      ? 'bg-blue-500 text-white scale-110'
-                      : 'bg-gray-100 hover:bg-blue-100'
-                  }`}
-                >
-                  {mood === 1 && '😢'}
-                  {mood === 2 && '😕'}
-                  {mood === 3 && '😐'}
-                  {mood === 4 && '🙂'}
-                  {mood === 5 && '😊'}
-                </button>
-              ))}
-            </div>
-            <p className="text-center text-sm text-gray-500 mt-3">
-              Tap to log your current mood
+            <p className="text-white/90 mb-6 text-lg">
+              Share what's on your mind, practice coping strategies, or just check in. 
+              Your AI companion understands your therapy goals and is ready to support you.
             </p>
-          </>
-        )}
+            <Link 
+              to="/client/chat"
+              className="inline-flex items-center px-8 py-4 bg-white text-blue-600 rounded-2xl font-semibold hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl group"
+            >
+              <Heart className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" />
+              Start Conversation
+              <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+          <div className="hidden lg:block">
+            <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
+              <Brain className="w-16 h-16 text-white/70" />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* PROMINENT MOOD TRACKER */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200"
+      >
+        <div className="text-center">
+          <div className="flex items-center justify-center space-x-2 mb-6">
+            <Sparkles className="w-6 h-6 text-purple-500" />
+            <h2 className="text-2xl font-bold text-gray-900">How are you feeling right now?</h2>
+          </div>
+          
+          {showMoodSuccess ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="py-8"
+            >
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-10 h-10 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-green-600 mb-2">Thank you for checking in!</h3>
+              <p className="text-gray-600">Your mood has been logged. Every check-in helps track your progress.</p>
+              <div className="mt-6 p-4 bg-green-50 rounded-2xl">
+                <p className="text-green-700 font-medium">
+                  {getMoodLabel(selectedMood || 0)}
+                </p>
+              </div>
+            </motion.div>
+          ) : (
+            <>
+              <div className="grid grid-cols-5 gap-4 max-w-lg mx-auto mb-6">
+                {[1, 2, 3, 4, 5].map((mood) => (
+                  <motion.button
+                    key={mood}
+                    onClick={() => handleMoodSelection(mood)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`aspect-square rounded-3xl transition-all duration-200 flex flex-col items-center justify-center text-center p-4 ${
+                      selectedMood === mood
+                        ? 'bg-blue-500 text-white scale-110 shadow-lg'
+                        : 'bg-gray-100 hover:bg-blue-100 hover:scale-105'
+                    }`}
+                  >
+                    <span className="text-3xl mb-2">{getMoodEmoji(mood)}</span>
+                    <span className="text-xs font-medium">
+                      {mood === 1 && 'Low'}
+                      {mood === 2 && 'Down'}
+                      {mood === 3 && 'Okay'}
+                      {mood === 4 && 'Good'}
+                      {mood === 5 && 'Great'}
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+              <p className="text-gray-600 mb-4">
+                Tap any mood to log how you're feeling. This helps track patterns over time.
+              </p>
+              <div className="text-sm text-gray-500">
+                💡 Tip: Regular mood tracking helps you and your therapist understand what works best for you
+              </div>
+            </>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Quick Actions Grid */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      >
+        {/* Today's Plan */}
+        <Link 
+          to="/client/plan"
+          className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-200"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <Target className="w-5 h-5 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Today's Plan</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                View your personalized exercises, goals, and therapy homework for today.
+              </p>
+              <div className="text-purple-600 font-medium text-sm group-hover:text-purple-700">
+                View plan →
+              </div>
+            </div>
+          </div>
+        </Link>
+
+        {/* Progress Insights */}
+        <Link 
+          to="/client/insights"
+          className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-200"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Progress Insights</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                See your wellness trends, achievements, and areas of growth over time.
+              </p>
+              <div className="text-green-600 font-medium text-sm group-hover:text-green-700">
+                View insights →
+              </div>
+            </div>
+          </div>
+        </Link>
       </motion.div>
 
       {/* Quick Stats */}

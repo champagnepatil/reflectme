@@ -145,11 +145,11 @@ const Chat: React.FC = () => {
 
       {/* Input Area */}
       <form onSubmit={handleSendMessage} className="p-4 border-t border-neutral-200">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-end space-x-2">
           <button
             type="button"
             onClick={isRecording ? stopRecording : startRecording}
-            className={`p-2 rounded-full transition-colors ${
+            className={`p-2 rounded-full transition-colors flex-shrink-0 ${
               isRecording 
                 ? 'bg-red-500 hover:bg-red-600 text-white' 
                 : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600'
@@ -162,18 +162,35 @@ const Chat: React.FC = () => {
             )}
           </button>
           
-          <input
-            type="text"
+          <textarea
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-grow p-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              // Auto-resize textarea
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = Math.min(target.scrollHeight, 128) + 'px';
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage(e);
+              }
+            }}
+            placeholder="Type your message... (Enter to send, Shift+Enter for new line)"
+            rows={1}
+            className="flex-grow p-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none min-h-[44px] max-h-32 overflow-y-auto leading-tight"
+            style={{
+              height: 'auto',
+              minHeight: '44px',
+              maxHeight: '128px'
+            }}
           />
           
           <button
             type="submit"
             disabled={!inputValue.trim()}
-            className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           >
             <Send className="w-5 h-5" />
           </button>

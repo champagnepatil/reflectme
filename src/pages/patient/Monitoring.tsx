@@ -146,9 +146,27 @@ const Monitoring: React.FC = () => {
          <div className="space-y-6">
            {/* Available Assessments */}
            <div>
+             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+               <div className="flex items-start gap-3">
+                 <div className="bg-blue-100 rounded-full p-2">
+                   <FileText className="w-5 h-5 text-blue-600" />
+                 </div>
+                 <div>
+                   <h3 className="font-semibold text-blue-900 mb-1">Assessment Guidance</h3>
+                   <p className="text-blue-800 text-sm mb-2">
+                     These assessments are typically recommended by your therapist based on your treatment plan and progress.
+                   </p>
+                   <p className="text-blue-700 text-sm">
+                     💡 <strong>Best practice:</strong> Complete assessments when suggested by your therapist or during scheduled check-ins for the most accurate results.
+                   </p>
+                 </div>
+               </div>
+             </div>
+             
              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                <ClipboardList className="w-6 h-6 text-blue-600" />
-               Available Assessment Scales
+               Assessment Scales
+               <span className="text-sm font-normal text-gray-600 ml-2">(Take when recommended by your therapist)</span>
              </h2>
              <div className="grid gap-4 md:grid-cols-2">
                {assessmentScales.map((scale) => (
