@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, CheckCircle, Clock, Sparkles, Bell, Gift, Eye } from 'lucide-react';
 import NotificationService from '../../services/NotificationService';
@@ -31,12 +31,21 @@ const WaitlistCTA: React.FC<WaitlistCTAProps> = ({ className = '' }) => {
     loadSubscriberCount();
   }, []);
 
-  const validateEmail = (email: string) => {
+  const validateEmail = useCallback((email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const loadSubscriberCount = useCallback(async () => {
+    try {
+      const count = await SupabaseWaitlistService.getSubscriberCount();
+      setSubscriberCount(count);
+    } catch (error) {
+      console.error('Error loading subscriber count:', error);
+    }
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -127,28 +136,23 @@ const WaitlistCTA: React.FC<WaitlistCTAProps> = ({ className = '' }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [email, validateEmail, loadSubscriberCount]);
 
-  const loadSubscriberCount = async () => {
-    try {
-      const count = await SupabaseWaitlistService.getSubscriberCount();
-      setSubscriberCount(count);
-    } catch (error) {
-      console.error('Error loading subscriber count:', error);
-    }
-  };
-
-  const requestNotificationPermission = async () => {
+  const requestNotificationPermission = useCallback(async () => {
     await NotificationService.requestPermission();
-  };
+  }, []);
 
-  const WaitlistForm = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className={`relative overflow-hidden bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-600 rounded-3xl p-8 md:p-12 shadow-2xl ${className}`}
-    >
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
+    }
+  }, [error]);
+
+  // Memoize the form content to prevent unnecessary re-renders
+  const formContent = useMemo(() => (
+    <>
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24 blur-3xl"></div>
@@ -193,156 +197,129 @@ const WaitlistCTA: React.FC<WaitlistCTAProps> = ({ className = '' }) => {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               placeholder="Enter your email address"
               className="w-full pl-12 pr-4 py-4 bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300"
               disabled={isLoading}
+              autoComplete="email"
             />
           </div>
-          
+
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-red-200 text-sm bg-red-500/20 rounded-xl p-3 border border-red-400/30"
+              className="text-red-200 text-sm bg-red-500/20 backdrop-blur-sm border border-red-400/30 rounded-xl p-3"
             >
               {error}
             </motion.div>
           )}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            onClick={requestNotificationPermission}
-            className="w-full bg-white text-primary-600 py-4 px-8 rounded-2xl font-semibold hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600 mr-3"></div>
-                Joining Waitlist...
-              </>
-            ) : (
-              <>
-                <Mail className="w-5 h-5 mr-3" />
-                Join {subscriberCount.toLocaleString()}+ People on Waitlist
-              </>
-            )}
-          </button>
+          <div className="space-y-4">
+            <button
+              type="submit"
+              disabled={isLoading || !email.trim()}
+              className="w-full py-4 px-6 bg-white text-primary-600 font-semibold rounded-2xl hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Joining Waitlist...
+                </div>
+              ) : (
+                'Join the Waitlist'
+              )}
+            </button>
 
-          <p className="text-white/70 text-xs text-center leading-relaxed">
-            By joining, you agree to receive updates about ReflectMe. Unsubscribe anytime.
-            <br />We respect your privacy and never share your information.
-          </p>
+            <div className="flex items-center justify-between text-white/70 text-sm">
+              <div className="flex items-center">
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {subscriberCount.toLocaleString()} already joined
+              </div>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEmailPreview(true)}
+                  className="flex items-center hover:text-white transition-colors"
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={requestNotificationPermission}
+                  className="flex items-center hover:text-white transition-colors"
+                >
+                  <Bell className="w-4 h-4 mr-1" />
+                  Notify
+                </button>
+              </div>
+            </div>
+          </div>
         </form>
       </div>
-    </motion.div>
-  );
+    </>
+  ), [email, error, isLoading, subscriberCount, handleSubmit, handleEmailChange, requestNotificationPermission]);
 
-  const SuccessState = () => (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className={`relative overflow-hidden bg-gradient-to-br from-green-500 via-green-600 to-teal-600 rounded-3xl p-8 md:p-12 shadow-2xl ${className}`}
-    >
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24 blur-3xl"></div>
-      
-      <div className="relative z-10 text-center">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.3, type: "spring", stiffness: 150 }}
-          className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6 border border-white/30"
-        >
-          <CheckCircle className="w-10 h-10 text-white" />
-        </motion.div>
-        
-        <h3 className="text-3xl font-bold text-white mb-4">You're on the List! 🎉</h3>
-        <p className="text-xl text-white/90 mb-6 leading-relaxed">
-          Welcome to the ReflectMe family! A confirmation email will be sent to <span className="font-semibold">{email}</span>
-        </p>
-        
-        <div className="bg-yellow-500/20 backdrop-blur-sm rounded-2xl p-4 border border-yellow-400/30 mb-6">
-          <div className="flex items-start">
-            <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-              <span className="text-yellow-900 text-sm font-bold">!</span>
-            </div>
-            <div className="text-yellow-100">
-              <p className="font-semibold text-sm mb-1">Demo Mode Notice</p>
-              <p className="text-xs leading-relaxed">
-                This is a demo environment. Real email confirmations are not sent, but you'll receive browser notifications and can view the notification history below.
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border border-white/30 mb-6">
-          <h4 className="text-lg font-semibold text-white mb-4">What happens next?</h4>
-          <div className="space-y-3 text-white/90">
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
-              <span>You'll receive priority access when we launch</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
-              <span>Exclusive 50% discount on your first subscription</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
-              <span>Beta access to new features before anyone else</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
-              <span>Monthly updates on our development progress</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-center">
-          <p className="text-white/80 text-sm mb-4">
-            Position in line: <span className="font-bold text-white">#{userPosition ? userPosition.toLocaleString() : subscriberCount.toLocaleString()}</span>
-          </p>
-          <div className="flex items-center justify-center space-x-4 text-white/70 text-xs mb-6">
-            <span>📧 Confirmation sent</span>
-            <span>🔔 Notifications enabled</span>
-            <span>🎁 Perks activated</span>
-          </div>
+  if (isSubmitted) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className={`relative overflow-hidden bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 rounded-3xl p-8 md:p-12 shadow-2xl ${className}`}
+      >
+        {/* Success state content */}
+        <div className="text-center text-white">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6"
+          >
+            <CheckCircle className="w-10 h-10" />
+          </motion.div>
           
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => setShowEmailPreview(true)}
-              className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-6 py-3 rounded-xl font-medium hover:bg-white/30 transition-all duration-300 text-sm flex items-center justify-center"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              📧 View Email Preview
-            </button>
-            
-            <button
-              onClick={() => NotificationService.simulateEmailReply(email, "Looking forward to the launch!")}
-              className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-6 py-3 rounded-xl font-medium hover:bg-white/30 transition-all duration-300 text-sm"
-            >
-              💬 Send Quick Reply (Demo)
-            </button>
+          <h3 className="text-3xl font-bold mb-4">Welcome to the Waitlist! 🎉</h3>
+          <p className="text-xl opacity-90 mb-6">
+            Thank you for joining! We've sent a confirmation email to <strong>{email}</strong>
+          </p>
+          
+          {userPosition && (
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mb-6">
+              <p className="text-lg mb-2">Your position in queue:</p>
+              <p className="text-4xl font-bold">#{userPosition}</p>
+            </div>
+          )}
+          
+          <div className="space-y-3 text-sm opacity-80">
+            <p>✅ Confirmation email sent</p>
+            <p>🎁 50% launch discount reserved</p>
+            <p>⚡ Priority access guaranteed</p>
           </div>
         </div>
-      </div>
-    </motion.div>
-  );
+      </motion.div>
+    );
+  }
 
   return (
     <>
-      <AnimatePresence mode="wait">
-        {isSubmitted ? <SuccessState /> : <WaitlistForm />}
-      </AnimatePresence>
-      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className={`relative overflow-hidden bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-600 rounded-3xl p-8 md:p-12 shadow-2xl ${className}`}
+      >
+        {formContent}
+      </motion.div>
+
+      {/* Email Preview Modal */}
       <AnimatePresence>
         {showEmailPreview && (
           <EmailPreview
-            email={email}
             isOpen={showEmailPreview}
             onClose={() => setShowEmailPreview(false)}
+            subscriberData={{ position_in_queue: subscriberCount + 1 }}
           />
         )}
       </AnimatePresence>
