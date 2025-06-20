@@ -27,7 +27,7 @@ const AppLayout: React.FC = () => {
               <div className="w-10 h-10 gradient-primary rounded-2xl flex items-center justify-center shadow-soft">
                 <Heart className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-neutral-800 ml-3 group-hover:text-primary-600 transition-colors">ReflectMe</h1>
+              <h1 className="text-2xl font-bold text-neutral-800 ml-3 group-hover:text-primary-600 transition-colors">Zentia</h1>
             </Link>
           </div>
 

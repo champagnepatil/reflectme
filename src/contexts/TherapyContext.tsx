@@ -691,7 +691,7 @@ const generateDemoChatHistory = (): ChatMessage[] => {
     {
       minutesAgo: 0,
       sender: 'system' as const,
-      content: 'Hi! I\'m your ReflectMe companion, here to support you between sessions. How are you feeling today?',
+      content: 'Hi! I\'m your Zentia companion, here to support you between sessions. How are you feeling today?',
       tags: ['welcome', 'check-in']
     }
   ];

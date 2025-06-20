@@ -63,7 +63,7 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({ isOpen, onClose, ac
     }
   };
 
-  const shareText = `🎉 I just ${achievement.title.toLowerCase()} on ReflectMe! ${achievement.description} #MentalHealthJourney #ReflectMe`;
+  const shareText = `🎉 I just ${achievement.title.toLowerCase()} on Zentia! ${achievement.description} #MentalHealthJourney #Zentia`;
 
   const handleShare = async (platform: 'twitter' | 'facebook' | 'copy') => {
     const url = window.location.href;

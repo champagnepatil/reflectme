@@ -92,12 +92,12 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
 
   const roleConfig = {
     client: {
-      title: 'ReflectMe Companion',
+      title: 'Zentia Companion',
       subtitle: 'Your digital companion for mental wellness',
       gradient: 'from-primary-600 to-secondary-600'
     },
     therapist: {
-      title: 'ReflectMe Professional',
+      title: 'Zentia Professional',
       subtitle: 'Advanced clinical platform with AI',
       gradient: 'from-secondary-600 to-teal-600'
     }
