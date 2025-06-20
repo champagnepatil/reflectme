@@ -4,7 +4,21 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = 'https://jjflfhcdxgmpustkffqo.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZmxmaGNkeGdtcHVzdGtmZnFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxMjczNDQsImV4cCI6MjA2NDcwMzM0NH0.XBgnbTT3AdQCh_RqeW6N5mpvG2LBUrnYUB2f_pET--w';
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false,
+  },
+  db: {
+    schema: 'public',
+  },
+  global: {
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Prefer': 'return=representation',
+    },
+  },
+});
 
 export interface WaitlistSubscriber {
   id?: string;
@@ -37,6 +51,8 @@ class SupabaseWaitlistService {
   // Add a new subscriber to the waitlist
   async addSubscriber(subscriberData: Omit<WaitlistSubscriber, 'id' | 'subscribed_at' | 'updated_at'>): Promise<{ data: WaitlistSubscriber | null; error: any }> {
     try {
+      console.log('🔄 Adding subscriber to Supabase:', subscriberData.email);
+      
       const { data, error } = await supabase
         .from('waitlist_subscribers')
         .insert([{
@@ -51,14 +67,20 @@ class SupabaseWaitlistService {
         .single();
 
       if (error) {
-        console.error('Error adding subscriber:', error);
+        console.error('❌ Error adding subscriber:', error);
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         return { data: null, error };
       }
 
       console.log(`✅ Subscriber added to Supabase:`, data);
       return { data, error: null };
     } catch (err) {
-      console.error('Unexpected error adding subscriber:', err);
+      console.error('❌ Unexpected error adding subscriber:', err);
       return { data: null, error: err };
     }
   }
@@ -71,16 +93,16 @@ class SupabaseWaitlistService {
         .select('id')
         .eq('email', email)
         .eq('status', 'active')
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single for better error handling
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
-        console.error('Error checking email subscription:', error);
+      if (error) {
+        console.error('❌ Error checking email subscription:', error);
         return false;
       }
 
       return !!data;
     } catch (err) {
-      console.error('Unexpected error checking email:', err);
+      console.error('❌ Unexpected error checking email:', err);
       return false;
     }
   }
@@ -92,16 +114,16 @@ class SupabaseWaitlistService {
         .from('waitlist_subscribers')
         .select('*')
         .eq('email', email)
-        .single();
+        .maybeSingle(); // Use maybeSingle for better handling of not found cases
 
       if (error) {
-        console.error('Error getting subscriber:', error);
+        console.error('❌ Error getting subscriber:', error);
         return { data: null, error };
       }
 
       return { data, error: null };
     } catch (err) {
-      console.error('Unexpected error getting subscriber:', err);
+      console.error('❌ Unexpected error getting subscriber:', err);
       return { data: null, error: err };
     }
   }

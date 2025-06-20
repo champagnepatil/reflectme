@@ -32,7 +32,7 @@ export default async function handler(
         }
 
         // Genera magic link di test
-        const magicLink = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5174'}/assessment/test-123?token=demo_token_12345`;
+        const magicLink = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5174'}/assessment/test-123?token=test_token_${Date.now()}`;
 
         result = await sendAssessmentReminder(to, {
           clientName: data.clientName,

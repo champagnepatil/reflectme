@@ -1,8 +1,3 @@
-import { Resend } from 'resend';
-
-// Resend configuration
-const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY || 'your_resend_api_key_here');
-
 export interface EmailTemplate {
   type: 'welcome' | 'update' | 'launch' | 'reminder';
   subject: string;
@@ -23,33 +18,37 @@ class RealEmailService {
   private fromEmail = 'hello@reflectme.app';
   private fromName = 'ReflectMe Team';
 
-  // Send email using Resend
+  // Send email using Netlify function (to avoid CORS issues)
   async sendEmail(emailData: EmailData): Promise<{ success: boolean; messageId?: string; error?: any }> {
     try {
       console.log(`📧 Sending real email to ${emailData.to}: ${emailData.subject}`);
       
-      const response = await resend.emails.send({
-        from: `${this.fromName} <${this.fromEmail}>`,
-        to: [emailData.to],
-        subject: emailData.subject,
-        html: emailData.html,
-        text: emailData.text,
-        tags: [
-          { name: 'type', value: emailData.metadata?.type || 'waitlist' },
-          { name: 'source', value: emailData.metadata?.source || 'system' }
-        ]
+      const response = await fetch('/.netlify/functions/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: emailData.to,
+          subject: emailData.subject,
+          html: emailData.html,
+          text: emailData.text,
+          type: emailData.metadata?.type || 'waitlist'
+        })
       });
 
-      if (response.error) {
-        console.error('Resend error:', response.error);
-        return { success: false, error: response.error };
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        console.error('❌ Failed to send email:', result.error);
+        return { success: false, error: result.error };
       }
 
-      console.log(`✅ Real email sent successfully. Message ID: ${response.data?.id}`);
-      return { success: true, messageId: response.data?.id };
+      console.log(`✅ Real email sent successfully. Message ID: ${result.messageId}`);
+      return { success: true, messageId: result.messageId };
 
     } catch (error) {
-      console.error('Real email sending error:', error);
+      console.error('❌ Real email sending error:', error);
       return { success: false, error };
     }
   }

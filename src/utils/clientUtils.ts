@@ -99,7 +99,7 @@ export const getClientEmail = (clientId: string): string => {
     '00000000-0000-4000-b000-000000000004': 'client4@mindtwin.demo',
   };
   
-  return emailMap[clientId] || 'demo@mindtwin.demo';
+  return emailMap[clientId] || 'client@mindtwin.app';
 };
 
 /**

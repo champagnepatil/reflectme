@@ -12,7 +12,10 @@ class NotificationService {
 
   constructor() {
     this.loadSubscribers();
-    this.setupPeriodicNotifications();
+    // Remove automatic demo notifications setup in production
+    if (import.meta.env.DEV) {
+      this.setupPeriodicNotifications();
+    }
   }
 
   private loadSubscribers() {
@@ -37,14 +40,18 @@ class NotificationService {
     
     console.log(`🎉 New subscriber added: ${email}`);
     console.log(`📊 Total subscribers: ${this.subscribers.size}`);
-    console.log(`💡 DEMO MODE: In a real environment, a confirmation email would be sent to ${email}`);
     
-    // Send welcome notification
-    this.scheduleNotification(email, 'welcome', 3000);
+    // Only show demo message in development
+    if (import.meta.env.DEV) {
+      console.log(`💡 DEMO MODE: In a real environment, a confirmation email would be sent to ${email}`);
+    }
     
-    // Schedule follow-up notifications
-    this.scheduleNotification(email, 'update', 7 * 24 * 60 * 60 * 1000); // 1 week
-    this.scheduleNotification(email, 'reminder', 30 * 24 * 60 * 60 * 1000); // 1 month
+    // Send welcome notification (only in development for demo)
+    if (import.meta.env.DEV) {
+      this.scheduleNotification(email, 'welcome', 3000);
+      this.scheduleNotification(email, 'update', 7 * 24 * 60 * 60 * 1000); // 1 week
+      this.scheduleNotification(email, 'reminder', 30 * 24 * 60 * 60 * 1000); // 1 month
+    }
   }
 
   private scheduleNotification(email: string, type: 'welcome' | 'update' | 'launch' | 'reminder', delay: number) {
@@ -100,24 +107,30 @@ class NotificationService {
       console.error('Error saving notification to Supabase:', error);
     }
 
-    // Browser notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(messages[type].title, {
-        body: messages[type].body,
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        tag: `reflectme-${type}`,
-        requireInteraction: type === 'launch',
-        actions: type === 'launch' ? [
-          { action: 'claim', title: 'Claim Discount' },
-          { action: 'later', title: 'Remind Later' }
-        ] : []
-      });
+    // Browser notification with proper error handling
+    try {
+      if (typeof window !== 'undefined' && 'Notification' in window && window.Notification.permission === 'granted') {
+        new window.Notification(messages[type].title, {
+          body: messages[type].body,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          tag: `reflectme-${type}`,
+          requireInteraction: type === 'launch',
+          actions: type === 'launch' ? [
+            { action: 'claim', title: 'Claim Discount' },
+            { action: 'later', title: 'Remind Later' }
+          ] : []
+        });
+      }
+    } catch (error) {
+      console.error('Error creating browser notification:', error);
     }
 
-    // Simulate email sending (in real app, this would be an API call)
-    console.log(`📧 Email sent to ${email}: ${messages[type].title}`);
-    console.log(`📄 Email content: ${messages[type].body}`);
+    // Simulate email sending (only log in development)
+    if (import.meta.env.DEV) {
+      console.log(`📧 Email sent to ${email}: ${messages[type].title}`);
+      console.log(`📄 Email content: ${messages[type].body}`);
+    }
     
     // Save notification history
     this.saveNotificationHistory();
@@ -146,7 +159,7 @@ class NotificationService {
   }
 
   private setupPeriodicNotifications() {
-    // Send weekly updates to all subscribers (demo)
+    // Send weekly updates to all subscribers (demo only)
     setInterval(() => {
       if (this.subscribers.size > 0) {
         const randomSubscriber = [...this.subscribers][Math.floor(Math.random() * this.subscribers.size)];
@@ -162,13 +175,18 @@ class NotificationService {
     }, 5 * 60 * 1000); // 5 minutes
   }
 
-  // Request notification permission
+  // Request notification permission with proper error handling
   static async requestPermission(): Promise<NotificationPermission> {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission();
-      return permission;
+    try {
+      if (typeof window !== 'undefined' && 'Notification' in window && window.Notification && typeof window.Notification.requestPermission === 'function') {
+        const permission = await window.Notification.requestPermission();
+        return permission;
+      }
+      return 'denied';
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+      return 'denied';
     }
-    return 'denied';
   }
 
   // Unsubscribe method
@@ -179,8 +197,10 @@ class NotificationService {
     localStorage.removeItem('reflectme_waitlist_date');
   }
 
-  // Simulate email reply system
+  // Simulate email reply system (development only)
   simulateEmailReply(email: string, replyContent: string) {
+    if (!import.meta.env.DEV) return;
+    
     const autoReplies = [
       "Thank you for your enthusiasm! We're working hard to make ReflectMe the best it can be. 💙",
       "Your feedback is valuable to us! We'll definitely consider this for our launch. 🚀",
@@ -193,12 +213,16 @@ class NotificationService {
     
     // Simulate reply delay
     setTimeout(() => {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('ReflectMe Team replied! 💬', {
-          body: reply,
-          icon: '/favicon.ico',
-          tag: 'reflectme-reply'
-        });
+      try {
+        if (typeof window !== 'undefined' && 'Notification' in window && window.Notification.permission === 'granted') {
+          new window.Notification('ReflectMe Team replied! 💬', {
+            body: reply,
+            icon: '/favicon.ico',
+            tag: 'reflectme-reply'
+          });
+        }
+      } catch (error) {
+        console.error('Error creating reply notification:', error);
       }
       
       console.log(`📧 Auto-reply sent to ${email}: ${reply}`);

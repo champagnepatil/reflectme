@@ -15,7 +15,7 @@ const WaitlistCTA: React.FC<WaitlistCTAProps> = ({ className = '' }) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [subscriberCount, setSubscriberCount] = useState(2847);
+  const [subscriberCount, setSubscriberCount] = useState(0);
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [userPosition, setUserPosition] = useState<number | null>(null);
 
@@ -113,7 +113,7 @@ const WaitlistCTA: React.FC<WaitlistCTAProps> = ({ className = '' }) => {
         
         // Set user position from Supabase data
         if (subscriber.position_in_queue) {
-          setUserPosition(2847 + subscriber.position_in_queue); // Adding base demo count
+          setUserPosition(subscriber.position_in_queue);
         }
       }
       
@@ -132,7 +132,7 @@ const WaitlistCTA: React.FC<WaitlistCTAProps> = ({ className = '' }) => {
   const loadSubscriberCount = async () => {
     try {
       const count = await SupabaseWaitlistService.getSubscriberCount();
-      setSubscriberCount(2847 + count); // Adding base demo count
+      setSubscriberCount(count);
     } catch (error) {
       console.error('Error loading subscriber count:', error);
     }

@@ -13,4 +13,20 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  build: {
+    sourcemap: false,
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['lucide-react', 'framer-motion'],
+        },
+      },
+    },
+  },
+  define: {
+    // Ensure window object is properly handled in production
+    global: 'globalThis',
+  },
 });
