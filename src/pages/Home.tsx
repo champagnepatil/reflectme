@@ -5,11 +5,19 @@ import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import WaitlistCTA from '../components/waitlist/WaitlistCTA';
 import NotificationHistory from '../components/waitlist/NotificationHistory';
+import { useAuth } from '../contexts/AuthContext';
 import { Heart, MessageCircle, Brain, Shield, Clock, Users, ArrowRight, Bell } from 'lucide-react';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Check if user is admin (you can modify this logic based on your admin criteria)
+  const isAdmin = user?.email?.includes('admin') || 
+                  user?.email?.includes('l.de.angelis') || 
+                  user?.role === 'admin' ||
+                  false; // Add your admin check logic here
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50">
@@ -272,39 +280,41 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-8 right-8 z-40 space-y-3">
-        {/* Admin Button */}
-        <motion.a
-          href="/waitlist-admin"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 1.2, type: "spring", stiffness: 150 }}
-          className="block w-12 h-12 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
-          title="Waitlist Admin"
-        >
-          <Users className="w-5 h-5 group-hover:scale-110 transition-transform" />
-        </motion.a>
+      {/* Floating Action Buttons - Only show to admins */}
+      {isAdmin && (
+        <div className="fixed bottom-8 right-8 z-40 space-y-3">
+          {/* Admin Button */}
+          <motion.a
+            href="/waitlist-admin"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1.2, type: "spring", stiffness: 150 }}
+            className="block w-12 h-12 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+            title="Waitlist Admin"
+          >
+            <Users className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          </motion.a>
 
-        {/* Notification Button */}
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 1, type: "spring", stiffness: 150 }}
-          onClick={() => setShowNotifications(true)}
-          className="w-14 h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group"
-          title="View Notifications"
-        >
-          <Bell className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-          <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-            <span className="text-xs font-bold text-white">3</span>
-          </div>
-        </motion.button>
-      </div>
+          {/* Notification Button */}
+          <motion.button
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1, type: "spring", stiffness: 150 }}
+            onClick={() => setShowNotifications(true)}
+            className="w-14 h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group"
+            title="View Notifications"
+          >
+            <Bell className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+              <span className="text-xs font-bold text-white">3</span>
+            </div>
+          </motion.button>
+        </div>
+      )}
 
-      {/* Notification History Modal */}
+      {/* Notification History Modal - Only for admins */}
       <AnimatePresence>
-        {showNotifications && (
+        {showNotifications && isAdmin && (
           <NotificationHistory
             isOpen={showNotifications}
             onClose={() => setShowNotifications(false)}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TherapyProvider } from './contexts/TherapyContext';
 import { ReflectMeProvider } from './contexts/ReflectMeContext';
 import { AssessmentProvider } from './contexts/AssessmentContext';
@@ -64,6 +64,24 @@ import PatientLayout from './layouts/PatientLayout';
 import AppLayout from './layouts/AppLayout';
 
 import { AITestPanel } from './components/AITestPanel';
+
+// Admin Route Protection Component
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+  
+  // Check if user is admin (same logic as in Home.tsx)
+  const isAdmin = user?.email?.includes('admin') || 
+                  user?.email?.includes('l.de.angelis') || 
+                  user?.role === 'admin' ||
+                  false;
+
+  if (!isAdmin) {
+    // Redirect non-admin users to home page
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 function App() {
   return (
@@ -136,11 +154,18 @@ function App() {
                 {/* Prototype Overview */}
                 <Route path="/prototype" element={<PrototypeOverview />} />
                 
-                {/* Waitlist Admin Route */}
-                <Route path="/waitlist-admin" element={<WaitlistAdmin />} />
+                {/* PROTECTED ADMIN ROUTES */}
+                <Route path="/waitlist-admin" element={
+                  <AdminRoute>
+                    <WaitlistAdmin />
+                  </AdminRoute>
+                } />
                 
-                {/* Email Campaign Admin Route */}
-                <Route path="/email-campaigns" element={<EmailCampaignAdmin />} />
+                <Route path="/email-campaigns" element={
+                  <AdminRoute>
+                    <EmailCampaignAdmin />
+                  </AdminRoute>
+                } />
 
                 {/* Test Routes (Development Only) */}
                 <Route path="/test/pdf" element={<PDFTestComponent />} />
