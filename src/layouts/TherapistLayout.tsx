@@ -77,17 +77,7 @@ const TherapistLayout: React.FC = () => {
                 <span className="ml-3 hidden md:block">Monitoring</span>
               </Link>
               
-              <Link 
-                to="/therapist/analytics" 
-                className={`flex items-center p-2 rounded-md transition-colors ${
-                  location.pathname === '/therapist/analytics' 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                <BarChart2 className="w-5 h-5" />
-                <span className="ml-3 hidden md:block">Analytics</span>
-              </Link>
+
               
               <Link 
                 to="/therapist/notes-overview" 

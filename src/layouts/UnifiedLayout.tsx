@@ -59,7 +59,7 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
         { icon: BarChart2, label: 'Dashboard', href: '/therapist' },
         { icon: Users, label: 'Active Clients', href: '/therapist/clients' },
         { icon: Activity, label: 'Monitoring', href: '/therapist/monitoring' },
-        { icon: Brain, label: 'Analytics', href: '/therapist/analytics' },
+  
         { icon: Cloud, label: 'Patterns', href: '/therapist/patterns' },
         { icon: FileText, label: 'Clinical Notes', href: '/therapist/notes-overview' },
         { icon: Download, label: 'Reports', href: '/therapist/reports' }

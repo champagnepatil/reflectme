@@ -217,10 +217,6 @@ const Dashboard: React.FC = () => {
                 <div className="text-sm text-neutral-500">Weekly Change</div>
               </div>
             </div>
-            
-            <Link to="/therapist/analytics" className="btn btn-outline">
-              View Detailed Reports
-            </Link>
           </div>
         </motion.div>
       )}

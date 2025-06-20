@@ -17,7 +17,7 @@ import Login from './pages/Login';
 import TherapistDashboard from './pages/therapist/Dashboard';
 import TherapistClientDetails from './pages/therapist/ClientDetails';
 import TherapistNotes from './pages/therapist/Notes';
-import TherapistAnalytics from './pages/therapist/Analytics';
+
 import TherapistNotesOverview from './pages/therapist/NotesOverview';
 import CaseHistories from './pages/therapist/CaseHistories';
 import CaseHistoryForm from './pages/therapist/CaseHistoryForm';
@@ -178,7 +178,7 @@ function App() {
                   <Route path="client/:clientId" element={<TherapistClientDetails />} />
                   <Route path="monitoring" element={<Monitoring />} />
                   <Route path="monitoring/:clientId" element={<MonitoringReview />} />
-                  <Route path="analytics" element={<TherapistAnalytics />} />
+
                   <Route path="patterns" element={<Patterns />} />
                   <Route path="reports" element={<CaseHistories />} /> {/* Reusing case histories as reports */}
                   <Route path="notes" element={<Navigate to="/therapist/notes-overview" replace />} />
