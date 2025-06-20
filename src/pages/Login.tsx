@@ -12,7 +12,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState<'patient' | 'therapist' | null>(null);
-  const { login, user } = useAuth();
+  const { login, user, register } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -25,17 +25,17 @@ const Login: React.FC = () => {
       if (user.role === 'therapist') {
         navigate('/therapist');
       } else {
-        navigate('/app');
+        navigate('/client');
       }
     }
   }, [user, navigate]);
 
   useEffect(() => {
     // If role is specified in URL, auto-trigger demo login
-    if (roleFromUrl && (roleFromUrl === 'patient' || roleFromUrl === 'therapist') && !user) {
+    if (roleFromUrl && (roleFromUrl === 'patient' || roleFromUrl === 'therapist') && !user && !loading && !demoLoading) {
       handleDemoLogin(roleFromUrl);
     }
-  }, [roleFromUrl, user]);
+  }, [roleFromUrl, user, loading, demoLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,17 +51,26 @@ const Login: React.FC = () => {
       await login(email, password);
       // Navigation will happen automatically when user state updates
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
-      console.error(err);
+      let errorMessage = 'Login failed';
+      
+      if (err.message.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password';
+      } else if (err.message.includes('Database error')) {
+        errorMessage = 'System error. Please try again in a few minutes.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDemoLogin = async (role: 'patient' | 'therapist') => {
+    if (loading || demoLoading) return; // Prevent double clicks
+
     const demoCredentials = {
-      patient: { email: 'patient@mindtwin.demo', password: 'demo123456' },
-      therapist: { email: 'therapist@mindtwin.demo', password: 'demo123456' }
+      patient: { email: 'democlient@mindtwin.demo', password: 'demo123456' },
+      therapist: { email: 'demotherapist@mindtwin.demo', password: 'demo123456' }
     };
 
     const { email: demoEmail, password: demoPassword } = demoCredentials[role];
@@ -70,14 +79,42 @@ const Login: React.FC = () => {
       setError('');
       setDemoLoading(role);
       await login(demoEmail, demoPassword);
-      
       // Navigation will happen automatically when user state updates
-      
     } catch (err: any) {
-      const errorMessage = err.message || 'Demo login failed';
-      console.error('Demo login error:', errorMessage);
-      setError(`Demo login failed: ${errorMessage}`);
+      let errorMessage = 'Demo login failed';
+      
+      if (err.message.includes('Database error')) {
+        errorMessage = 'System error. Please try again in a few minutes.';
+      } else if (err.message.includes('password is incorrect') || err.message.includes('Please use password') || err.message.includes('Use:')) {
+        errorMessage = err.message; // Use the specific error message from AuthContext
+      } else {
+        errorMessage = 'Demo login failed. Please try again.';
+      }
+      
+      console.error('Demo login error:', err.message);
+      setError(errorMessage);
+    } finally {
       setDemoLoading(null);
+    }
+  };
+
+  const createDemoUsers = async () => {
+    try {
+      setError('');
+      setLoading(true);
+      
+      // Create demo client
+      await register('Demo Client', 'democlient@mindtwin.demo', 'demo123456', 'patient');
+      
+      // Create demo therapist  
+      await register('Demo Therapist', 'demotherapist@mindtwin.demo', 'demo123456', 'therapist');
+      
+      setError('Demo users created successfully! Try the demo buttons now.');
+    } catch (err: any) {
+      console.error('Error creating demo users:', err);
+      setError('Error creating demo users: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,98 +131,51 @@ const Login: React.FC = () => {
         >
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-neutral-900">Welcome Back</h1>
-            <p className="text-neutral-600 mt-2">Sign in to continue to ReflectMe</p>
+            <p className="text-neutral-600 mt-2">Sign in to continue your journey</p>
           </div>
           
           {error && (
-            <div className="bg-error-50 border border-error-200 text-error-700 p-4 rounded-md mb-6 text-sm leading-relaxed flex items-start">
+            <div className="bg-error-50 border border-error-200 text-error-700 p-4 rounded-md mb-6 flex items-start">
               <AlertCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
-              <span>{error}</span>
+              <span className="text-sm">{error}</span>
             </div>
           )}
 
-          {/* Demo Login Buttons */}
-          <div className="mb-6 space-y-3">
-            <div className="text-center text-sm text-neutral-600 mb-3">Try the demo:</div>
-            
-            <button
-              onClick={() => handleDemoLogin('patient')}
-              disabled={loading || demoLoading !== null}
-              className="w-full btn bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {demoLoading === 'patient' ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Setting up demo...
-                </>
-              ) : (
-                'Demo as Patient'
-              )}
-            </button>
-            
-            <button
-              onClick={() => handleDemoLogin('therapist')}
-              disabled={loading || demoLoading !== null}
-              className="w-full btn bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {demoLoading === 'therapist' ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Setting up demo...
-                </>
-              ) : (
-                'Demo as Therapist'
-              )}
-            </button>
-          </div>
-
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-neutral-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-neutral-500">Or sign in with your account</span>
-            </div>
-          </div>
-          
-          <form onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <label htmlFor="email" className="label">Email Address</label>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">
+                Email
+              </label>
               <input
-                type="email"
                 id="email"
-                className="input"
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="input w-full"
                 placeholder="your@email.com"
-                required
-                disabled={demoLoading !== null}
+                disabled={loading || !!demoLoading}
               />
             </div>
-            
-            <div className="mb-8">
-              <div className="flex justify-between mb-1">
-                <label htmlFor="password" className="label">Password</label>
-                <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
-                  Forgot password?
-                </Link>
-              </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1">
+                Password
+              </label>
               <input
-                type="password"
                 id="password"
-                className="input"
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="input w-full"
                 placeholder="••••••••"
-                required
-                disabled={demoLoading !== null}
+                disabled={loading || !!demoLoading}
               />
             </div>
-            
+
             <button
               type="submit"
-              className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-              disabled={loading || demoLoading !== null}
+              className="btn btn-primary w-full"
+              disabled={loading || !!demoLoading}
             >
               {loading ? (
                 <>
@@ -197,23 +187,56 @@ const Login: React.FC = () => {
               )}
             </button>
           </form>
-          
-          <p className="text-center mt-6 text-neutral-600">
+
+          <div className="mt-8">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-neutral-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-neutral-500">or try the demo</span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <button
+                onClick={() => handleDemoLogin('patient')}
+                className="btn btn-outline"
+                disabled={loading || !!demoLoading}
+              >
+                {demoLoading === 'patient' ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  'Demo Client'
+                )}
+              </button>
+
+              <button
+                onClick={() => handleDemoLogin('therapist')}
+                className="btn btn-outline"
+                disabled={loading || !!demoLoading}
+              >
+                {demoLoading === 'therapist' ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  'Demo Therapist'
+                )}
+              </button>
+            </div>
+          </div>
+
+          <p className="mt-8 text-center text-sm text-neutral-600">
             Don't have an account?{' '}
-            <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link to="/register" className="font-medium text-primary hover:text-primary-dark">
               Sign up
             </Link>
           </p>
-
-          {/* Demo Instructions */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">Demo Instructions</h4>
-            <div className="text-sm text-blue-800 space-y-1">
-              <p>• <strong>Patient Demo:</strong> Experience the ReflectMe chat interface and coping tools</p>
-              <p>• <strong>Therapist Demo:</strong> Review client monitoring data and case histories</p>
-              <p>• Demo accounts are created automatically on first login</p>
-            </div>
-          </div>
         </motion.div>
       </div>
       

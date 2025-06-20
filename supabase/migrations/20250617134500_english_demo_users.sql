@@ -1,0 +1,107 @@
+-- Update therapist records with English data
+UPDATE public.therapist 
+SET 
+    first_name = CASE id
+        WHEN '00000000-0000-4000-a000-000000000001' THEN 'Michael'
+        WHEN '00000000-0000-4000-a000-000000000002' THEN 'William'
+        WHEN '00000000-0000-4000-a000-000000000003' THEN 'Emma'
+        WHEN '00000000-0000-4000-a000-000000000004' THEN 'Sarah'
+    END,
+    last_name = CASE id
+        WHEN '00000000-0000-4000-a000-000000000001' THEN 'Smith'
+        WHEN '00000000-0000-4000-a000-000000000002' THEN 'Johnson'
+        WHEN '00000000-0000-4000-a000-000000000003' THEN 'Brown'
+        WHEN '00000000-0000-4000-a000-000000000004' THEN 'Davis'
+    END,
+    billing_address = CASE id
+        WHEN '00000000-0000-4000-a000-000000000001' THEN '123 Oxford Street, London W1D 2JD'
+        WHEN '00000000-0000-4000-a000-000000000002' THEN '45 Baker Street, London NW1 6XE'
+        WHEN '00000000-0000-4000-a000-000000000003' THEN '78 Harley Street, London W1G 7HJ'
+        WHEN '00000000-0000-4000-a000-000000000004' THEN '90 Wimpole Street, London W1G 9SR'
+    END,
+    vat_number = CASE id
+        WHEN '00000000-0000-4000-a000-000000000001' THEN 'GB123456789'
+        WHEN '00000000-0000-4000-a000-000000000002' THEN 'GB234567890'
+        WHEN '00000000-0000-4000-a000-000000000003' THEN 'GB345678901'
+        WHEN '00000000-0000-4000-a000-000000000004' THEN 'GB456789012'
+    END,
+    fiscal_code = CASE id
+        WHEN '00000000-0000-4000-a000-000000000001' THEN 'SMTMHL80A01H501X'
+        WHEN '00000000-0000-4000-a000-000000000002' THEN 'JHNWLL75A01H501Y'
+        WHEN '00000000-0000-4000-a000-000000000003' THEN 'BRWEMM85A41H501Z'
+        WHEN '00000000-0000-4000-a000-000000000004' THEN 'DVSSRH82A41H501W'
+    END,
+    invoice_prefix = CASE id
+        WHEN '00000000-0000-4000-a000-000000000001' THEN 'INV-2025-MS'
+        WHEN '00000000-0000-4000-a000-000000000002' THEN 'INV-2025-WJ'
+        WHEN '00000000-0000-4000-a000-000000000003' THEN 'INV-2025-EB'
+        WHEN '00000000-0000-4000-a000-000000000004' THEN 'INV-2025-SD'
+    END;
+
+-- Update profiles for therapists
+UPDATE public.profiles 
+SET 
+    first_name = CASE id
+        WHEN '00000000-0000-4000-a000-000000000001' THEN 'Michael'
+        WHEN '00000000-0000-4000-a000-000000000002' THEN 'William'
+        WHEN '00000000-0000-4000-a000-000000000003' THEN 'Emma'
+        WHEN '00000000-0000-4000-a000-000000000004' THEN 'Sarah'
+    END,
+    last_name = CASE id
+        WHEN '00000000-0000-4000-a000-000000000001' THEN 'Smith'
+        WHEN '00000000-0000-4000-a000-000000000002' THEN 'Johnson'
+        WHEN '00000000-0000-4000-a000-000000000003' THEN 'Brown'
+        WHEN '00000000-0000-4000-a000-000000000004' THEN 'Davis'
+    END
+WHERE id IN ('00000000-0000-4000-a000-000000000001', 
+             '00000000-0000-4000-a000-000000000002',
+             '00000000-0000-4000-a000-000000000003',
+             '00000000-0000-4000-a000-000000000004');
+
+-- Update clients table with English data
+UPDATE public.clients 
+SET 
+    first_name = CASE id
+        WHEN '00000000-0000-4000-b000-000000000001' THEN 'James'
+        WHEN '00000000-0000-4000-b000-000000000002' THEN 'Emily'
+        WHEN '00000000-0000-4000-b000-000000000003' THEN 'Daniel'
+        WHEN '00000000-0000-4000-b000-000000000004' THEN 'Olivia'
+    END,
+    last_name = CASE id
+        WHEN '00000000-0000-4000-b000-000000000001' THEN 'Wilson'
+        WHEN '00000000-0000-4000-b000-000000000002' THEN 'Taylor'
+        WHEN '00000000-0000-4000-b000-000000000003' THEN 'Anderson'
+        WHEN '00000000-0000-4000-b000-000000000004' THEN 'Thomas'
+    END,
+    emergency_contact = CASE id
+        WHEN '00000000-0000-4000-b000-000000000001' THEN '{"name": "Mary Wilson", "relationship": "Wife", "phone": "+44123456797"}'::jsonb
+        WHEN '00000000-0000-4000-b000-000000000002' THEN '{"name": "John Taylor", "relationship": "Husband", "phone": "+44123456798"}'::jsonb
+        WHEN '00000000-0000-4000-b000-000000000003' THEN '{"name": "Robert Anderson", "relationship": "Father", "phone": "+44123456799"}'::jsonb
+        WHEN '00000000-0000-4000-b000-000000000004' THEN '{"name": "Elizabeth Thomas", "relationship": "Mother", "phone": "+44123456800"}'::jsonb
+    END,
+    medical_info = CASE id
+        WHEN '00000000-0000-4000-b000-000000000001' THEN '{"allergies": ["None"], "medications": ["None"], "conditions": ["Anxiety", "Work-related stress"]}'::jsonb
+        WHEN '00000000-0000-4000-b000-000000000002' THEN '{"allergies": ["Penicillin"], "medications": ["Sertraline"], "conditions": ["Depression"]}'::jsonb
+        WHEN '00000000-0000-4000-b000-000000000003' THEN '{"allergies": ["None"], "medications": ["None"], "conditions": ["Social Anxiety Disorder"]}'::jsonb
+        WHEN '00000000-0000-4000-b000-000000000004' THEN '{"allergies": ["None"], "medications": ["Alprazolam"], "conditions": ["PTSD", "Generalized Anxiety Disorder"]}'::jsonb
+    END;
+
+-- Update profiles for clients
+UPDATE public.profiles 
+SET 
+    first_name = CASE id
+        WHEN '00000000-0000-4000-b000-000000000001' THEN 'James'
+        WHEN '00000000-0000-4000-b000-000000000002' THEN 'Emily'
+        WHEN '00000000-0000-4000-b000-000000000003' THEN 'Daniel'
+        WHEN '00000000-0000-4000-b000-000000000004' THEN 'Olivia'
+    END,
+    last_name = CASE id
+        WHEN '00000000-0000-4000-b000-000000000001' THEN 'Wilson'
+        WHEN '00000000-0000-4000-b000-000000000002' THEN 'Taylor'
+        WHEN '00000000-0000-4000-b000-000000000003' THEN 'Anderson'
+        WHEN '00000000-0000-4000-b000-000000000004' THEN 'Thomas'
+    END
+WHERE id IN ('00000000-0000-4000-b000-000000000001',
+             '00000000-0000-4000-b000-000000000002',
+             '00000000-0000-4000-b000-000000000003',
+             '00000000-0000-4000-b000-000000000004'); 

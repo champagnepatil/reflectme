@@ -1,0 +1,21 @@
+model Assessment {
+  id           String   @id @default(uuid())
+  clientId     String
+  instrument   String      // "PHQ-9" | "GAD-7" | "WHODAS-2.0" | "DSM-5-CC"
+  schedule     String      // "biweekly" | "monthly" | "once"
+  nextDueAt    DateTime
+  createdAt    DateTime @default(now())
+  results      AssessmentResult[]
+  @@index([clientId, instrument])
+}
+
+model AssessmentResult {
+  id            String   @id @default(uuid())
+  assessmentId  String
+  score         Float
+  rawJson       Json
+  completedAt   DateTime @default(now())
+  assessment    Assessment @relation(fields: [assessmentId], references: [id])
+  @@index([completedAt])
+  @@unique([assessmentId, completedAt])
+} 

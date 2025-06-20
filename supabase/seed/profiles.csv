@@ -1,0 +1,5 @@
+id,email,name,role,avatar_url,created_at,updated_at
+00000000-0000-0000-0000-000000000001,therapist@mindtwin.demo,Dr. Emily Wilson,therapist,https://api.dicebear.com/7.x/personas/svg?seed=therapist@mindtwin.demo,2024-01-01 00:00:00,2024-01-01 00:00:00
+00000000-0000-0000-0000-000000000002,dr.smith@mindtwin.demo,Dr. Sarah Smith,therapist,https://api.dicebear.com/7.x/personas/svg?seed=dr.smith@mindtwin.demo,2024-01-01 00:00:00,2024-01-01 00:00:00
+00000000-0000-0000-0000-000000000003,dr.johnson@mindtwin.demo,Dr. Michael Johnson,therapist,https://api.dicebear.com/7.x/personas/svg?seed=dr.johnson@mindtwin.demo,2024-01-01 00:00:00,2024-01-01 00:00:00
+00000000-0000-0000-0000-000000000004,dr.patel@mindtwin.demo,Dr. Priya Patel,therapist,https://api.dicebear.com/7.x/personas/svg?seed=dr.patel@mindtwin.demo,2024-01-01 00:00:00,2024-01-01 00:00:00 

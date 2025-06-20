@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTherapy } from '../../contexts/TherapyContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Calendar, Clock, BarChart2, FileText, ArrowRight, Users, UserCheck, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, BarChart2, FileText, ArrowRight, Users, UserCheck, AlertCircle, Plus, Target } from 'lucide-react';
+import { TopicCloud } from '../../components/therapist/TopicCloud';
+import { TaskCreator } from '../../components/therapist/TaskCreator';
+import { AdherenceGauge } from '../../components/therapist/AdherenceGauge';
 
 const Dashboard: React.FC = () => {
   const { clients } = useTherapy();
+  const [showTaskCreator, setShowTaskCreator] = useState(false);
+  const [selectedClientForTask, setSelectedClientForTask] = useState<string>('');
   
   console.log('🏥 Therapist Dashboard - Clients loaded:', {
     count: clients.length,
@@ -220,6 +225,93 @@ const Dashboard: React.FC = () => {
         </motion.div>
       )}
 
+      {/* AI-Powered Components */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Topic Cloud - Overview of all clients */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.5 }}
+        >
+          <TopicCloud 
+            timeRange="week"
+            maxTags={15}
+            className="h-full"
+          />
+        </motion.div>
+
+        {/* Adherence Gauge for Demo Client */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.6 }}
+        >
+          <AdherenceGauge 
+            clientId="demo-client-1"
+            timeRange="month"
+            showDetails={true}
+            className="h-full"
+          />
+        </motion.div>
+      </div>
+
+              {/* Quick Actions */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.7 }}
+        className="card p-6"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-neutral-900">Quick Actions</h2>
+          <div className="flex items-center">
+            <Target className="w-5 h-5 text-primary-600 mr-2" />
+            <span className="text-sm font-medium text-primary-600">Task Management</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => {
+              setSelectedClientForTask('demo-client-1');
+              setShowTaskCreator(true);
+            }}
+            className="flex items-center p-4 border border-neutral-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all"
+          >
+            <Plus className="w-5 h-5 text-primary-600 mr-3" />
+            <div className="text-left">
+              <div className="font-medium text-neutral-900">Create Task</div>
+              <div className="text-sm text-neutral-500">for Demo Client 1</div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => {
+              setSelectedClientForTask('demo-client-2');
+              setShowTaskCreator(true);
+            }}
+            className="flex items-center p-4 border border-neutral-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all"
+          >
+            <Plus className="w-5 h-5 text-primary-600 mr-3" />
+            <div className="text-left">
+              <div className="font-medium text-neutral-900">Create Task</div>
+              <div className="text-sm text-neutral-500">for Demo Client 2</div>
+            </div>
+          </button>
+          
+          <Link
+            to="/therapist/analytics"
+            className="flex items-center p-4 border border-neutral-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all"
+          >
+            <BarChart2 className="w-5 h-5 text-primary-600 mr-3" />
+            <div className="text-left">
+              <div className="font-medium text-neutral-900">Analytics AI</div>
+              <div className="text-sm text-neutral-500">Advanced insights</div>
+            </div>
+          </Link>
+        </div>
+      </motion.div>
+
       {/* Client List */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -313,6 +405,20 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Task Creator Modal */}
+      <TaskCreator
+        isOpen={showTaskCreator}
+        onClose={() => {
+          setShowTaskCreator(false);
+          setSelectedClientForTask('');
+        }}
+        clientId={selectedClientForTask}
+        onTaskCreated={(task) => {
+          console.log('✅ New task created:', task);
+          // Qui si potrebbe aggiornare lo stato locale o ricaricare i dati
+        }}
+      />
     </div>
   );
 };

@@ -1,22 +1,15 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
-import { Heart, MessageCircle, Brain, Shield, Clock, Users, X, Sparkles, ArrowRight } from 'lucide-react';
+import WaitlistCTA from '../components/waitlist/WaitlistCTA';
+import NotificationHistory from '../components/waitlist/NotificationHistory';
+import { Heart, MessageCircle, Brain, Shield, Clock, Users, ArrowRight, Bell } from 'lucide-react';
 
 const Home: React.FC = () => {
-  const [showDemoModal, setShowDemoModal] = useState(false);
   const navigate = useNavigate();
-
-  const handleDemoSelection = (role: 'patient' | 'therapist') => {
-    setShowDemoModal(false);
-    if (role === 'patient') {
-      navigate('/app');
-    } else {
-      navigate('/therapist');
-    }
-  };
+  const [showNotifications, setShowNotifications] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50">
@@ -45,11 +38,20 @@ const Home: React.FC = () => {
               
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
                 <button 
-                  onClick={() => setShowDemoModal(true)}
+                  onClick={() => navigate('/client')}
                   className="group px-10 py-4 bg-white text-primary-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center"
                 >
-                  <Sparkles className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                  Try Demo
+                  <Heart className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                  ReflectMe Companion
+                  <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                </button>
+                
+                <button 
+                  onClick={() => navigate('/therapist')}
+                  className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-primary-600 transition-all duration-300 flex items-center justify-center"
+                >
+                  <Users className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                  ReflectMe Professional
                   <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
@@ -211,6 +213,26 @@ const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* Waitlist Section */}
+      <section className="py-24 px-6 bg-neutral-50">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl font-bold text-neutral-800 mb-6">Be Among the First</h2>
+            <p className="text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+              ReflectMe is launching soon! Join our exclusive waitlist for early access, special launch pricing, and beta features.
+            </p>
+          </motion.div>
+          
+          <WaitlistCTA />
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 gradient-teal opacity-90"></div>
@@ -226,76 +248,67 @@ const Home: React.FC = () => {
               <p className="text-xl text-white/90 mb-12 leading-relaxed">
                 Join thousands who are already experiencing the benefits of personalized digital therapy support.
               </p>
-              <button 
-                onClick={() => setShowDemoModal(true)}
-                className="group px-10 py-4 bg-white text-teal-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center mx-auto"
-              >
-                <Sparkles className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                Try Demo First
-                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-              </button>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <button 
+                  onClick={() => navigate('/client')}
+                  className="group px-10 py-4 bg-white text-teal-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center"
+                >
+                  <Heart className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                  ReflectMe Companion
+                  <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                </button>
+                
+                <button 
+                  onClick={() => navigate('/therapist')}
+                  className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-teal-600 transition-all duration-300 flex items-center justify-center"
+                >
+                  <Users className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                  ReflectMe Professional
+                  <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Demo Selection Modal */}
-      <AnimatePresence>
-        {showDemoModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl p-10 max-w-lg w-full shadow-large"
-            >
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-3xl font-bold text-neutral-800">Choose Demo Experience</h3>
-                <button
-                  onClick={() => setShowDemoModal(false)}
-                  className="p-3 hover:bg-neutral-100 rounded-2xl transition-colors"
-                >
-                  <X className="w-6 h-6 text-neutral-500" />
-                </button>
-              </div>
-              
-              <p className="text-neutral-600 mb-10 text-lg leading-relaxed">
-                Select which perspective you'd like to experience:
-              </p>
-              
-              <div className="space-y-6">
-                <button
-                  onClick={() => handleDemoSelection('patient')}
-                  className="w-full p-8 border-2 border-primary-200 rounded-2xl hover:border-primary-400 hover:bg-primary-50 transition-all text-left group"
-                >
-                  <div className="flex items-center mb-4">
-                    <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 transition-transform">
-                      <Heart className="w-8 h-8 text-primary-600" />
-                    </div>
-                    <h4 className="text-2xl font-semibold text-neutral-800">As Patient</h4>
-                  </div>
-                  <p className="text-neutral-600 leading-relaxed">
-                    Experience the ReflectMe chat interface, coping tools, and session insights from a patient's perspective.
-                  </p>
-                </button>
-                
-                <button
-                  onClick={() => handleDemoSelection('therapist')}
-                  className="w-full p-8 border-2 border-teal-200 rounded-2xl hover:border-teal-400 hover:bg-teal-50 transition-all text-left group"
-                >
-                  <div className="flex items-center mb-4">
-                    <div className="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 transition-transform">
-                      <Users className="w-8 h-8 text-teal-600" />
-                    </div>
-                    <h4 className="text-2xl font-semibold text-neutral-800">As Therapist</h4>
-                  </div>
-                  <p className="text-neutral-600 leading-relaxed">
-                    Explore the therapist portal with client management, case histories, and monitoring tools.
-                  </p>
-                </button>
-              </div>
-            </motion.div>
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-8 right-8 z-40 space-y-3">
+        {/* Admin Button */}
+        <motion.a
+          href="/waitlist-admin"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 1.2, type: "spring", stiffness: 150 }}
+          className="block w-12 h-12 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+          title="Waitlist Admin"
+        >
+          <Users className="w-5 h-5 group-hover:scale-110 transition-transform" />
+        </motion.a>
+
+        {/* Notification Button */}
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 1, type: "spring", stiffness: 150 }}
+          onClick={() => setShowNotifications(true)}
+          className="w-14 h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group"
+          title="View Notifications"
+        >
+          <Bell className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+            <span className="text-xs font-bold text-white">3</span>
           </div>
+        </motion.button>
+      </div>
+
+      {/* Notification History Modal */}
+      <AnimatePresence>
+        {showNotifications && (
+          <NotificationHistory
+            isOpen={showNotifications}
+            onClose={() => setShowNotifications(false)}
+          />
         )}
       </AnimatePresence>
 

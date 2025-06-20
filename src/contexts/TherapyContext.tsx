@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useAuth } from './AuthContext';
+import { supabase } from '@/lib/supabase';
 
 // Types
 export interface Client {
@@ -81,7 +82,9 @@ const TherapyContext = createContext<TherapyContextType>({
   getClient: () => undefined,
 });
 
-export const useTherapy = () => useContext(TherapyContext);
+export const useTherapy = () => {
+  return useContext(TherapyContext);
+};
 
 // Generate 30 days of mock mood data
 const generateMoodHistory = () => {
@@ -506,72 +509,408 @@ const mockClients: Client[] = [
   },
 ];
 
+// Generate comprehensive demo journal entries for AI clustering
+const generateDemoJournalEntries = (): JournalEntry[] => {
+  const today = new Date();
+  const entries: JournalEntry[] = [];
+  
+  // 20 diverse demo entries over the last month for better AI clustering
+  const demoEntries = [
+    {
+      daysAgo: 1,
+      mood: 4,
+      content: "Had a really good therapy session today. We worked on challenging my perfectionist thoughts and I felt like I made a breakthrough. Dr. Chen helped me see that making mistakes is part of learning, not a sign of failure. I'm grateful for this progress.",
+      tags: ["therapy", "breakthrough", "perfectionism", "gratitude", "growth"]
+    },
+    {
+      daysAgo: 2,
+      mood: 3,
+      content: "Work was stressful today. Had to present to the board and I was anxious all morning. Used the breathing exercises Dr. Chen taught me and they actually helped! Still felt nervous but managed to get through it without a panic attack.",
+      tags: ["work", "anxiety", "breathing-exercises", "coping-strategies", "presentation"]
+    },
+    {
+      daysAgo: 4,
+      mood: 5,
+      content: "Amazing day! Went hiking with friends and felt so connected to nature and the people I care about. These are the moments that remind me life can be beautiful. I should schedule more outdoor activities like this.",
+      tags: ["hiking", "friends", "nature", "joy", "social-connection", "outdoors"]
+    },
+    {
+      daysAgo: 5,
+      mood: 2,
+      content: "Feeling down today. Had an argument with my partner about household responsibilities. I know I tend to catastrophize when we fight, but it's hard to stop the negative thoughts once they start. Need to practice the thought-challenging techniques.",
+      tags: ["relationships", "argument", "negative-thoughts", "catastrophizing", "conflict"]
+    },
+    {
+      daysAgo: 7,
+      mood: 4,
+      content: "Started a new mindfulness practice this week. It's only 10 minutes a day but I can already notice small differences in how I react to stress. My mind still wanders a lot but I'm getting better at bringing attention back to my breath.",
+      tags: ["mindfulness", "meditation", "stress-management", "progress", "breathing"]
+    },
+    {
+      daysAgo: 9,
+      mood: 1,
+      content: "Really struggling today. Woke up feeling heavy and sad for no apparent reason. It's one of those days where everything feels overwhelming and pointless. Called my sister and that helped a little. Trying to be gentle with myself.",
+      tags: ["depression", "overwhelming", "support", "family", "self-care", "sadness"]
+    },
+    {
+      daysAgo: 11,
+      mood: 3,
+      content: "Bad day at work. Made a mistake on an important project and I can't stop beating myself up about it. I know rationally that everyone makes mistakes, but emotionally I feel like such a failure. Need to talk to my therapist about this.",
+      tags: ["work", "mistake", "self-criticism", "perfectionism", "failure", "negative-self-talk"]
+    },
+    {
+      daysAgo: 13,
+      mood: 5,
+      content: "Celebrated a work achievement today! Got positive feedback from my manager and the whole team appreciated my project. For once, I allowed myself to feel proud instead of immediately thinking about what I could have done better.",
+      tags: ["achievement", "work", "positive-feedback", "pride", "self-acceptance", "success"]
+    },
+    {
+      daysAgo: 15,
+      mood: 4,
+      content: "Practiced self-compassion exercises today. Instead of criticizing myself for procrastinating, I tried to speak to myself like I would a good friend. It felt weird at first but I think it actually helped me feel less stuck.",
+      tags: ["self-compassion", "procrastination", "self-talk", "exercises", "kindness"]
+    },
+    {
+      daysAgo: 17,
+      mood: 3,
+      content: "Had dinner with my family. It was nice but also triggering - they kept asking about my career progress and making comparisons to my siblings. I managed to stay calm and use some boundary-setting phrases I've been practicing.",
+      tags: ["family", "boundaries", "triggers", "career", "comparison", "dinner"]
+    },
+    {
+      daysAgo: 19,
+      mood: 4,
+      content: "Completed my first week of the new exercise routine. I was skeptical that physical activity would help with my mental health, but I actually do feel more energized and less anxious. Going to keep this up!",
+      tags: ["exercise", "routine", "mental-health", "energy", "anxiety", "physical-activity"]
+    },
+    {
+      daysAgo: 21,
+      mood: 2,
+      content: "Social anxiety flared up at a work networking event. I wanted to leave after 20 minutes but pushed myself to stay longer. Met one interesting person and had a good conversation, so it wasn't all bad. Small wins count.",
+      tags: ["social-anxiety", "networking", "exposure", "small-wins", "growth", "courage"]
+    },
+    {
+      daysAgo: 23,
+      mood: 3,
+      content: "Started reading a book about anxiety management. Some of the cognitive techniques are similar to what I'm learning in therapy. It's helpful to have multiple resources and perspectives on managing my mental health.",
+      tags: ["reading", "anxiety", "cognitive-techniques", "learning", "resources", "education"]
+    },
+    {
+      daysAgo: 25,
+      mood: 4,
+      content: "Had a deep conversation with my best friend about our mental health journeys. It felt so good to be vulnerable and realize I'm not alone in struggling. She shared some techniques that have worked for her too.",
+      tags: ["friendship", "vulnerability", "mental-health", "support", "connection", "sharing"]
+    },
+    {
+      daysAgo: 27,
+      mood: 2,
+      content: "Insomnia hit again last night. Kept replaying that work presentation and thinking about all the things I could have said differently. Need to practice the sleep hygiene techniques my therapist recommended.",
+      tags: ["insomnia", "work", "rumination", "sleep", "perfectionism", "overthinking"]
+    },
+    {
+      daysAgo: 29,
+      mood: 5,
+      content: "Spent the morning in my garden planting new flowers. There's something so therapeutic about working with soil and watching things grow. It reminds me that healing and growth take time and patience.",
+      tags: ["gardening", "therapeutic", "growth", "patience", "nature", "healing"]
+    },
+    {
+      daysAgo: 31,
+      mood: 3,
+      content: "First therapy session was today. Felt nervous but Dr. Chen made me feel comfortable. We talked about my anxiety and perfectionism. It's going to be hard work but I'm ready to start this journey.",
+      tags: ["therapy", "first-session", "anxiety", "perfectionism", "journey", "nervous"]
+    },
+    {
+      daysAgo: 33,
+      mood: 4,
+      content: "Starting this journal as part of my mental health journey. My therapist suggested it might help me track patterns and progress. Feeling hopeful about this new chapter and the work I'm doing on myself.",
+      tags: ["journal", "mental-health", "therapy", "patterns", "hope", "self-improvement"]
+    },
+    {
+      daysAgo: 35,
+      mood: 3,
+      content: "Tried cooking a new recipe today instead of ordering takeout. It was actually really relaxing and meditative. Plus I felt accomplished when it turned out well. Small acts of self-care matter.",
+      tags: ["cooking", "self-care", "accomplishment", "meditation", "healthy-habits", "nurturing"]
+    },
+    {
+      daysAgo: 37,
+      mood: 2,
+      content: "Feeling overwhelmed by all the self-help advice online. Sometimes it feels like I should be 'fixed' by now. Reminder to myself: healing isn't linear and I'm doing the best I can with where I am right now.",
+      tags: ["overwhelmed", "self-help", "healing", "progress", "patience", "self-acceptance"]
+    }
+  ];
+
+  demoEntries.forEach((demo, index) => {
+    const entryDate = new Date(today);
+    entryDate.setDate(today.getDate() - demo.daysAgo);
+    
+    entries.push({
+      id: `demo-${index + 1}`,
+      date: format(entryDate, 'yyyy-MM-dd'),
+      mood: demo.mood,
+      content: demo.content,
+      tags: demo.tags
+    });
+  });
+
+  return entries.reverse(); // Return in chronological order
+};
+
 // Mock journal entries
-const mockJournalEntries: JournalEntry[] = [
-  {
-    id: '1',
-    date: '2024-01-16',
-    mood: 3,
-    content: 'Had that presentation at work today. I kept thinking everyone was judging my slides, but when I used the evidence chart technique, I realized most people seemed engaged and asked good questions.',
-    tags: ['work', 'presentation', 'evidence-chart', 'anxiety'],
-  },
-  {
-    id: '2',
-    date: '2024-01-15',
-    mood: 4,
-    content: 'Therapy session today was helpful. Dr. Jones helped me see how I dismiss my small wins. I did complete that project on time last week.',
-    tags: ['therapy', 'small-wins', 'self-compassion'],
-  },
-];
+const mockJournalEntries: JournalEntry[] = generateDemoJournalEntries();
+
+// Generate demo chat history
+const generateDemoChatHistory = (): ChatMessage[] => {
+  const now = new Date();
+  const messages: ChatMessage[] = [];
+  
+  // Create a realistic conversation flow from today going back
+  const demoMessages = [
+    {
+      minutesAgo: 5,
+      sender: 'user' as const,
+      content: 'I had a good day today! Used the breathing technique during my presentation and it really helped.',
+      tags: ['breathing-exercises', 'success', 'presentation']
+    },
+    {
+      minutesAgo: 4,
+      sender: 'bot' as const,
+      content: 'That\'s wonderful to hear! It sounds like you\'re really putting the techniques into practice. How did it feel to use the breathing exercise during your presentation?',
+      tags: ['encouragement', 'technique-application']
+    },
+    {
+      minutesAgo: 3,
+      sender: 'user' as const,
+      content: 'It felt empowering. Instead of spiraling into anxiety, I was able to stay grounded and focused.',
+      tags: ['empowerment', 'anxiety-management', 'grounding']
+    },
+    {
+      minutesAgo: 2,
+      sender: 'bot' as const,
+      content: 'That\'s a significant breakthrough! You\'re developing real resilience. Remember to celebrate these victories - they\'re proof of your growth and hard work.',
+      tags: ['breakthrough', 'resilience', 'celebration']
+    },
+    {
+      minutesAgo: 0,
+      sender: 'system' as const,
+      content: 'Hi! I\'m your ReflectMe companion, here to support you between sessions. How are you feeling today?',
+      tags: ['welcome', 'check-in']
+    }
+  ];
+
+  demoMessages.forEach((demo, index) => {
+    const messageTime = new Date(now.getTime() - demo.minutesAgo * 60000);
+    
+    messages.push({
+      id: `demo-chat-${index + 1}`,
+      sender: demo.sender,
+      content: demo.content,
+      timestamp: messageTime.toISOString(),
+      tags: demo.tags
+    });
+  });
+
+  return messages.reverse(); // Return in chronological order
+};
 
 // Mock chat history
-const mockChatHistory: ChatMessage[] = [
-  {
-    id: '1',
-    sender: 'system',
-    content: 'Hi! I\'m your ReflectMe companion, here to support you between sessions. How are you feeling today?',
-    timestamp: '2024-01-16T08:00:00Z',
-  },
-];
+const mockChatHistory: ChatMessage[] = generateDemoChatHistory();
 
 export const TherapyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [allClients] = useState<Client[]>(mockClients);
   const [clients, setClients] = useState<Client[]>([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(mockJournalEntries);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>(mockChatHistory);
 
-  // Filter clients based on user role and email
+  // Fetch real patients from Supabase or provide demo data
   useEffect(() => {
-    if (!user) {
-      setClients([]);
-      return;
-    }
-
-    console.log('🔍 Filtering clients for user:', { 
-      email: user.email, 
-      role: user.role,
-      totalClients: allClients.length 
-    });
-
-    if (user.role === 'therapist') {
-      // For demo therapist, show all clients
-      if (user.email === 'therapist@mindtwin.demo') {
-        console.log('✅ Demo therapist detected - showing all clients');
-        setClients(allClients);
-      } else {
-        // For other therapists, filter by their email
-        const therapistClients = allClients.filter(client => client.therapistEmail === user.email);
-        console.log('📋 Filtered clients for therapist:', therapistClients.length);
-        setClients(therapistClients);
+    const fetchClients = async () => {
+      if (!user || user.role !== 'therapist') {
+        setClients([]);
+        return;
       }
-    } else if (user.role === 'patient') {
-      // Patient sees only their own data (as a client record)
-      const patientClient = allClients.find(client => client.email === user.email);
-      console.log('👤 Patient client found:', !!patientClient);
-      setClients(patientClient ? [patientClient] : []);
-    }
-  }, [user, allClients]);
+
+      // If it's a demo therapist, provide demo clients
+      if (user.isDemo) {
+        console.log('🎭 Loading demo clients for therapist');
+        const demoClients: Client[] = [
+          {
+            id: 'demo-client-1',
+            name: 'Sarah Johnson',
+            email: 'sarah.j@email.com',
+            avatar: 'https://api.dicebear.com/7.x/personas/svg?seed=sarah-johnson',
+            age: 28,
+            gender: 'female',
+            therapistEmail: user.email,
+            lastSessionDate: format(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 2 days ago
+            nextSessionDate: format(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 5 days from now
+            mood: 3,
+            moodHistory: [
+              { date: format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 2 },
+              { date: format(new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 3 },
+              { date: format(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 4 },
+              { date: format(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 3 },
+            ],
+            notes: [
+              {
+                id: 'note-1',
+                date: format(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+                title: 'Session Notes - Anxiety Management',
+                content: 'Sarah showed significant progress with breathing techniques. Discussed workplace stress triggers and developed coping strategies for upcoming presentation.',
+                tags: ['anxiety', 'workplace', 'breathing-techniques', 'presentation']
+              },
+              {
+                id: 'note-2',
+                date: format(new Date(Date.now() - 9 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+                title: 'Initial Assessment',
+                content: 'Generalized anxiety disorder with perfectionist tendencies. Client reports high stress at work and difficulty sleeping.',
+                tags: ['assessment', 'anxiety', 'perfectionism', 'sleep']
+              }
+            ],
+            triggers: ['public speaking', 'deadline pressure', 'criticism', 'large groups'],
+            copingStrategies: [
+              {
+                id: 'strategy-1',
+                title: 'Box Breathing',
+                description: '4-4-4-4 breathing technique for anxiety management',
+                steps: ['Inhale for 4 counts', 'Hold for 4 counts', 'Exhale for 4 counts', 'Hold for 4 counts', 'Repeat 5-10 times'],
+                tags: ['breathing', 'anxiety', 'quick-relief'],
+                effectiveness: 8
+              },
+              {
+                id: 'strategy-2',
+                title: 'Evidence Chart',
+                description: 'Challenge negative thoughts with evidence',
+                steps: ['Write down the negative thought', 'List evidence for the thought', 'List evidence against the thought', 'Write a balanced perspective'],
+                tags: ['cognitive', 'perfectionism', 'thought-challenge'],
+                effectiveness: 7
+              }
+            ],
+            medicalHistory: 'No significant medical history. Occasional headaches related to stress.',
+            familyHistory: 'Mother has history of anxiety. No other significant family mental health history.',
+            developmentalHistory: 'High achiever throughout school. Perfectionist tendencies developed in adolescence.',
+            safetyNotes: 'No current safety concerns. Low risk for self-harm.'
+          },
+          {
+            id: 'demo-client-2',
+            name: 'Michael Chen',
+            email: 'michael.c@email.com',
+            avatar: 'https://api.dicebear.com/7.x/personas/svg?seed=michael-chen',
+            age: 35,
+            gender: 'male',
+            therapistEmail: user.email,
+            lastSessionDate: format(new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 5 days ago
+            nextSessionDate: format(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 2 days from now
+            mood: 4,
+            moodHistory: [
+              { date: format(new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 2 },
+              { date: format(new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 3 },
+              { date: format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 4 },
+              { date: format(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 4 },
+            ],
+            notes: [
+              {
+                id: 'note-3',
+                date: format(new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+                title: 'Progress Review - Depression Management',
+                content: 'Michael reports improved mood stability. Sleep schedule is more regular. Discussed relationship challenges and communication skills.',
+                tags: ['depression', 'relationships', 'sleep', 'communication']
+              }
+            ],
+            triggers: ['isolation', 'work-life imbalance', 'relationship conflicts'],
+            copingStrategies: [
+              {
+                id: 'strategy-3',
+                title: 'Daily Activity Scheduling',
+                description: 'Structure daily routine with meaningful activities',
+                steps: ['Plan 3 activities each day', 'Include 1 social activity', 'Include 1 physical activity', 'Include 1 enjoyable activity', 'Track completion and mood'],
+                tags: ['behavioral-activation', 'depression', 'routine'],
+                effectiveness: 8
+              }
+            ],
+            medicalHistory: 'History of depression. Currently on SSRI medication.',
+            familyHistory: 'Father has history of depression.',
+            developmentalHistory: 'Shy child, became more withdrawn in teenage years.',
+            safetyNotes: 'Previous history of depressive episodes. Monitor for early warning signs.'
+          },
+          {
+            id: 'demo-client-3',
+            name: 'Emma Rodriguez',
+            email: 'emma.r@email.com',
+            avatar: 'https://api.dicebear.com/7.x/personas/svg?seed=emma-rodriguez',
+            age: 22,
+            gender: 'female',
+            therapistEmail: user.email,
+            lastSessionDate: format(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 1 day ago
+            nextSessionDate: format(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 6 days from now
+            mood: 2,
+            moodHistory: [
+              { date: format(new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 3 },
+              { date: format(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 2 },
+              { date: format(new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 1 },
+              { date: format(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), value: 2 },
+            ],
+            notes: [
+              {
+                id: 'note-4',
+                date: format(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+                title: 'Crisis Session - Academic Stress',
+                content: 'Emma experiencing high stress due to upcoming exams. Discussed grounding techniques and academic pressure management. Schedule follow-up this week.',
+                tags: ['crisis', 'academic-stress', 'grounding', 'follow-up-needed']
+              }
+            ],
+            triggers: ['exam pressure', 'academic failure fears', 'family expectations'],
+            copingStrategies: [
+              {
+                id: 'strategy-4',
+                title: '5-4-3-2-1 Grounding',
+                description: 'Sensory grounding technique for anxiety',
+                steps: ['Name 5 things you can see', 'Name 4 things you can touch', 'Name 3 things you can hear', 'Name 2 things you can smell', 'Name 1 thing you can taste'],
+                tags: ['grounding', 'anxiety', 'sensory', 'immediate-relief'],
+                effectiveness: 9
+              }
+            ],
+            medicalHistory: 'No significant medical history.',
+            familyHistory: 'High-achieving family with academic expectations.',
+            developmentalHistory: 'Academic overachiever, recent struggles with university transition.',
+            safetyNotes: 'Monitor for academic burnout. Increase session frequency during exam periods.'
+          }
+        ];
+        
+        setClients(demoClients);
+        return;
+      }
+
+      // For real therapists, load from database
+      const { data, error } = await supabase.from('patients').select('*');
+      if (error) {
+        console.error('Error fetching patients from Supabase:', error);
+        setClients([]);
+        return;
+      }
+      
+      const mappedClients: Client[] = (data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        avatar: p.avatar || `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(p.name || p.email)}`,
+        age: p.age || 0,
+        gender: p.gender || 'other',
+        therapistEmail: p.therapist_email || user.email,
+        lastSessionDate: p.last_session_date || format(new Date(), 'yyyy-MM-dd'),
+        nextSessionDate: p.next_session_date || format(new Date(), 'yyyy-MM-dd'),
+        mood: 3,
+        moodHistory: [],
+        notes: [],
+        triggers: [],
+        copingStrategies: [],
+        medicalHistory: '',
+        familyHistory: '',
+        developmentalHistory: '',
+        safetyNotes: '',
+      }));
+      setClients(mappedClients);
+    };
+    fetchClients();
+  }, [user]);
 
   const addClient = (client: Omit<Client, 'id'>) => {
     const newClient = {

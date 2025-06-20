@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTherapy } from '../../contexts/TherapyContext';
-import { Tag, X, Save, ArrowLeft, Plus } from 'lucide-react';
+import { Tag, X, Save, ArrowLeft, Plus, Brain } from 'lucide-react';
+import { AINotesAnalysis } from '../../components/therapist/AINotesAnalysis';
+import { getClientDisplayName } from '../../utils/clientUtils';
 
 const Notes: React.FC = () => {
   const { clientId } = useParams<{ clientId: string }>();
@@ -17,8 +19,9 @@ const Notes: React.FC = () => {
   const [selectedText, setSelectedText] = useState('');
   const [showTagPopup, setShowTagPopup] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   
-  if (!client) {
+  if (!client && !clientId) {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold text-neutral-900">Client not found</h2>
@@ -26,6 +29,10 @@ const Notes: React.FC = () => {
       </div>
     );
   }
+
+  // Use client data if available, otherwise use clientId for display
+  const displayName = client?.name || getClientDisplayName(clientId || '');
+  const actualClientId = clientId || client?.id || '';
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,14 +42,16 @@ const Notes: React.FC = () => {
       return;
     }
     
-    addNote(client.id, {
-      date: new Date().toISOString().split('T')[0],
-      title,
-      content,
-      tags,
-    });
+    if (client) {
+      addNote(client.id, {
+        date: new Date().toISOString().split('T')[0],
+        title,
+        content,
+        tags,
+      });
+    }
     
-    navigate(`/therapist/client/${client.id}`);
+    navigate(`/therapist/client/${actualClientId}`);
   };
   
   const addTagToList = () => {
@@ -89,16 +98,36 @@ const Notes: React.FC = () => {
   };
 
   return (
-    <div>
-      <div className="flex items-center mb-6">
-        <button 
-          onClick={() => navigate(`/therapist/client/${client.id}`)} 
-          className="p-2 rounded-full hover:bg-neutral-100 mr-3"
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <button 
+            onClick={() => navigate(`/therapist/client/${actualClientId}`)} 
+            className="p-2 rounded-full hover:bg-neutral-100 mr-3"
+          >
+            <ArrowLeft className="w-5 h-5 text-neutral-600" />
+          </button>
+          <h1 className="text-2xl font-bold text-neutral-900">Note di Sessione - {displayName}</h1>
+        </div>
+
+        {/* Toggle AI Analysis */}
+        <button
+          onClick={() => setShowAIAnalysis(!showAIAnalysis)}
+          className={`btn flex items-center space-x-2 ${showAIAnalysis ? 'btn-primary' : 'btn-outline'}`}
         >
-          <ArrowLeft className="w-5 h-5 text-neutral-600" />
+          <Brain className="w-4 h-4" />
+          <span>{showAIAnalysis ? 'Nascondi Analisi AI' : 'Mostra Analisi AI'}</span>
         </button>
-        <h1 className="text-2xl font-bold text-neutral-900">Add Session Note</h1>
       </div>
+
+      {/* AI Analysis Panel */}
+      {showAIAnalysis && actualClientId && (
+        <AINotesAnalysis 
+          clientId={actualClientId}
+          clientName={displayName}
+          className="mb-6"
+        />
+      )}
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -107,36 +136,42 @@ const Notes: React.FC = () => {
       >
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label htmlFor="client" className="label">Client</label>
+            <label htmlFor="client" className="label">Cliente</label>
             <div className="flex items-center px-3 py-2 border border-neutral-300 rounded-md bg-neutral-50">
-              <div className="w-8 h-8 rounded-full overflow-hidden mr-3">
-                <img 
-                  src={client.avatar} 
-                  alt={client.name} 
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-8 h-8 rounded-full overflow-hidden mr-3 bg-primary-100 flex items-center justify-center">
+                {client?.avatar ? (
+                  <img 
+                    src={client.avatar} 
+                    alt={displayName} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-primary-600 font-semibold text-sm">
+                    {displayName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </span>
+                )}
               </div>
-              <span className="font-medium text-neutral-900">{client.name}</span>
+              <span className="font-medium text-neutral-900">{displayName}</span>
             </div>
           </div>
           
           <div className="mb-6">
-            <label htmlFor="title" className="label">Note Title</label>
+            <label htmlFor="title" className="label">Titolo della Nota</label>
             <input
               type="text"
               id="title"
               className="input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Initial Assessment, CBT Session, Progress Review"
+              placeholder="es. Valutazione Iniziale, Sessione CBT, Revisione Progressi"
               required
             />
           </div>
           
           <div className="mb-6">
-            <label htmlFor="content" className="label">Session Notes</label>
+            <label htmlFor="content" className="label">Note di Sessione</label>
             <p className="text-sm text-neutral-500 mb-2">
-              Select text to tag as triggers or coping strategies.
+              Seleziona il testo per taggarlo come trigger o strategie di coping.
             </p>
             <textarea
               id="content"
@@ -144,7 +179,7 @@ const Notes: React.FC = () => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onMouseUp={handleTextSelection}
-              placeholder="Document your observations, interventions, and client's progress..."
+              placeholder="Documenta le tue osservazioni, interventi e progressi del cliente..."
               required
             ></textarea>
             
@@ -163,14 +198,14 @@ const Notes: React.FC = () => {
                     onClick={handleAddAsTag}
                     className="px-3 py-1 bg-primary-100 text-primary-800 rounded-md text-sm"
                   >
-                    Add as Tag
+                    Aggiungi come Tag
                   </button>
                   <button
                     type="button"
                     onClick={handleAddAsTrigger}
                     className="px-3 py-1 bg-warning-100 text-warning-800 rounded-md text-sm"
                   >
-                    Mark as Trigger
+                    Segna come Trigger
                   </button>
                 </div>
               </div>
@@ -178,14 +213,14 @@ const Notes: React.FC = () => {
           </div>
           
           <div className="mb-6">
-            <label className="label">Tags</label>
+            <label className="label">Tag</label>
             <div className="flex items-center mb-2">
               <input
                 type="text"
                 className="input rounded-r-none"
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
-                placeholder="Add tags (e.g., anxiety, CBT, homework)"
+                placeholder="Aggiungi tag (es. ansia, CBT, compiti)"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -198,58 +233,50 @@ const Notes: React.FC = () => {
                 onClick={addTagToList}
                 className="bg-primary-600 text-white px-4 py-2 rounded-r-md hover:bg-primary-700"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
               </button>
             </div>
             
-            <div className="flex flex-wrap gap-2">
-              {tags.map((t, index) => (
-                <div 
-                  key={index}
-                  className="flex items-center bg-primary-100 text-primary-800 px-3 py-1 rounded-full"
-                >
-                  <Tag className="w-3 h-3 mr-1" />
-                  <span className="text-sm">{t}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeTag(t)}
-                    className="ml-2 text-primary-600 hover:text-primary-800"
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((t, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm"
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <Tag className="w-3 h-3 mr-1" />
+                    {t}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(t)}
+                      className="ml-2 text-primary-600 hover:text-primary-800"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           
           <div className="flex justify-end space-x-3">
             <button
               type="button"
-              onClick={() => navigate(`/therapist/client/${client.id}`)}
-              className="btn btn-ghost"
+              onClick={() => navigate(`/therapist/client/${actualClientId}`)}
+              className="btn btn-outline"
             >
-              Cancel
+              Annulla
             </button>
             <button
               type="submit"
-              className="btn btn-primary"
-              disabled={!title.trim() || !content.trim()}
+              className="btn btn-primary flex items-center"
             >
               <Save className="w-4 h-4 mr-2" />
-              Save Note
+              Salva Nota
             </button>
           </div>
         </form>
       </motion.div>
-      
-      <div className="mt-6 p-4 bg-primary-50 border border-primary-200 rounded-lg">
-        <h2 className="font-medium text-primary-900 mb-2">Note to Therapists</h2>
-        <p className="text-sm text-primary-800">
-          Tagged content and triggers identified in your notes help build your client's digital twin. 
-          This allows the companion to provide personalized support based on your therapeutic approach.
-          All notes are encrypted and only accessible to you and the client's digital companion.
-        </p>
-      </div>
     </div>
   );
 };

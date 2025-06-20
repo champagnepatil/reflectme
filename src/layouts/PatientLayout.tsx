@@ -38,7 +38,7 @@ const PatientLayout: React.FC = () => {
             <Link to="/" className="p-2 rounded-full hover:bg-slate-100 mr-3 transition-colors">
               <ArrowLeft className="w-5 h-5 text-slate-600" />
             </Link>
-            <Link to="/patient" className="flex items-center group">
+            <Link to="/client" className="flex items-center group">
               <div className="w-10 h-10 gradient-primary rounded-2xl flex items-center justify-center shadow-soft">
                 <Heart className="w-6 h-6 text-white" />
               </div>
@@ -68,9 +68,9 @@ const PatientLayout: React.FC = () => {
             
             <nav className="flex-grow space-y-1">
               <Link 
-                to="/patient" 
+                to="/client" 
                 className={`flex items-center p-2 rounded-md ${
-                  location.pathname === '/patient' 
+                  location.pathname === '/client' 
                     ? 'bg-blue-50 text-blue-700' 
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
@@ -80,9 +80,9 @@ const PatientLayout: React.FC = () => {
               </Link>
               
               <Link 
-                to="/patient/chat" 
+                to="/client/chat" 
                 className={`flex items-center p-2 rounded-md ${
-                  location.pathname === '/patient/chat' 
+                  location.pathname === '/client/chat' 
                     ? 'bg-blue-50 text-blue-700' 
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
@@ -92,9 +92,9 @@ const PatientLayout: React.FC = () => {
               </Link>
               
               <Link 
-                to="/patient/journal" 
+                to="/client/journal" 
                 className={`flex items-center p-2 rounded-md ${
-                  location.pathname === '/patient/journal' 
+                  location.pathname === '/client/journal' 
                     ? 'bg-blue-50 text-blue-700' 
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
@@ -104,9 +104,9 @@ const PatientLayout: React.FC = () => {
               </Link>
               
               <Link 
-                to="/patient/monitoring" 
+                to="/client/monitoring" 
                 className={`flex items-center p-2 rounded-md ${
-                  location.pathname === '/patient/monitoring' 
+                  location.pathname === '/client/monitoring' 
                     ? 'bg-blue-50 text-blue-700' 
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
@@ -116,9 +116,9 @@ const PatientLayout: React.FC = () => {
               </Link>
               
               <Link 
-                to="/patient/settings" 
+                to="/client/settings" 
                 className={`flex items-center p-2 rounded-md ${
-                  location.pathname === '/patient/settings' 
+                  location.pathname === '/client/settings' 
                     ? 'bg-blue-50 text-blue-700' 
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}

@@ -8,6 +8,7 @@ interface AuthUser {
   email: string;
   role: 'therapist' | 'patient';
   avatar?: string;
+  isDemo?: boolean;
 }
 
 interface AuthContextType {
@@ -32,8 +33,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const mapUserWithProfile = async (authUser: User): Promise<AuthUser | null> => {
     if (!authUser) return null;
 
+    const isDemo = authUser.email?.endsWith('@mindtwin.demo') || false;
+    const role = isDemo 
+      ? authUser.email?.includes('therapist') ? 'therapist' : 'patient'
+      : authUser.user_metadata?.role || 'patient';
+
+    // For demo users, always return a valid user object (no database interactions needed)
+    if (isDemo) {
+      return {
+        id: authUser.id,
+        name: authUser.user_metadata?.name || (role === 'patient' ? 'Demo Client' : 'Demo Therapist'),
+        email: authUser.email || '',
+        role: role as 'therapist' | 'patient',
+        avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
+        isDemo: true,
+      };
+    }
+
+    // For regular users, try to get profile
     try {
-      // Get user profile from profiles table
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -47,21 +65,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: authUser.id,
           name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
           email: authUser.email || '',
-          role: authUser.user_metadata?.role || 'patient',
+          role: role as 'therapist' | 'patient',
           avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
+          isDemo: false,
         };
       }
 
       return {
         id: profile.id,
-        name: profile.name,
+        name: profile.name || (profile.first_name + ' ' + profile.last_name).trim(),
         email: authUser.email || '',
-        role: profile.role,
+        role: profile.role || role as 'therapist' | 'patient',
         avatar: profile.avatar_url || `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
+        isDemo: false,
       };
     } catch (error) {
       console.error('Error mapping user with profile:', error);
-      return null;
+      // Always return a fallback user object instead of null
+      return {
+        id: authUser.id,
+        name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+        email: authUser.email || '',
+        role: role as 'therapist' | 'patient',
+        avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
+        isDemo: false,
+      };
     }
   };
 
@@ -116,36 +144,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string, userData: any) => {
     console.log('📝 Signing up user:', { email, role: userData.role });
     
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name: userData.name,
-          role: userData.role,
-        },
-      },
-    });
-
-    if (error) throw error;
-
-    if (data.user) {
-      // Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: data.user.id,
+    try {
+      // Try to sign up first
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
             name: userData.name,
             role: userData.role,
-            avatar_url: `https://api.dicebear.com/7.x/personas/svg?seed=${email}`,
           },
-        ]);
+        },
+      });
 
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        // Don't throw here as the user is created
+      if (error) {
+        // If user already exists, try to sign in
+        if (error.message.includes('User already registered')) {
+          console.log('👤 User already exists, attempting sign in');
+          return await signIn(email, password);
+        }
+        throw error;
       }
+
+      if (data.user) {
+        // Split name into first_name and last_name
+        const nameParts = (userData.name || '').split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: data.user.id,
+              email: email,
+              first_name: firstName,
+              last_name: lastName,
+              role: userData.role,
+            },
+          ]);
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          // Don't throw here as the user is created
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error during signup:', error);
+      throw error;
     }
   };
 
@@ -163,6 +210,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     console.log('🚪 Signing out user');
     
+    // Check if it's a demo user
+    if (user?.isDemo) {
+      console.log('🎭 Demo user logout - skipping Supabase signOut');
+      setUser(null);
+      setSession(null);
+      return;
+    }
+    
+    // Regular user logout
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setUser(null);
@@ -181,61 +237,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🔐 Attempting login for:', email);
       
-      // Check if this is a demo account
-      const isDemoAccount = email.includes('@mindtwin.demo');
-      
+      // For demo accounts, create a mock session instead of real auth
+      const isDemoAccount = email.endsWith('@mindtwin.demo');
       if (isDemoAccount) {
-        console.log('🎭 Demo account detected:', email);
-        // For demo accounts, try to create them if they don't exist
-        const role = email.includes('patient@') ? 'patient' : 'therapist';
-        const name = role === 'patient' ? 'Demo Patient' : 'Demo Therapist';
+        console.log('🎭 Demo account detected - creating mock session');
         
-        try {
-          // First try to sign in
-          await signIn(email, password);
-          console.log('✅ Demo account signed in successfully');
-          return;
-        } catch (signInError: any) {
-          console.log('⚠️ Demo account sign-in failed, attempting to create:', signInError.message);
-          
-          if (signInError.message.includes('Invalid login credentials')) {
-            console.log('🔧 Demo account not found, creating it...');
-            
-            try {
-              // Create the demo account
-              await signUp(email, password, { name, role });
-              console.log('✅ Demo account created successfully');
-              
-              // Wait a moment for the account to be fully created
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              
-              // Try to sign in again
-              await signIn(email, password);
-              console.log('✅ Demo account signed in after creation');
-              return;
-            } catch (signUpError: any) {
-              console.error('❌ Demo account creation failed:', signUpError);
-              
-              if (signUpError.message.includes('User already registered')) {
-                console.log('🔄 Demo user already exists, trying sign-in again...');
-                // Wait a moment and try again
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                await signIn(email, password);
-                return;
-              }
-              
-              throw signUpError;
-            }
-          } else {
-            throw signInError;
-          }
+        if (password !== 'demo123456') {
+          throw new Error('Demo account password is incorrect. Use: demo123456');
         }
-      } else {
-        // Regular account login
-        await signIn(email, password);
+        
+        const role = email.includes('therapist') ? 'therapist' : 'patient';
+        const name = role === 'patient' ? 'Demo Client' : 'Demo Therapist';
+        
+        // Create mock demo user
+        const mockDemoUser: AuthUser = {
+          id: `demo-${role}-${Date.now()}`,
+          name,
+          email,
+          role,
+          avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(email)}`,
+          isDemo: true,
+        };
+        
+        // Set the user immediately
+        setUser(mockDemoUser);
+        setLoading(false);
+        
+        console.log('✅ Demo user logged in successfully:', mockDemoUser);
+        return;
       }
       
-      console.log('✅ Login successful');
+      // For regular accounts, use normal auth
+      await signIn(email, password);
+      console.log('✅ Regular login successful');
+      
     } catch (error) {
       console.error('❌ Login error:', error);
       throw error;

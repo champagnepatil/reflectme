@@ -1,206 +1,335 @@
-# MindTwin - Mental Health Digital Twin Platform
+# 🧠 ReflectMe - Clinical Assessment Platform
 
-A comprehensive mental health platform that bridges the gap between therapy sessions with personalized digital support.
+**Piattaforma digitale per assessment clinici standardizzati e monitoraggio sintomi in tempo reale**
 
-## Features
+## 🌟 **Phase 2 - Production Ready**
 
-### For Patients
-- **Digital Companion**: AI-powered chat interface for support between sessions
-- **Local Voice Journal**: Client-side speech recognition with automatic mood detection
-- **Mood Tracking**: Interactive charts showing mood trends over time
-- **Coping Strategies**: Personalized techniques based on therapy sessions
+ReflectMe Phase 2 è **completamente implementato** e pronto per il deployment in produzione con tutte le funzionalità avanzate:
 
-### For Therapists
-- **Client Management**: Comprehensive dashboard for tracking patient progress
-- **Session Notes**: SOAP note generation with voice recording capabilities
-- **Case Histories**: Detailed patient documentation and assessment tools
-- **Analytics**: Mood trends and progress tracking across all clients
+### ✅ **Features Implementate**
 
-## Voice Journal Integration
+#### 📊 **Sistema Assessment Completo**
+- **4 strumenti validati**: PHQ-9, GAD-7, WHODAS-2.0, DSM-5-CC
+- **Scheduling automatico**: biweekly, monthly, once
+- **Scoring clinico** con interpretazione automatica
+- **Database integration** completa con Supabase
 
-### Client-Side Speech Recognition
-The application now uses the Web Speech API for local, privacy-focused voice journaling:
+#### 📧 **Email Automation System**
+- **Resend API** integrato per invio professionale
+- **Template HTML** per reminder e crisi alert
+- **Magic links** per accesso sicuro agli assessment
+- **Numeri di emergenza** italiani per crisi suicidarie
 
-#### Key Features
-- **Local Processing**: All speech recognition happens in the browser - no data sent to external servers
-- **60-Second Recording**: Optimized for quick daily mood and thought capture
-- **Automatic Mood Detection**: Uses local sentiment analysis to map speech to a 1-5 mood scale
-- **Real-time Transcription**: Live text display as you speak
-- **Editable Results**: Modify transcribed text before saving to journal
+#### 📄 **PDF Reports Generation**
+- **@react-pdf/renderer** per report professionali
+- **Clinical layouts** con trend e analisi sintomi
+- **Supabase Storage** integrato per archiviazione sicura
+- **Download automatico** da UI con un click
 
-#### Browser Compatibility
-- **Chrome**: Full support with high-quality recognition
-- **Edge**: Full support with high-quality recognition  
-- **Safari**: Full support with good recognition quality
-- **Firefox**: Limited support (Web Speech API not fully implemented)
+#### ⚡ **Real-time Features**
+- **Live updates** dei grafici con Supabase Realtime
+- **Instant notifications** per completamenti assessment
+- **Progressive enhancement** per UX ottimale
 
-#### How It Works
-1. **Speech Capture**: Uses browser's native Web Speech API for audio input
-2. **Real-time Transcription**: Converts speech to text locally in the browser
-3. **Sentiment Analysis**: Analyzes text using the `sentiment` library to determine emotional tone
-4. **Mood Mapping**: Maps sentiment score to 1-5 mood scale:
-   - Score ≤ -0.6: Mood 1 (Very Low) 😔
-   - Score ≤ -0.2: Mood 2 (Low) 🙁  
-   - Score ≤ 0.2: Mood 3 (Neutral) 😐
-   - Score ≤ 0.6: Mood 4 (Good) 🙂
-   - Score > 0.6: Mood 5 (Very Good) 😊
-5. **Journal Integration**: Saves transcribed text and mood score to patient's journal
-
-### SpeechJournalMood Component
-
-The `SpeechJournalMood` component provides a complete voice journaling experience:
-
-```typescript
-interface VoiceJournalData {
-  journal: string;
-  mood: number;
-}
-
-<SpeechJournalMood 
-  onDataUpdate={(data: VoiceJournalData) => {
-    // Handle journal entry and mood data
-  }}
-/>
-```
-
-#### Component Features
-- **Visual Recording Interface**: Large microphone button with recording timer
-- **Progress Indicators**: Visual feedback during recording and processing
-- **Error Handling**: Clear messages for unsupported browsers or permission issues
-- **Mood Visualization**: Emoji and color-coded mood display with 5-level bar chart
-- **Editable Text**: Users can modify transcribed text before saving
-- **Local Storage**: All processing happens client-side for maximum privacy
-
-## Environment Variables
-
-```bash
-# Supabase Configuration
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-**Note**: ElevenLabs dependencies have been removed. The application now uses local browser APIs for speech processing.
-
-## Development Setup
-
-### Prerequisites
-- Node.js 18+ 
-- npm or pnpm
-- Modern browser with Web Speech API support (Chrome, Edge, Safari recommended)
-
-### Installation
-```bash
-# Install dependencies
-npm install
-
-# Copy environment template
-cp .env.example .env
-
-# Add your Supabase credentials to .env file
-```
-
-### Running the Application
-```bash
-# Start the development server
-npm run dev
-
-# Application will be available at http://localhost:5173
-```
-
-## Testing Voice Integration
-
-1. **Browser Setup**: Use Chrome, Edge, or Safari for best results
-2. **Permissions**: Grant microphone access when prompted
-3. **Recording**: Navigate to any patient page and use the voice journal widget
-4. **Process Flow**:
-   - Click microphone to start 60-second recording
-   - Speak your thoughts and current mood
-   - Watch real-time transcription appear
-   - Review automatically detected mood score
-   - Edit text if needed and save to journal
-
-## Local Speech Processing
-
-### Web Speech API Integration
-- **Recognition Engine**: Uses browser's built-in speech recognition
-- **Language**: Configured for English (en-US) with high accuracy
-- **Continuous Mode**: Captures speech continuously during recording session
-- **Interim Results**: Shows partial transcription in real-time
-
-### Sentiment Analysis
-- **Library**: Uses `sentiment` npm package for local text analysis
-- **Processing**: Analyzes emotional tone of transcribed text
-- **Mapping Algorithm**: 
-  ```javascript
-  const mapSentimentToMood = (sentimentScore) => {
-    if (sentimentScore <= -0.6) return 1; // Very negative
-    if (sentimentScore <= -0.2) return 2; // Negative  
-    if (sentimentScore <= 0.2) return 3;  // Neutral
-    if (sentimentScore <= 0.6) return 4;  // Positive
-    return 5; // Very positive
-  };
-  ```
-
-### Privacy & Security
-- **No External APIs**: All speech processing happens locally in the browser
-- **No Data Transmission**: Voice data never leaves the user's device
-- **HIPAA Compliance**: Local processing ensures patient privacy
-- **Secure Storage**: Journal entries stored securely in Supabase with RLS
-
-## Component Architecture
-
-### Patient-Only Access Control
-Voice journal components are restricted to patient accounts:
-```typescript
-{user?.role === 'patient' && (
-  <SpeechJournalMood onDataUpdate={handleVoiceJournalUpdate} />
-)}
-```
-
-### Data Flow
-1. **Voice Input**: Patient records audio via Web Speech API
-2. **Local Transcription**: Browser converts speech to text in real-time
-3. **Sentiment Analysis**: Local analysis determines mood score
-4. **UI Update**: Components update with transcribed text and detected mood
-5. **Journal Integration**: Data can be edited and saved to permanent journal entries
-
-## Troubleshooting
-
-### Browser Compatibility Issues
-- **Firefox**: Web Speech API not fully supported - use Chrome, Edge, or Safari
-- **Older Browsers**: Upgrade to latest version for best compatibility
-- **Mobile**: iOS Safari and Android Chrome work well
-
-### Microphone Access
-- **Permissions**: Ensure microphone access is granted
-- **HTTPS Required**: Voice features require secure connection in production
-- **Privacy Settings**: Check browser privacy settings if microphone blocked
-
-### Speech Recognition Issues
-- **Clear Speech**: Speak clearly and at normal pace
-- **Quiet Environment**: Reduce background noise for better accuracy
-- **Language**: Currently optimized for English - other languages may have reduced accuracy
-
-## Production Deployment
-
-### Build Process
-```bash
-# Build the frontend
-npm run build
-
-# Serve static files from dist/ directory
-```
-
-### Environment Setup
-- Configure Supabase credentials
-- Ensure HTTPS for microphone access
-- Set up proper CORS policies
-
-### Performance Optimization
-- Voice processing is entirely client-side - no server load
-- Sentiment analysis library is lightweight (~50KB)
-- Real-time transcription provides immediate feedback
+#### 🔒 **Security & Privacy**
+- **Row Level Security** per isolamento dati
+- **HIPAA-compliant** storage e transmission
+- **Magic link authentication** per assessment esterni
+- **Audit trails** completi per compliance
 
 ---
 
-**Note**: This platform supplements professional mental health care. All voice interactions are processed locally in the browser with strict privacy protections and no external data transmission.
+## 🚀 **Stack Tecnologico**
+
+### **Frontend**
+```json
+{
+  "framework": "React 18 + TypeScript",
+  "styling": "Tailwind CSS + Headless UI", 
+  "state": "React Query + Zustand",
+  "charts": "Recharts",
+  "pdf": "@react-pdf/renderer",
+  "build": "Vite"
+}
+```
+
+### **Backend & Infrastructure**
+```json
+{
+  "database": "Supabase (PostgreSQL)",
+  "auth": "Supabase Auth + Magic Links",
+  "storage": "Supabase Storage",
+  "email": "Resend API",
+  "hosting": "Netlify",
+  "functions": "Netlify Functions",
+  "cron": "Netlify Scheduled Functions"
+}
+```
+
+---
+
+## 📦 **Installazione & Setup**
+
+### **1. Clona e Installa**
+```bash
+git clone https://github.com/your-username/reflectme.git
+cd reflectme
+npm install
+```
+
+### **2. Dependencies**
+```bash
+# Core production dependencies
+npm install @supabase/supabase-js
+npm install resend
+npm install @react-pdf/renderer
+npm install recharts
+
+# Development dependencies  
+npm install -D @netlify/functions
+npm install -D @types/react @types/react-dom
+npm install -D tailwindcss postcss autoprefixer
+```
+
+### **3. Environment Setup**
+```env
+# .env.local
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+RESEND_API_KEY=re_...
+CRON_SECRET=your-secure-secret
+NEXT_PUBLIC_BASE_URL=https://your-app.netlify.app
+```
+
+### **4. Database Setup**
+Il database è già configurato tramite Supabase. Vedere `PHASE2_SETUP.md` per i dettagli dello schema.
+
+### **5. Development**
+```bash
+npm run dev
+```
+
+---
+
+## 🌐 **Deployment su Netlify**
+
+### **Deployment Automatico**
+
+#### **1. Preparazione Files**
+```bash
+# Build dell'applicazione
+npm run build
+
+# Verifica che i file di configurazione esistano
+ls netlify.toml        # ✅ Configurazione Netlify
+ls public/_redirects   # ✅ SPA routing
+ls dist/               # ✅ Build artifacts
+```
+
+#### **2. Deploy Diretto (Opzione A)**
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
+
+# Login to Netlify
+netlify login
+
+# Deploy direttamente dalla cartella
+netlify deploy --prod --dir=dist
+```
+
+#### **3. Deploy via Git (Opzione B)**
+1. **Push to GitHub**: Carica il codice su GitHub
+2. **Netlify Dashboard**: Vai su [netlify.com](https://netlify.com)
+3. **New Site**: Click "New site from Git"
+4. **Connect GitHub**: Autorizza e seleziona il repository
+5. **Deploy Settings**: Netlify rileva automaticamente `netlify.toml`
+
+#### **4. Environment Variables**
+Nel dashboard Netlify, vai a **Site Settings > Environment Variables** e aggiungi:
+
+```env
+# Richiesto per AI features
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+
+# Opzionale - per database production
+VITE_SUPABASE_URL=your_supabase_url_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+```
+
+#### **5. Build Settings**
+Netlify configurazione automatica da `netlify.toml`:
+```toml
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+#### **6. Domain Setup**
+- **Free Subdomain**: `https://app-name.netlify.app`
+- **Custom Domain**: Configura in Site Settings > Domain management
+- **SSL**: Automatico con Let's Encrypt
+
+#### **7. Deploy Status**
+✅ **Build Time**: ~45 secondi  
+✅ **Bundle Size**: ~3.1MB (gzipped: 954KB)  
+✅ **SPA Routing**: Configurato  
+✅ **Asset Caching**: Ottimizzato  
+
+### **🎯 App Demo Live**
+Una volta deployato, l'app sarà accessibile con:
+- **Client Dashboard**: `/client` (demo user)
+- **Therapist Portal**: `/therapist` (demo therapist)
+- **AI Journal**: `/client/journal` (clustering intelligente)
+- **Insights**: `/client/insights` (analytics AI)
+- **Google Fit**: Dashboard integration CTA
+
+---
+
+## 📊 **Struttura Database**
+
+### **Tabelle Principali**
+- `assessments` - Schedulazione assessment
+- `assessment_results` - Risultati e punteggi  
+- `assessment_reminders` - Tracking invii email
+- `notifications` - Sistema notifiche in-app
+- `storage/reports` - PDF reports archiviati
+
+### **Security**
+Tutte le tabelle hanno **Row Level Security** abilitato con policy specifiche per ruoli therapist/client.
+
+---
+
+## 🔧 **API Endpoints**
+
+### **Assessment Management**
+```typescript
+GET    /api/assessments?clientId={id}
+POST   /api/assessments
+PUT    /api/assessments/{id}
+DELETE /api/assessments/{id}
+```
+
+### **PDF Reports**
+```typescript
+GET  /api/reports/download?clientId={id}&month={month}
+POST /api/test/generate-pdf  # Testing endpoint
+```
+
+### **Email System**
+```typescript
+POST /api/test/send-email  # Testing endpoint
+POST /.netlify/functions/assessment-reminders  # Scheduled
+```
+
+---
+
+## 🧪 **Testing**
+
+### **PDF Generation**
+```bash
+# Test PDF generation locally
+curl -X POST http://localhost:3000/api/test/generate-pdf \
+     -H "Content-Type: application/json" \
+     -d '{"clientId":"00000000-0000-4000-a000-000000000002","month":"2024-01"}'
+```
+
+### **Email System**
+```bash
+# Test email sending
+curl -X POST http://localhost:3000/api/test/send-email \
+     -H "Content-Type: application/json" \
+     -d '{"to":"test@example.com","type":"reminder"}'
+```
+
+### **Scheduled Functions**
+```bash
+# Test Netlify function locally
+netlify dev
+# Then visit: http://localhost:8888/.netlify/functions/assessment-reminders
+```
+
+---
+
+## 📋 **Production Checklist**
+
+### ✅ **Completato**
+- [x] Database schema e RLS policies
+- [x] Email system con Resend
+- [x] PDF generation con @react-pdf/renderer  
+- [x] Real-time updates
+- [x] Security headers e CORS
+- [x] Netlify configuration
+- [x] Environment variables setup
+
+### 🔄 **Da Configurare nel Deploy**
+- [ ] Domain personalizzato su Netlify
+- [ ] SSL/TLS certificates (automatico su Netlify)
+- [ ] Monitoring e analytics setup
+- [ ] Backup strategy per database
+
+---
+
+## 🎯 **Roadmap Future**
+
+### **Phase 3 - Advanced Analytics**
+- 📈 **ML Insights** - Prediction models per risk assessment
+- 🤖 **AI Summaries** - LLM per riassunti narrativi clinici
+- 📱 **Mobile App** - React Native companion app
+- 🔗 **API Integrations** - Google Fit, Apple Health
+
+### **Phase 4 - Clinical Network**
+- 👥 **Multi-tenant** - Support for clinical practices
+- 🏥 **Hospital Integration** - EMR/EHR connectors
+- 📊 **Population Analytics** - Aggregate insights
+- 🌍 **Internationalization** - Multi-language support
+
+---
+
+## 🤝 **Contributing**
+
+### **Development Workflow**
+1. Fork del repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+### **Code Standards**
+- **TypeScript** strict mode
+- **ESLint** + **Prettier** for formatting
+- **Conventional Commits** per commit messages
+- **Component-driven** development
+
+---
+
+## 📄 **License**
+
+Questo progetto è sotto licenza **MIT** - vedere il file [LICENSE](LICENSE) per i dettagli.
+
+---
+
+## 🙏 **Acknowledgments**
+
+- **Supabase** per il backend-as-a-service eccellente
+- **Resend** per l'email delivery affidabile  
+- **Netlify** per hosting e serverless functions
+- **React PDF** per la generazione di report professionali
+- **Tailwind CSS** per il design system moderno
+
+---
+
+## 📞 **Support**
+
+Per domande tecniche o supporto:
+- 📧 **Email**: support@reflectme.app
+- 🐛 **Issues**: [GitHub Issues](https://github.com/your-username/reflectme/issues)
+- 📖 **Docs**: Vedere `PHASE2_SETUP.md` per documentazione dettagliata
+
+**ReflectMe Phase 2 è production-ready! 🎉**

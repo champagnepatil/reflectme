@@ -2,16 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTherapy, ChatMessage } from '../../contexts/TherapyContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { SpeechJournalMood } from '../../components/SpeechJournalMood';
-import { Send, ChevronRight, Info, HelpCircle } from 'lucide-react';
+import { Send, Info, HelpCircle, Mic, Square, X } from 'lucide-react';
 
 const Chat: React.FC = () => {
-  const { chatHistory, addChatMessage, addJournalEntry } = useTherapy();
+  const { chatHistory, addChatMessage } = useTherapy();
   const { user } = useAuth();
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showInfo, setShowInfo] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -20,6 +21,56 @@ const Chat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [chatHistory]);
+
+  const startRecording = async () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      console.error('Speech recognition not supported');
+      return;
+    }
+
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('');
+        
+        setInputValue(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      
+    } catch (err) {
+      console.error('Speech recognition error:', err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+    }
+    setIsRecording(false);
+  };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,183 +93,153 @@ const Chat: React.FC = () => {
     }, 1500);
   };
 
-  const handleQuickAccess = (message: string) => {
-    setInputValue(message);
-    // Focus the input field
-    const inputElement = document.querySelector('input[type="text"]') as HTMLInputElement;
-    if (inputElement) {
-      inputElement.focus();
-    }
-  };
-
-  const handleVoiceJournalUpdate = (data: { journal: string; mood: number }) => {
-    if (data.journal && data.mood > 0) {
-      addJournalEntry({
-        date: new Date().toISOString().split('T')[0],
-        mood: data.mood,
-        content: data.journal,
-        tags: ['voice-recorded', 'chat-session'],
-      });
-    }
-  };
-
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
-    <div className="h-[calc(100vh-12rem)] flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">Your Digital Companion</h1>
-        <button 
-          onClick={() => setShowInfo(!showInfo)}
-          className="p-2 rounded-full hover:bg-neutral-100 transition-colors"
-        >
-          <Info className="w-5 h-5 text-neutral-500" />
-        </button>
-      </div>
-
-      {/* Voice Journal Interface */}
-      {user?.role === 'patient' && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-6"
-        >
-          <SpeechJournalMood 
-            onDataUpdate={handleVoiceJournalUpdate}
-          />
-        </motion.div>
-      )}
-
-      <AnimatePresence>
-        {showInfo && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mb-6 overflow-hidden"
+    <div className="flex flex-col h-full">
+      {/* Chat Messages */}
+      <div className="flex-grow overflow-y-auto p-4 space-y-4">
+        {chatHistory.map((message, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className="card p-4 bg-primary-50 border border-primary-200">
-              <div className="flex items-start">
-                <HelpCircle className="w-5 h-5 text-primary-600 mt-0.5 mr-3 flex-shrink-0" />
-                <div>
-                  <h3 className="font-medium text-primary-900 mb-2">About Your Digital Companion</h3>
-                  <p className="text-sm text-primary-800 mb-2">
-                    This AI companion is trained on your therapy notes and personal coping strategies. It's designed to provide support between sessions by:
-                  </p>
-                  <ul className="text-sm text-primary-800 list-disc pl-5 space-y-1 mb-2">
-                    <li>Recommending coping techniques your therapist has approved</li>
-                    <li>Guiding you through exercises you've learned in therapy</li>
-                    <li>Helping you practice skills and strategies</li>
-                    <li>Detecting potential crisis situations and providing appropriate resources</li>
-                  </ul>
-                  <p className="text-sm text-primary-800">
-                    <strong>Important:</strong> Your companion is not a replacement for your therapist. In crisis situations, please call emergency services or use the crisis resources provided.
-                  </p>
-                </div>
+            <div
+              className={`max-w-[80%] rounded-lg p-3 ${
+                message.sender === 'user'
+                  ? 'bg-primary-100 text-primary-900'
+                  : 'bg-neutral-100 text-neutral-900'
+              }`}
+            >
+              <p className="text-sm">{message.content}</p>
+              <span className="text-xs text-neutral-500 mt-1 block">
+                {formatTimestamp(message.timestamp)}
+              </span>
+            </div>
+          </motion.div>
+        ))}
+        
+        {isTyping && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-start"
+          >
+            <div className="bg-neutral-100 rounded-lg p-3">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce delay-100" />
+                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce delay-200" />
               </div>
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
-
-      <div className="card flex-grow flex flex-col overflow-hidden">
-        <div className="flex-grow p-6 overflow-y-auto">
-          {chatHistory.map((message) => (
-            <div 
-              key={message.id}
-              className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className="flex flex-col max-w-[80%]">
-                <div 
-                  className={`rounded-2xl px-4 py-3 ${
-                    message.sender === 'user' 
-                      ? 'bg-primary-100 text-primary-900' 
-                      : message.sender === 'system'
-                        ? 'bg-neutral-100 text-neutral-800 border border-neutral-200'
-                        : 'bg-white text-neutral-900 border border-neutral-200 shadow-sm'
-                  }`}
-                >
-                  {message.content.split('\n').map((line, i) => (
-                    <React.Fragment key={i}>
-                      {line}
-                      {i !== message.content.split('\n').length - 1 && <br />}
-                    </React.Fragment>
-                  ))}
-                </div>
-                <span className={`text-xs mt-1 text-neutral-500 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                  {formatTimestamp(message.timestamp)}
-                </span>
-              </div>
-            </div>
-          ))}
-          
-          {isTyping && (
-            <div className="flex justify-start mb-4">
-              <div className="bg-white border border-neutral-200 rounded-2xl px-4 py-3 shadow-sm">
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-neutral-300 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 rounded-full bg-neutral-300 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 rounded-full bg-neutral-300 animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
         
-        <div className="border-t border-neutral-200 p-4">
-          <form onSubmit={handleSendMessage} className="flex items-center">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-grow px-4 py-3 border border-neutral-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-            <button
-              type="submit"
-              className="bg-primary-600 text-white px-4 py-3 rounded-r-md hover:bg-primary-700 transition-colors"
-              disabled={!inputValue.trim()}
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </form>
-        </div>
+        <div ref={messagesEndRef} />
       </div>
 
-      <div className="mt-6">
-        <h2 className="text-lg font-semibold text-neutral-900 mb-3">Quick Access</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* Input Area */}
+      <form onSubmit={handleSendMessage} className="p-4 border-t border-neutral-200">
+        <div className="flex items-center space-x-2">
           <button
-            onClick={() => handleQuickAccess("I'm feeling anxious right now")}
-            className="flex items-center justify-between p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
+            type="button"
+            onClick={isRecording ? stopRecording : startRecording}
+            className={`p-2 rounded-full transition-colors ${
+              isRecording 
+                ? 'bg-red-500 hover:bg-red-600 text-white' 
+                : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600'
+            }`}
           >
-            <span>I'm feeling anxious</span>
-            <ChevronRight className="w-4 h-4 text-neutral-400" />
+            {isRecording ? (
+              <Square className="w-5 h-5" />
+            ) : (
+              <Mic className="w-5 h-5" />
+            )}
           </button>
           
-          <button
-            onClick={() => handleQuickAccess("Can you guide me through a breathing exercise?")}
-            className="flex items-center justify-between p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
-          >
-            <span>Guide me through breathing</span>
-            <ChevronRight className="w-4 h-4 text-neutral-400" />
-          </button>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-grow p-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
           
           <button
-            onClick={() => handleQuickAccess("I need help challenging my negative thoughts")}
-            className="flex items-center justify-between p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
+            type="submit"
+            disabled={!inputValue.trim()}
+            className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>Challenge negative thoughts</span>
-            <ChevronRight className="w-4 h-4 text-neutral-400" />
+            <Send className="w-5 h-5" />
           </button>
         </div>
-      </div>
+      </form>
+
+      {/* Info Modal */}
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-lg p-6 max-w-lg w-full"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-neutral-900">About Your Companion</h3>
+                <button
+                  onClick={() => setShowInfo(false)}
+                  className="text-neutral-500 hover:text-neutral-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-neutral-600">
+                  Your AI companion is here to support you between therapy sessions. You can:
+                </p>
+                
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <HelpCircle className="w-5 h-5 text-primary-600 mr-2 mt-0.5" />
+                    <span className="text-neutral-700">Share your thoughts and feelings</span>
+                  </li>
+                  <li className="flex items-start">
+                    <HelpCircle className="w-5 h-5 text-primary-600 mr-2 mt-0.5" />
+                    <span className="text-neutral-700">Get support during difficult moments</span>
+                  </li>
+                  <li className="flex items-start">
+                    <HelpCircle className="w-5 h-5 text-primary-600 mr-2 mt-0.5" />
+                    <span className="text-neutral-700">Practice coping strategies</span>
+                  </li>
+                  <li className="flex items-start">
+                    <HelpCircle className="w-5 h-5 text-primary-600 mr-2 mt-0.5" />
+                    <span className="text-neutral-700">Track your progress over time</span>
+                  </li>
+                </ul>
+                
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    Remember: This is a supportive tool, not a replacement for professional help. 
+                    If you're in crisis, please contact your therapist or emergency services.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

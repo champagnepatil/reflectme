@@ -1,0 +1,178 @@
+# =============================================================================
+# ReflectMe - Mental Health Platform Environment Variables
+# =============================================================================
+# Copy this file to .env and fill in your actual values
+# Never commit .env to version control!
+
+# =============================================================================
+# 🔥 SUPABASE CONFIGURATION
+# =============================================================================
+# Get these from: https://app.supabase.com/project/[your-project]/settings/api
+
+# Your Supabase project URL
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+
+# Public anon key (safe to expose in frontend)
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# Service role key (NEVER expose in frontend, only for Netlify Functions)
+# Used for: Biometrics sync, admin operations, bypassing RLS
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# =============================================================================
+# 🤖 AI SERVICES - GEMINI PRO
+# =============================================================================
+# Get your API key from: https://makersuite.google.com/app/apikey
+# Used for: AI chat responses, therapy notes analysis, intelligent insights
+
+VITE_GEMINI_API_KEY=AIzaSyYourGeminiApiKeyHere
+
+# =============================================================================
+# 🔗 GOOGLE OAUTH (GOOGLE FIT INTEGRATION)
+# =============================================================================
+# Setup at: https://console.cloud.google.com/apis/credentials
+# Required for: Health data sync (steps, sleep, heart rate)
+
+# OAuth 2.0 Client ID
+REACT_APP_GOOGLE_CLIENT_ID=1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com
+
+# OAuth 2.0 Client Secret (only for server-side token exchange)
+REACT_APP_GOOGLE_CLIENT_SECRET=GOCSPX-YourGoogleClientSecretHere
+
+# =============================================================================
+# 📧 EMAIL SERVICES (Optional - for notifications)
+# =============================================================================
+# Configure if you want email notifications for therapists/patients
+
+# SMTP Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# SendGrid (Alternative to SMTP)
+SENDGRID_API_KEY=SG.YourSendGridApiKeyHere
+
+# =============================================================================
+# 🔒 SECURITY & ENCRYPTION
+# =============================================================================
+# Generate secure random strings for these
+
+# JWT Secret for additional token signing (if needed)
+JWT_SECRET=your-super-secret-jwt-signing-key-here
+
+# Encryption key for sensitive data (32 characters)
+ENCRYPTION_KEY=your-32-character-encryption-key-here
+
+# =============================================================================
+# 🌍 ENVIRONMENT & DEPLOYMENT
+# =============================================================================
+
+# Environment (development, staging, production)
+NODE_ENV=development
+
+# Base URL for OAuth redirects and API calls
+REACT_APP_BASE_URL=http://localhost:5173
+
+# API Base URL (if different from app URL)
+REACT_APP_API_BASE_URL=https://your-api-domain.com
+
+# =============================================================================
+# 📊 ANALYTICS & MONITORING (Optional)
+# =============================================================================
+
+# Google Analytics Measurement ID
+REACT_APP_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+
+# Sentry DSN for error tracking
+REACT_APP_SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
+
+# LogRocket App ID for session recording
+REACT_APP_LOGROCKET_APP_ID=your-app-id/your-project
+
+# =============================================================================
+# 🏥 HEALTHCARE INTEGRATIONS (Phase 3+)
+# =============================================================================
+
+# Apple Health (for iOS app integration)
+REACT_APP_APPLE_HEALTH_APP_ID=your-apple-health-app-id
+
+# Fitbit API (if supporting Fitbit devices)
+FITBIT_CLIENT_ID=your-fitbit-client-id
+FITBIT_CLIENT_SECRET=your-fitbit-client-secret
+
+# =============================================================================
+# 🔧 DEVELOPMENT TOOLS
+# =============================================================================
+
+# Disable TypeScript checks in development (true/false)
+TSC_COMPILE_ON_ERROR=false
+
+# Enable source maps in production (true/false)
+GENERATE_SOURCEMAP=false
+
+# Bundle analyzer (true/false)
+ANALYZE=false
+
+# =============================================================================
+# 📦 FEATURE FLAGS
+# =============================================================================
+# Control which features are enabled
+
+# Enable Phase 3 features (biometrics, AI summaries)
+REACT_APP_ENABLE_PHASE3=true
+
+# Enable voice journal feature
+REACT_APP_ENABLE_VOICE_JOURNAL=true
+
+# Enable real-time chat
+REACT_APP_ENABLE_REALTIME_CHAT=true
+
+# Enable PDF report generation
+REACT_APP_ENABLE_PDF_REPORTS=true
+
+# Enable micro-wins detection
+REACT_APP_ENABLE_MICRO_WINS=true
+
+# =============================================================================
+# 🚀 NETLIFY SPECIFIC (if using Netlify)
+# =============================================================================
+
+# Netlify Site ID
+NETLIFY_SITE_ID=your-netlify-site-id
+
+# Netlify Auth Token (for deployments)
+NETLIFY_AUTH_TOKEN=your-netlify-auth-token
+
+# =============================================================================
+# 📋 SETUP CHECKLIST
+# =============================================================================
+# ✅ Copy this file to .env
+# ✅ Fill in your Supabase credentials
+# ✅ Generate Gemini API key and set VITE_GEMINI_API_KEY
+# ✅ Setup Google OAuth in Google Cloud Console
+# ✅ Configure redirect URIs: [your-domain]/oauth/callback
+# ✅ Enable Google Fitness API in Google Cloud
+# ✅ Test OAuth flow end-to-end
+# ✅ Verify Netlify Functions have access to environment variables
+# ✅ Check that all Phase 3 database migrations are applied
+
+# =============================================================================
+# 🔗 USEFUL LINKS
+# =============================================================================
+# Supabase Dashboard: https://app.supabase.com
+# Google Cloud Console: https://console.cloud.google.com
+# Gemini API Studio: https://makersuite.google.com
+# Netlify Dashboard: https://app.netlify.com
+# Google Fit API Docs: https://developers.google.com/fit
+# OAuth 2.0 Playground: https://developers.google.com/oauthplayground
+
+# =============================================================================
+# ⚠️  SECURITY NOTES
+# =============================================================================
+# - Never commit .env files to version control
+# - Use different credentials for development/staging/production
+# - Rotate API keys regularly
+# - Monitor API usage and set quotas
+# - Use HTTPS in production for all OAuth redirects
+# - Validate all environment variables on app startup 

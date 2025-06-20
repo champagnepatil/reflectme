@@ -1,0 +1,137 @@
+# 🚀 Netlify Configuration for ReflectMe
+# Clinical Assessment Platform - Production Ready
+
+[build]
+  command = "npm run build"
+  functions = "netlify/functions"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+
+# 📧 Scheduled Functions for Assessment Reminders
+[functions."assessment-reminders"]
+  schedule = "0 8 * * *"  # Daily at 8:00 AM UTC (9:00 AM in Italy)
+
+# 📊 Scheduled Functions for Biometrics Sync
+[functions."biometrics-sync"]
+  schedule = "0 */2 * * *"  # Every 2 hours for fresh biometric data
+
+# 🔄 URL Redirects and Rewrites
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# SPA fallback - redirect all routes to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 🔒 Security Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), fullscreen=(), payment=()"
+
+# API CORS Headers
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
+
+# Static Assets Caching
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML Files
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+# Medical data handling compliance
+[[headers]]
+  for = "/api/assessments/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.resend.com"
+
+# PDF Reports Security
+[[headers]]
+  for = "/api/reports/*"
+  [headers.values]
+    Content-Type = "application/pdf"
+    Content-Disposition = "attachment"
+    X-Content-Type-Options = "nosniff"
+
+# 🔧 Build Processing
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+[build.processing.images]
+  compress = true
+
+# 🚨 Edge Functions for Real-time Features (future)
+# [[edge_functions]]
+# function = "assessment-realtime"
+# path = "/api/realtime/*"
+
+# 📊 Performance optimizations
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
+  [plugins.inputs.audits]
+    performance = true
+    accessibility = true
+    best-practices = true
+    seo = true
+
+# Form handling for contact/support
+[forms]
+  spam-filtering = true
+
+# Development branch deploys
+[context.branch-deploy]
+  command = "npm run build:staging"
+
+[context.branch-deploy.environment]
+  NODE_ENV = "staging"
+
+# Preview deploys
+[context.deploy-preview]
+  command = "npm run build:preview"
+
+[context.deploy-preview.environment]
+  NODE_ENV = "preview"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable" 

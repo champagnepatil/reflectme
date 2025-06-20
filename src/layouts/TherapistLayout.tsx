@@ -38,7 +38,19 @@ const TherapistLayout: React.FC = () => {
                 }`}
               >
                 <Users className="w-5 h-5" />
-                <span className="ml-3 hidden md:block">Clients</span>
+                <span className="ml-3 hidden md:block">Dashboard</span>
+              </Link>
+              
+              <Link 
+                to="/therapist/active-clients" 
+                className={`flex items-center p-2 rounded-md transition-colors ${
+                  location.pathname === '/therapist/active-clients' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Users className="w-5 h-5" />
+                <span className="ml-3 hidden md:block">Active Clients</span>
               </Link>
               
               <Link 
@@ -62,7 +74,7 @@ const TherapistLayout: React.FC = () => {
                 }`}
               >
                 <Activity className="w-5 h-5" />
-                <span className="ml-3 hidden md:block">Client Monitoring</span>
+                <span className="ml-3 hidden md:block">Monitoring</span>
               </Link>
               
               <Link 
@@ -78,7 +90,7 @@ const TherapistLayout: React.FC = () => {
               </Link>
               
               <Link 
-                to="/therapist/notes" 
+                to="/therapist/notes-overview" 
                 className={`flex items-center p-2 rounded-md transition-colors ${
                   location.pathname.includes('/therapist/notes') 
                     ? 'bg-blue-50 text-blue-700' 

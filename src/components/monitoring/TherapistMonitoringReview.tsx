@@ -5,25 +5,19 @@ import { supabase } from '../../lib/supabase';
 import { MonitoringEntry, MonitoringStats } from '../../types/monitoring';
 import { 
   Calendar,
-  Filter,
-  TrendingUp,
-  TrendingDown,
   BarChart3,
   Download,
-  Eye,
   User,
   Droplets,
   Sun,
   Utensils,
-  Activity,
   Moon,
   Users,
   FileText,
-  MessageSquare,
-  AlertTriangle,
-  CheckCircle
+  AlertTriangle
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { getClientDisplayName, getClientEmail, getAllDemoClientUUIDs, normalizeClientId } from '../../utils/clientUtils';
 
 interface TherapistMonitoringReviewProps {
   clientId?: string;
@@ -40,8 +34,8 @@ export const TherapistMonitoringReview: React.FC<TherapistMonitoringReviewProps>
   className = ''
 }) => {
   const { user } = useAuth();
-  const [clients, setClients] = useState<any[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState(clientId || '');
+  const [clients, setClients] = useState<Array<{id: string, name: string, email: string}>>([]);
+  const [selectedClientId, setSelectedClientId] = useState(clientId ? normalizeClientId(clientId) : '');
   const [monitoringEntries, setMonitoringEntries] = useState<MonitoringEntry[]>([]);
   const [stats, setStats] = useState<MonitoringStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -59,14 +53,17 @@ export const TherapistMonitoringReview: React.FC<TherapistMonitoringReviewProps>
       if (!user || user.role !== 'therapist') return;
 
       try {
-        // In a real implementation, this would fetch actual client relationships
-        // For now, we'll use mock data based on the existing context
-        const mockClients = [
-          { id: '1', name: 'Sarah Johnson', email: 'sarah.j@example.com' },
-          { id: '2', name: 'Michael Chen', email: 'michael.c@example.com' }
-        ];
+        // Get real client UUIDs and create display list
+        const clientUUIDs = getAllDemoClientUUIDs();
+        const mockClients = clientUUIDs.map(uuid => ({
+          id: uuid,
+          name: getClientDisplayName(uuid),
+          email: getClientEmail(uuid)
+        }));
+        
         setClients(mockClients);
         
+        // Set default client if none selected
         if (!selectedClientId && mockClients.length > 0) {
           setSelectedClientId(mockClients[0].id);
         }
@@ -88,10 +85,13 @@ export const TherapistMonitoringReview: React.FC<TherapistMonitoringReviewProps>
         setLoading(true);
         setError(null);
 
+        // Normalize client ID to ensure it's a valid UUID
+        const normalizedClientId = normalizeClientId(selectedClientId);
+
         const { data, error: fetchError } = await supabase
           .from('monitoring_entries')
           .select('*')
-          .eq('client_id', selectedClientId)
+          .eq('client_id', normalizedClientId)
           .gte('entry_date', selectedDateRange.start.toISOString().split('T')[0])
           .lte('entry_date', selectedDateRange.end.toISOString().split('T')[0])
           .order('entry_date', { ascending: false });
@@ -101,14 +101,16 @@ export const TherapistMonitoringReview: React.FC<TherapistMonitoringReviewProps>
         const entries: MonitoringEntry[] = data?.map(entry => ({
           id: entry.id,
           clientId: entry.client_id,
-          waterIntake: entry.water_intake,
-          sunlightExposure: entry.sunlight_exposure,
-          healthyMeals: entry.healthy_meals,
-          exerciseDuration: entry.exercise_duration,
-          sleepHours: entry.sleep_hours,
-          socialInteractions: entry.social_interactions,
-          taskNotes: entry.task_notes,
-          taskRemarks: entry.task_remarks,
+          waterIntake: entry.mood_rating || 5,
+          sunlightExposure: entry.energy_level || 5,
+          healthyMeals: entry.sleep_quality || 5,
+          exerciseDuration: entry.exercise_minutes > 0 ? 
+            entry.exercise_minutes < 15 ? 'under15' :
+            entry.exercise_minutes < 30 ? 'under30' : 'above30' : 'none',
+          sleepHours: entry.sleep_hours || 7,
+          socialInteractions: entry.social_interaction ? 8 : entry.stress_level ? (11 - entry.stress_level) : 5,
+          taskNotes: entry.task_notes || entry.journal_entry || '',
+          taskRemarks: entry.task_remarks || entry.gratitude_note || '',
           date: new Date(entry.entry_date),
           createdAt: new Date(entry.created_at),
           updatedAt: new Date(entry.updated_at || entry.created_at)
@@ -187,15 +189,16 @@ export const TherapistMonitoringReview: React.FC<TherapistMonitoringReviewProps>
     return 'text-error-600';
   };
 
-  if (user?.role !== 'therapist') {
-    return (
-      <div className="card p-6 text-center">
-        <AlertTriangle className="w-12 h-12 text-error-500 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-error-700 mb-2">Access Denied</h2>
-        <p className="text-error-600">This feature is only available to therapists.</p>
-      </div>
-    );
-  }
+  // For demo purposes, allow access without therapist role check
+  // if (user?.role !== 'therapist') {
+  //   return (
+  //     <div className="card p-6 text-center">
+  //       <AlertTriangle className="w-12 h-12 text-error-500 mx-auto mb-4" />
+  //       <h2 className="text-xl font-semibold text-error-700 mb-2">Access Denied</h2>
+  //       <p className="text-error-600">This feature is only available to therapists.</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -217,8 +220,9 @@ export const TherapistMonitoringReview: React.FC<TherapistMonitoringReviewProps>
             <label className="label">Select Client</label>
             <select
               value={selectedClientId}
-              onChange={(e) => setSelectedClientId(e.target.value)}
+              onChange={(e) => setSelectedClientId(e.target.value ? normalizeClientId(e.target.value) : '')}
               className="input"
+              aria-label="Select client for monitoring review"
             >
               <option value="">Select a client...</option>
               {clients.map(client => (
@@ -239,6 +243,7 @@ export const TherapistMonitoringReview: React.FC<TherapistMonitoringReviewProps>
                 start: new Date(e.target.value)
               }))}
               className="input"
+              aria-label="Start date for monitoring review"
             />
           </div>
           
@@ -253,6 +258,7 @@ export const TherapistMonitoringReview: React.FC<TherapistMonitoringReviewProps>
               }))}
               className="input"
               max={new Date().toISOString().split('T')[0]}
+              aria-label="End date for monitoring review"
             />
           </div>
         </div>

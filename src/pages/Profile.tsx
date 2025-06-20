@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import { User, Bell, Shield, Save, LogOut, Heart, Calendar, TrendingUp, ArrowLeft } from 'lucide-react';
 import { useReflectMe } from '../contexts/ReflectMeContext';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Profile: React.FC = () => {
   const { sessionRecaps, moodEntries } = useReflectMe();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   
   const [name, setName] = useState('Demo Patient');
   const [notifications, setNotifications] = useState({
@@ -32,7 +34,7 @@ const Profile: React.FC = () => {
     : 'N/A';
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen flex flex-col">
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8 flex items-center">
@@ -239,6 +241,21 @@ const Profile: React.FC = () => {
             </motion.div>
           </div>
         </div>
+      </div>
+      <div className="flex-grow flex items-center justify-center px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="card p-6"
+        >
+          {user?.isDemo && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
+              <span className="font-semibold text-yellow-800">Modalità Demo Attiva</span>
+              <span className="text-yellow-700 text-xs">(i dati non saranno salvati in modo permanente)</span>
+            </div>
+          )}
+        </motion.div>
       </div>
     </div>
   );

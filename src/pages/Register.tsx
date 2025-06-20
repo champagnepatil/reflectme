@@ -45,10 +45,10 @@ const Register: React.FC = () => {
       await login(email, password);
       
       // Redirect based on user role
-      navigate(`/${role}`);
+      navigate(role === 'therapist' ? '/therapist' : '/client');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create an account');
-      console.error(err);
+      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }
@@ -56,8 +56,8 @@ const Register: React.FC = () => {
 
   const handleDemoLogin = async (role: 'patient' | 'therapist') => {
     const demoCredentials = {
-      patient: { email: 'patient@mindtwin.demo', password: 'demo123456' },
-      therapist: { email: 'therapist@mindtwin.demo', password: 'demo123456' }
+      patient: { email: 'democlient@mindtwin.demo', password: 'demo123456' },
+      therapist: { email: 'demotherapist@mindtwin.demo', password: 'demo123456' }
     };
 
     const { email: demoEmail, password: demoPassword } = demoCredentials[role];
@@ -66,15 +66,15 @@ const Register: React.FC = () => {
       setError('');
       setDemoLoading(role);
       await login(demoEmail, demoPassword);
-      navigate(`/${role}`);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Demo login failed';
+      navigate(role === 'therapist' ? '/therapist' : '/client');
+    } catch (err: any) {
+      const errorMessage = err.message.includes('password is incorrect') || err.message.includes('Please use password')
+        ? err.message
+        : err.message.includes('Database error')
+        ? 'System error. Please try again in a few minutes.'
+        : 'Demo login failed. Please try again.';
       
-      if (errorMessage.includes('created but sign-in failed')) {
-        setError(`Demo ${role} account created! Please try the demo login button again.`);
-      } else {
-        setError(`Demo login failed: ${errorMessage}`);
-      }
+      setError(errorMessage);
       setDemoLoading(null);
     }
   };
@@ -103,39 +103,37 @@ const Register: React.FC = () => {
           )}
 
           {/* Demo Login Buttons */}
-          <div className="mb-6 space-y-3">
-            <div className="text-center text-sm text-neutral-600 mb-3">Try the demo:</div>
-            <button
-              onClick={() => handleDemoLogin('patient')}
-              disabled={loading || demoLoading !== null}
-              className="w-full btn bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {demoLoading === 'patient' ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Setting up demo...
-                </>
-              ) : (
-                'Demo as Patient'
-              )}
-            </button>
-            <button
-              onClick={() => handleDemoLogin('therapist')}
-              disabled={loading || demoLoading !== null}
-              className="w-full btn bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {demoLoading === 'therapist' ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Setting up demo...
-                </>
-              ) : (
-                'Demo as Therapist'
-              )}
-            </button>
-          </div>
+          <div className="text-center text-sm text-neutral-600 mb-3">Try the demo:</div>
+          <button
+            onClick={() => handleDemoLogin('patient')}
+            disabled={loading || demoLoading !== null}
+            className="w-full btn bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mb-3"
+          >
+            {demoLoading === 'patient' ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Setting up demo...
+              </>
+            ) : (
+              'Demo Client'
+            )}
+          </button>
+          <button
+            onClick={() => handleDemoLogin('therapist')}
+            disabled={loading || demoLoading !== null}
+            className="w-full btn bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            {demoLoading === 'therapist' ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Setting up demo...
+              </>
+            ) : (
+              'Demo Therapist'
+            )}
+          </button>
 
-          <div className="relative mb-6">
+          <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-neutral-300" />
             </div>
@@ -143,7 +141,7 @@ const Register: React.FC = () => {
               <span className="px-2 bg-white text-neutral-500">Or create a new account</span>
             </div>
           </div>
-          
+
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
               <label htmlFor="name" className="label">Full Name</label>
@@ -216,7 +214,7 @@ const Register: React.FC = () => {
                   onClick={() => setRole('patient')}
                   disabled={demoLoading !== null}
                 >
-                  <span className="font-medium">Patient</span>
+                  <span className="font-medium">Client</span>
                 </button>
                 
                 <button
