@@ -36,9 +36,18 @@ interface UpcomingItem {
   urgent?: boolean;
 }
 
+interface QuickAction {
+  title: string;
+  subtitle: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  color: string;
+}
+
 const PatientDashboard: React.FC = () => {
   const { user } = useAuth();
   const [quickStats, setQuickStats] = useState<QuickStat[]>([]);
+  const [quickActions, setQuickActions] = useState<QuickAction[]>([]);
   const [upcomingItems, setUpcomingItems] = useState<UpcomingItem[]>([]);
   const [greeting, setGreeting] = useState('');
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
@@ -77,6 +86,38 @@ const PatientDashboard: React.FC = () => {
         value: '12',
         change: 'days logging',
         trend: 'stable',
+        color: 'bg-purple-500'
+      }
+    ]);
+
+    // Quick actions for easy navigation
+    setQuickActions([
+      {
+        title: 'Journal Entry',
+        subtitle: 'Record your thoughts and feelings',
+        href: '/client/journal',
+        icon: MessageSquare,
+        color: 'bg-blue-500'
+      },
+      {
+        title: 'Mood Check-in',
+        subtitle: 'Track your emotional wellbeing',
+        href: '/client/mood',
+        icon: Heart,
+        color: 'bg-pink-500'
+      },
+      {
+        title: 'View Progress',
+        subtitle: 'See your journey and insights',
+        href: '/client/insights',
+        icon: TrendingUp,
+        color: 'bg-green-500'
+      },
+      {
+        title: 'Upcoming Sessions',
+        subtitle: 'Check your therapy schedule',
+        href: '/client/sessions',
+        icon: Calendar,
         color: 'bg-purple-500'
       }
     ]);
