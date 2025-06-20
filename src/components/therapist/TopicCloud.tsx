@@ -104,7 +104,7 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
 
     } catch (err) {
       console.error('Error fetching tags:', err);
-      setError('Errore nel caricamento dei tag');
+      setError('Error loading topics');
     } finally {
       setLoading(false);
     }
@@ -153,12 +153,12 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
 
   const getCategoryName = (category: string) => {
     switch (category) {
-      case 'emotion': return 'Emozioni';
-      case 'topic': return 'Argomenti';
-      case 'symptom': return 'Sintomi';
-      case 'coping-strategy': return 'Strategie';
-      case 'trigger': return 'Trigger';
-      default: return 'Altri';
+      case 'emotion': return 'Emotions';
+      case 'topic': return 'Topics';
+      case 'symptom': return 'Symptoms';
+      case 'coping-strategy': return 'Strategies';
+      case 'trigger': return 'Triggers';
+      default: return 'Other';
     }
   };
 
@@ -167,7 +167,7 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
       <div className={`card p-6 ${className}`}>
         <div className="flex items-center justify-center h-40">
           <div className="loader"></div>
-          <span className="ml-3 text-neutral-600">Caricamento tag...</span>
+          <span className="ml-3 text-neutral-600">Loading tags...</span>
         </div>
       </div>
     );
@@ -178,7 +178,7 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
       <div className={`card p-6 ${className}`}>
         <div className="flex items-center text-error-600">
           <AlertTriangle className="w-5 h-5 mr-2" />
-          <span>{error}</span>
+          <span>Error loading topics</span>
         </div>
       </div>
     );
@@ -191,11 +191,11 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
           <div className="flex items-center">
             <Hash className="w-5 h-5 text-primary-600 mr-2" />
             <h3 className="text-lg font-semibold text-neutral-900">
-              Nuvola di Argomenti
+              Topic Cloud
             </h3>
             {tags.length > 0 && (
               <span className="ml-2 px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
-                {filteredTags.length} tag
+                {filteredTags.length} tags
               </span>
             )}
           </div>
@@ -203,8 +203,8 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
           <div className="flex items-center space-x-2">
             <Clock className="w-4 h-4 text-neutral-400" />
             <span className="text-sm text-neutral-600">
-              {timeRange === 'week' ? 'Ultima settimana' : 
-               timeRange === 'month' ? 'Ultimo mese' : 'Tutti i dati'}
+              {timeRange === 'week' ? 'Last week' : 
+               timeRange === 'month' ? 'Last month' : 'All data'}
             </span>
           </div>
         </div>
@@ -219,7 +219,7 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
               }`}
             >
-              Tutti ({tags.length})
+              All ({tags.length})
             </button>
             {categories.map(category => {
               const count = tags.filter(t => t.tag_category === category).length;
@@ -246,12 +246,12 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
           <div className="text-center py-12">
             <TrendingUp className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
             <h4 className="text-xl font-semibold text-neutral-800 mb-2">
-              Nessun Tag Disponibile
+              No Tags Available
             </h4>
             <p className="text-neutral-600">
               {selectedCategory === 'all' 
-                ? 'Non ci sono ancora conversazioni taggate nel periodo selezionato.'
-                : `Nessun tag nella categoria "${getCategoryName(selectedCategory)}".`
+                ? 'No conversations have been tagged in the selected period.'
+                : `No tags in the "${getCategoryName(selectedCategory)}" category.`
               }
             </p>
           </div>
@@ -269,7 +269,7 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
                   color: getTagColor(tag),
                   fontWeight: 500 + (tag.frequency * 100)
                 }}
-                title={`${tag.tag}: ${tag.frequency} volte (score: ${tag.avg_score.toFixed(2)})`}
+                title={`${tag.tag}: ${tag.frequency} times (score: ${tag.avg_score.toFixed(2)})`}
               >
                 <span className="hover:opacity-80 transition-opacity">
                   {tag.tag}
@@ -278,13 +278,13 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-neutral-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                   <div className="font-medium">{tag.tag}</div>
                   <div className="text-neutral-300">
-                    Frequenza: {tag.frequency} | Score: {tag.avg_score.toFixed(2)}
+                    Frequency: {tag.frequency} | Score: {tag.avg_score.toFixed(2)}
                   </div>
                   <div className="text-neutral-400 text-xs">
-                    Categoria: {getCategoryName(tag.tag_category)}
+                    Category: {getCategoryName(tag.tag_category)}
                   </div>
                   <div className="text-neutral-400 text-xs">
-                    Ultimo: {new Date(tag.last_seen).toLocaleDateString('it-IT')}
+                    Last: {new Date(tag.last_seen).toLocaleDateString('en-US')}
                   </div>
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-neutral-800"></div>
                 </div>
@@ -299,14 +299,14 @@ export const TopicCloud: React.FC<TopicCloudProps> = ({
           <div className="flex items-center justify-between text-sm text-neutral-600">
             <div className="flex items-center space-x-4">
               <span>
-                <strong>{filteredTags.reduce((sum, tag) => sum + tag.frequency, 0)}</strong> menzioni totali
+                <strong>{filteredTags.reduce((sum, tag) => sum + tag.frequency, 0)}</strong> total mentions
               </span>
               <span>
-                Score medio: <strong>{(filteredTags.reduce((sum, tag) => sum + tag.avg_score, 0) / filteredTags.length).toFixed(2)}</strong>
+                Average Score: <strong>{(filteredTags.reduce((sum, tag) => sum + tag.avg_score, 0) / filteredTags.length).toFixed(2)}</strong>
               </span>
             </div>
             <div className="text-xs text-neutral-500">
-              Aggiornato: {new Date().toLocaleDateString('it-IT', { 
+              Updated: {new Date().toLocaleDateString('en-US', { 
                 hour: '2-digit', 
                 minute: '2-digit' 
               })}

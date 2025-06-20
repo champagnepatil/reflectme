@@ -89,83 +89,83 @@ const Patterns: React.FC = () => {
 
   const getMockPatterns = (): PatternInsight[] => [
     {
-      pattern: 'Ansia mattutina',
+      pattern: 'Morning Anxiety',
       frequency: 24,
       clients_affected: 8,
       trend: 'increasing',
       severity: 'high',
       recommendations: [
-        'Implementare routine mattutine strutturate',
-        'Tecniche di respirazione al risveglio',
-        'Considerare sessioni mattutine'
+        'Implement structured morning routines',
+        'Breathing techniques upon waking',
+        'Consider morning session scheduling'
       ]
     },
     {
-      pattern: 'Miglioramento weekend',
+      pattern: 'Weekend Improvement',
       frequency: 18,
       clients_affected: 12,
       trend: 'stable',
       severity: 'medium',
       recommendations: [
-        'Integrare elementi di weekend nei giorni lavorativi',
-        'Focus su work-life balance',
-        'Attività ricreative programmate'
+        'Integrate weekend elements into weekdays',
+        'Focus on work-life balance',
+        'Schedule recreational activities'
       ]
     },
     {
-      pattern: 'Stress lavorativo',
+      pattern: 'Work-related Stress',
       frequency: 31,
       clients_affected: 15,
       trend: 'increasing',
       severity: 'high',
       recommendations: [
-        'Tecniche di gestione dello stress',
-        'Pause programmte durante il lavoro',
-        'Comunicazione con datori di lavoro'
+        'Stress management techniques',
+        'Scheduled breaks during work',
+        'Communication with employers'
       ]
     },
     {
-      pattern: 'Supporto sociale positivo',
+      pattern: 'Positive Social Support',
       frequency: 14,
       clients_affected: 9,
       trend: 'increasing',
       severity: 'low',
       recommendations: [
-        'Continuare a rafforzare le relazioni',
-        'Gruppi di supporto',
-        'Attività sociali strutturate'
+        'Continue strengthening relationships',
+        'Support groups',
+        'Structured social activities'
       ]
     }
   ];
 
   const getMockCorrelations = (): CrossClientCorrelation[] => [
     {
-      factor1: 'Qualità del sonno',
-      factor2: 'Livelli di ansia',
+      factor1: 'Sleep Quality',
+      factor2: 'Anxiety Levels',
       correlation: -0.78,
       significance: 'high',
-      insight: 'Una migliore qualità del sonno è fortemente correlata a livelli di ansia più bassi'
+      insight: 'Better sleep quality is strongly correlated with lower anxiety levels'
     },
     {
-      factor1: 'Esercizio fisico',
-      factor2: 'Umore generale',
+      factor1: 'Physical Exercise',
+      factor2: 'General Mood',
       correlation: 0.65,
       significance: 'high',
-      insight: 'L\'attività fisica regolare mostra una forte correlazione positiva con il miglioramento dell\'umore'
+      insight: 'Regular physical activity shows strong positive correlation with mood improvement'
     },
     {
-      factor1: 'Supporto sociale',
-      factor2: 'Aderenza terapeutica',
+      factor1: 'Social Support',
+      factor2: 'Treatment Adherence',
       correlation: 0.54,
       significance: 'medium',
-      insight: 'Clienti con maggiore supporto sociale tendono ad essere più aderenti al trattamento'
+      insight: 'Clients with greater social support tend to be more adherent to treatment'
     },
     {
-      factor1: 'Stress lavorativo',
-      factor2: 'Episodi depressivi',
+      factor1: 'Work Stress',
+      factor2: 'Depressive Episodes',
       correlation: 0.71,
       significance: 'high',
-      insight: 'Elevati livelli di stress lavorativo sono fortemente associati a episodi depressivi'
+      insight: 'High levels of work stress are strongly associated with depressive episodes'
     }
   ];
 
@@ -189,10 +189,10 @@ const Patterns: React.FC = () => {
 
   const getCorrelationStrength = (correlation: number) => {
     const abs = Math.abs(correlation);
-    if (abs >= 0.7) return 'Forte';
-    if (abs >= 0.5) return 'Moderata';
-    if (abs >= 0.3) return 'Debole';
-    return 'Molto debole';
+    if (abs >= 0.7) return 'Strong';
+    if (abs >= 0.5) return 'Moderate';
+    if (abs >= 0.3) return 'Weak';
+    return 'Very weak';
   };
 
   const getCorrelationColor = (correlation: number) => {

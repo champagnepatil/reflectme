@@ -206,7 +206,7 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
 
     } catch (err) {
       console.error('Error fetching adherence data:', err);
-      setError('Errore nel caricamento dei dati di aderenza');
+      setError('Error loading adherence data');
     } finally {
       setLoading(false);
     }
@@ -249,11 +249,11 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'completed': return 'Completato';
-      case 'overdue': return 'In Ritardo';
-      case 'stale': return 'Fermo';
-      case 'active': return 'Attivo';
-      default: return 'Sconosciuto';
+      case 'completed': return 'Completed';
+      case 'overdue': return 'Overdue';
+      case 'stale': return 'Stale';
+      case 'active': return 'Active';
+      default: return 'Unknown';
     }
   };
 
@@ -262,7 +262,7 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
       <div className={`card p-6 ${className}`}>
         <div className="flex items-center justify-center h-40">
           <div className="loader"></div>
-          <span className="ml-3 text-neutral-600">Caricamento aderenza...</span>
+          <span className="ml-3 text-neutral-600">Loading adherence...</span>
         </div>
       </div>
     );
@@ -273,7 +273,7 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
       <div className={`card p-6 ${className}`}>
         <div className="flex items-center text-error-600">
           <AlertCircle className="w-5 h-5 mr-2" />
-          <span>{error}</span>
+          <span>Error loading adherence data</span>
         </div>
       </div>
     );
@@ -285,10 +285,10 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
         <div className="text-center py-8">
           <Target className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
           <h4 className="text-lg font-semibold text-neutral-800 mb-2">
-            Nessun Task Assegnato
+            No Tasks Assigned
           </h4>
           <p className="text-neutral-600">
-            Non ci sono task nel periodo selezionato per calcolare l'aderenza.
+            No tasks in the selected period to calculate adherence.
           </p>
         </div>
       </div>
@@ -303,14 +303,14 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
           <div className="flex items-center">
             <Target className="w-5 h-5 text-primary-600 mr-2" />
             <h3 className="text-lg font-semibold text-neutral-900">
-              Aderenza ai Task
+              Treatment Adherence
             </h3>
           </div>
           <div className="flex items-center space-x-2">
             <Calendar className="w-4 h-4 text-neutral-400" />
             <span className="text-sm text-neutral-600">
-              {timeRange === 'week' ? 'Ultima settimana' : 
-               timeRange === 'month' ? 'Ultimo mese' : 'Tutti i dati'}
+              {timeRange === 'week' ? 'Last week' : 
+               timeRange === 'month' ? 'Last month' : 'All data'}
             </span>
           </div>
         </div>
@@ -376,7 +376,7 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
                 <div className="text-3xl font-bold text-neutral-900">
                   {Math.round(stats.avg_completion_rate)}%
                 </div>
-                <div className="text-sm text-neutral-500">Completamento Medio</div>
+                <div className="text-sm text-neutral-500">Average Completion Rate</div>
                 {stats.completion_trend !== 0 && (
                   <div className={`flex items-center text-xs mt-1 ${
                     stats.completion_trend > 0 ? 'text-success-600' : 'text-error-600'
@@ -395,15 +395,15 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
             <div className="grid grid-cols-1 gap-2 text-sm">
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-success-500 rounded-full mr-2"></div>
-                <span>Completati ({stats.completed_tasks})</span>
+                <span>Completed ({stats.completed_tasks})</span>
               </div>
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-primary-500 rounded-full mr-2"></div>
-                <span>In Corso ({stats.in_progress_tasks})</span>
+                <span>In Progress ({stats.in_progress_tasks})</span>
               </div>
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-error-500 rounded-full mr-2"></div>
-                <span>In Ritardo ({stats.overdue_tasks})</span>
+                <span>Overdue ({stats.overdue_tasks})</span>
               </div>
             </div>
           </div>
@@ -419,7 +419,7 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
                 <div className="text-2xl font-bold text-neutral-900">
                   {stats.total_tasks}
                 </div>
-                <div className="text-sm text-neutral-600">Task Totali</div>
+                <div className="text-sm text-neutral-600">Total Tasks</div>
               </motion.div>
               
               <motion.div
@@ -431,14 +431,14 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
                 <div className="text-2xl font-bold text-success-700">
                   {stats.completed_tasks}
                 </div>
-                <div className="text-sm text-success-600">Completati</div>
+                <div className="text-sm text-success-600">Completed</div>
               </motion.div>
             </div>
 
             {/* Task Details Preview */}
             {showDetails && taskDetails.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium text-neutral-900 mb-3">Task Recenti</h4>
+                <h4 className="font-medium text-neutral-900 mb-3">Recent Tasks</h4>
                 {taskDetails.slice(0, 3).map((task, index) => (
                   <motion.div
                     key={task.id}
@@ -464,8 +464,8 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
                       </div>
                       {task.due_at && (
                         <div className="text-xs text-neutral-500">
-                          {new Date(task.due_at) > new Date() ? 'Scade il' : 'Scaduto il'} {' '}
-                          {new Date(task.due_at).toLocaleDateString('it-IT')}
+                          {new Date(task.due_at) > new Date() ? 'Due Date' : 'Due Date'} {' '}
+                          {new Date(task.due_at).toLocaleDateString('en-US')}
                         </div>
                       )}
                     </div>
@@ -481,7 +481,7 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
       <div className="bg-neutral-50 px-6 py-4 border-t border-neutral-200">
         <div className="flex items-center justify-between text-sm text-neutral-600">
           <span>
-            Ultima valutazione: {new Date().toLocaleDateString('it-IT', { 
+            Last evaluation: {new Date().toLocaleDateString('en-US', { 
               hour: '2-digit', 
               minute: '2-digit' 
             })}
@@ -489,7 +489,7 @@ export const AdherenceGauge: React.FC<AdherenceGaugeProps> = ({
           {stats.completion_trend > 0 && (
             <div className="flex items-center text-success-600">
               <TrendingUp className="w-4 h-4 mr-1" />
-              <span>Tendenza positiva</span>
+              <span>Positive Trend</span>
             </div>
           )}
         </div>

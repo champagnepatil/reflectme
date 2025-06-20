@@ -240,7 +240,7 @@ const Dashboard: React.FC = () => {
           />
         </motion.div>
 
-        {/* Adherence Gauge for Demo Client */}
+        {/* Treatment Adherence Gauge for Demo Client */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -255,7 +255,7 @@ const Dashboard: React.FC = () => {
         </motion.div>
       </div>
 
-              {/* Quick Actions */}
+      {/* Quick Actions */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -270,7 +270,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             onClick={() => {
               setSelectedClientForTask('demo-client-1');
@@ -298,17 +298,6 @@ const Dashboard: React.FC = () => {
               <div className="text-sm text-neutral-500">for Demo Client 2</div>
             </div>
           </button>
-          
-          <Link
-            to="/therapist/analytics"
-            className="flex items-center p-4 border border-neutral-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all"
-          >
-            <BarChart2 className="w-5 h-5 text-primary-600 mr-3" />
-            <div className="text-left">
-              <div className="font-medium text-neutral-900">Analytics AI</div>
-              <div className="text-sm text-neutral-500">Advanced insights</div>
-            </div>
-          </Link>
         </div>
       </motion.div>
 
