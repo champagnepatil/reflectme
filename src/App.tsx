@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TherapyProvider } from './contexts/TherapyContext';
 import { ReflectMeProvider } from './contexts/ReflectMeContext';
@@ -65,9 +65,57 @@ import AppLayout from './layouts/AppLayout';
 
 import { AITestPanel } from './components/AITestPanel';
 
+// Access Denied Component
+const AccessDenied: React.FC = () => {
+  const navigate = useNavigate();
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+      <div className="max-w-md mx-auto text-center p-8">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-bold text-neutral-800 mb-4">Access Denied</h1>
+        <p className="text-neutral-600 mb-8">
+          You don't have permission to access this admin area. 
+          This section is restricted to authorized administrators only.
+        </p>
+        <div className="space-y-3">
+          <button
+            onClick={() => navigate('/')}
+            className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Return to Homepage
+          </button>
+          <button
+            onClick={() => navigate('/login')}
+            className="w-full px-6 py-3 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors"
+          >
+            Login as Admin
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Admin Route Protection Component
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  // Show loading while auth is being checked
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-neutral-600">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
   
   // Check if user is admin (same logic as in Home.tsx)
   const isAdmin = user?.email?.includes('admin') || 
@@ -75,9 +123,9 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   user?.role === 'admin' ||
                   false;
 
-  if (!isAdmin) {
-    // Redirect non-admin users to home page
-    return <Navigate to="/" replace />;
+  // If not loading and not admin, show access denied page
+  if (!loading && !isAdmin) {
+    return <AccessDenied />;
   }
 
   return <>{children}</>;
