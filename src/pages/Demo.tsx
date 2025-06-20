@@ -8,7 +8,7 @@ import { MessageCircle, Heart, FileText, Send, Play, Star, TrendingUp } from 'lu
 const Demo: React.FC = () => {
   const [activeDemo, setActiveDemo] = useState<'chat' | 'tools' | 'insights'>('chat');
   const [messages, setMessages] = useState<{id: number; text: string; sender: 'bot' | 'user'}[]>([
-    { id: 1, text: "Hi! I'm ReflectMe, your digital therapy companion. I understand you've been working on anxiety management with your therapist. How are you feeling today?", sender: 'bot' },
+    { id: 1, text: "Hi! I'm Zentia, your digital therapy companion. I understand you've been working on anxiety management with your therapist. How are you feeling today?", sender: 'bot' },
   ]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -87,10 +87,10 @@ const Demo: React.FC = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mr-4">
                 <Heart className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-slate-900">ReflectMe Demo</h1>
+              <h1 className="text-4xl md:text-5xl font-bold text-slate-900">Zentia Demo</h1>
             </div>
             <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-              Experience how ReflectMe provides personalized support between therapy sessions using AI and your therapy history.
+              Experience how Zentia provides personalized support between therapy sessions using AI and your therapy history.
             </p>
             
             <div className="flex justify-center mt-8">
@@ -147,7 +147,7 @@ const Demo: React.FC = () => {
                   <div className="flex items-center">
                     <Heart className="w-6 h-6 mr-3" />
                     <div>
-                      <h3 className="font-semibold">ReflectMe Assistant</h3>
+                      <h3 className="font-semibold">Zentia Assistant</h3>
                       <p className="text-sm text-blue-100">Personalized support based on your therapy history</p>
                     </div>
                   </div>

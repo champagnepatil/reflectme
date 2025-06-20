@@ -26,7 +26,7 @@ import {
   Linkedin
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useReflectMe } from '../../contexts/ReflectMeContext';
+import { useZentia } from '../../contexts/ZentiaContext';
 import { GeminiAIService } from '../../services/geminiAIService';
 
 interface InsightData {
@@ -44,7 +44,7 @@ interface InsightData {
 
 const Insights: React.FC = () => {
   const { user } = useAuth();
-  const { getProgressData, sessionRecaps, moodEntries } = useReflectMe();
+  const { getProgressData, sessionRecaps, moodEntries } = useZentia();
   const [insightData, setInsightData] = useState<InsightData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);

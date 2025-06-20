@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Clock, Star, Play, Filter, Search, Sparkles, ArrowLeft } from 'lucide-react';
-import { useReflectMe } from '../contexts/ReflectMeContext';
+import { useZentia } from '../contexts/ZentiaContext';
 import { Link } from 'react-router-dom';
 
 const CopingTools: React.FC = () => {
-  const { copingTools, getRecommendedTools } = useReflectMe();
+  const { copingTools, getRecommendedTools } = useZentia();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 

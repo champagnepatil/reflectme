@@ -37,7 +37,7 @@ const Home: React.FC = () => {
                 <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mr-6 border border-white/30">
                   <Heart className="w-10 h-10 text-white" />
                 </div>
-                <h1 className="text-6xl md:text-7xl font-bold text-white">ReflectMe</h1>
+                <h1 className="text-6xl md:text-7xl font-bold text-white">Zentia</h1>
               </div>
               
               <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-4xl mx-auto leading-relaxed">
@@ -50,7 +50,7 @@ const Home: React.FC = () => {
                   className="group px-10 py-4 bg-white text-primary-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center"
                 >
                   <Heart className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                  ReflectMe Companion
+                  Zentia Companion
                   <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
                 </button>
                 
@@ -74,7 +74,7 @@ const Home: React.FC = () => {
                   className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-primary-600 transition-all duration-300 flex items-center justify-center"
                 >
                   <Users className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                  ReflectMe Professional
+                  Zentia Professional
                   <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
@@ -97,7 +97,7 @@ const Home: React.FC = () => {
             viewport={{ once: true }}
             className="text-center mb-20"
           >
-            <h2 className="text-4xl font-bold text-neutral-800 mb-6">How ReflectMe Supports Your Journey</h2>
+            <h2 className="text-4xl font-bold text-neutral-800 mb-6">How Zentia Supports Your Journey</h2>
             <p className="text-xl text-neutral-600 max-w-4xl mx-auto leading-relaxed">
               Bridging the gap between therapy sessions with personalized, AI-powered support that understands your unique therapeutic journey.
             </p>
@@ -248,7 +248,7 @@ const Home: React.FC = () => {
           >
             <h2 className="text-4xl font-bold text-neutral-800 mb-6">Be Among the First</h2>
             <p className="text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed">
-              ReflectMe is launching soon! Join our exclusive waitlist for early access, special launch pricing, and beta features.
+              Zentia is launching soon! Join our exclusive waitlist for early access, special launch pricing, and beta features.
             </p>
           </motion.div>
           
@@ -277,7 +277,7 @@ const Home: React.FC = () => {
                   className="group px-10 py-4 bg-white text-teal-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center"
                 >
                   <Heart className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                  ReflectMe Companion
+                  Zentia Companion
                   <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
                 </button>
                 
@@ -286,7 +286,7 @@ const Home: React.FC = () => {
                   className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-teal-600 transition-all duration-300 flex items-center justify-center"
                 >
                   <Users className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                  ReflectMe Professional
+                  Zentia Professional
                   <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>

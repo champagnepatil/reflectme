@@ -58,7 +58,7 @@ export interface MoodEntry {
   context: 'chat' | 'manual' | 'session';
 }
 
-interface ReflectMeContextType {
+interface ZentiaContextType {
   // Chat
   chatHistory: ChatMessage[];
   addMessage: (message: Omit<ChatMessage, 'id'>) => ChatMessage;
@@ -79,12 +79,12 @@ interface ReflectMeContextType {
   getProgressData: () => { date: string; mood: number }[];
 }
 
-const ReflectMeContext = createContext<ReflectMeContextType | undefined>(undefined);
+const ZentiaContext = createContext<ZentiaContextType | undefined>(undefined);
 
-export const useReflectMe = () => {
-  const context = useContext(ReflectMeContext);
+export const useZentia = () => {
+  const context = useContext(ZentiaContext);
   if (!context) {
-    throw new Error('useReflectMe must be used within a ReflectMeProvider');
+    throw new Error('useZentia must be used within a ZentiaProvider');
   }
   return context;
 };
@@ -200,196 +200,183 @@ const mockSessionRecaps: SessionRecap[] = [
       'Try one grounding technique this week'
     ],
     moodBefore: 3,
-    moodAfter: 6,
+    moodAfter: 6
   },
   {
     id: '2',
-    date: '2024-01-08',
-    title: 'Understanding Triggers',
+    date: '2024-01-10',
+    title: 'Sleep Hygiene and Routine',
     keyTakeaways: [
-      'Explored childhood experiences that may contribute to current anxiety',
-      'Discussed the fight-or-flight response',
-      'Identified physical symptoms of anxiety'
+      'Poor sleep is affecting mood and anxiety levels',
+      'Screen time before bed disrupts sleep quality',
+      'Established connection between sleep and daily functioning'
     ],
     therapistSuggestions: [
-      'Notice early warning signs of anxiety',
-      'Practice self-compassion when experiencing difficult emotions',
-      'Use the ReflectMe app to track mood patterns'
+      'Create a consistent bedtime routine',
+      'Avoid screens 1 hour before sleep',
+      'Try progressive muscle relaxation for better sleep'
     ],
     actionItems: [
-      'Complete anxiety symptom tracker',
-      'Practice mindfulness meditation 10 minutes daily',
-      'Read recommended article on anxiety'
+      'Set phone to "Do Not Disturb" mode at 9 PM',
+      'Practice bedtime routine for one week',
+      'Track sleep quality in journal'
     ],
     moodBefore: 4,
-    moodAfter: 5,
+    moodAfter: 5
   },
   {
     id: '3',
-    date: '2024-01-01',
-    title: 'Initial Assessment',
+    date: '2024-01-05',
+    title: 'Relationship Communication',
     keyTakeaways: [
-      'Established therapeutic goals and expectations',
-      'Discussed current life stressors and support systems',
-      'Introduced cognitive-behavioral therapy approach'
+      'Difficulty expressing needs in close relationships',
+      'Tendency to avoid conflict leads to resentment',
+      'Learned "I" statements for better communication'
     ],
     therapistSuggestions: [
-      'Begin keeping a daily mood log',
-      'Start with basic breathing exercises',
-      'Focus on sleep hygiene and routine'
+      'Practice "I" statements daily',
+      'Schedule regular check-ins with partner',
+      'Use grounding when feeling defensive'
     ],
     actionItems: [
-      'Download and set up ReflectMe app',
-      'Establish consistent sleep schedule',
-      'Begin daily check-ins with mood tracking'
+      'Have one important conversation using "I" statements',
+      'Notice when avoiding difficult topics',
+      'Practice active listening techniques'
     ],
-    moodBefore: 3,
-    moodAfter: 4,
-  },
+    moodBefore: 5,
+    moodAfter: 7
+  }
 ];
 
-const mockChatHistory: ChatMessage[] = [
-  {
-    id: '1',
-    sender: 'system',
-    content: 'Welcome to ReflectMe! I\'m here to support you between therapy sessions. How are you feeling today?',
-    timestamp: new Date().toISOString(),
-  },
+const mockMoodEntries: MoodEntry[] = [
+  { id: '1', date: '2024-01-20', mood: 7, context: 'chat', notes: 'Feeling better after talking through anxiety' },
+  { id: '2', date: '2024-01-19', mood: 4, trigger: 'Work stress', context: 'manual' },
+  { id: '3', date: '2024-01-18', mood: 6, context: 'manual' },
+  { id: '4', date: '2024-01-17', mood: 5, trigger: 'Relationship conflict', context: 'chat' },
+  { id: '5', date: '2024-01-16', mood: 8, context: 'session', notes: 'Great session today' },
+  { id: '6', date: '2024-01-15', mood: 6, context: 'session' },
+  { id: '7', date: '2024-01-14', mood: 3, trigger: 'Financial worries', context: 'manual' },
 ];
 
-export const ReflectMeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ZentiaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>(mockChatHistory);
-  const [copingTools] = useState<CopingTool[]>(mockCopingTools);
-  const [sessionRecaps] = useState<SessionRecap[]>(mockSessionRecaps);
-  const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      sender: 'assistant',
+      content: "Hello! I'm your Zentia companion. I'm here to support you between therapy sessions. How are you feeling today?",
+      timestamp: new Date().toISOString(),
+    }
+  ]);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
-
-  // Removed unused getTherapistNotes function - now handled in GeminiAIService
+  const [moodEntries, setMoodEntries] = useState<MoodEntry[]>(mockMoodEntries);
 
   const addMessage = (message: Omit<ChatMessage, 'id'>): ChatMessage => {
     const newMessage: ChatMessage = {
       ...message,
-      id: Math.random().toString(36).substring(2, 11),
+      id: Date.now().toString(),
     };
     
     setChatHistory(prev => [...prev, newMessage]);
-    
+
     // If it's a user message, generate AI response
     if (message.sender === 'user') {
       generateAIResponse(message.content);
     }
-    
+
     return newMessage;
   };
 
-  // Removed unused analyzeEmotionalContext function - now handled in GeminiAIService
-
-  // Removed unused findRelevantTherapistNotes function - now handled in GeminiAIService
-
   const generateAIResponse = async (userMessage: string) => {
-    console.log('🚀 Starting AI response generation for:', userMessage);
     setIsGeneratingResponse(true);
     
     try {
-      // FOR DEMO USERS: Always use a consistent ID to enable API calls
-      // while preserving the demo context.
-      const clientIdForAIService = user?.isDemo ? 'demo-client-1' : user?.id;
+      // Create therapy context from session recaps and mood entries
+      const therapyContext = {
+        recentSessions: mockSessionRecaps.slice(0, 2),
+        recentMoods: moodEntries.slice(-7),
+        copingTools: mockCopingTools.filter(tool => tool.therapistApproved)
+      };
 
-      // Use the new Gemini AI service
-      const chatResponse = await GeminiAIService.generaRispostaChat(
+      const response = await GeminiAIService.generateTherapeuticResponse(
         userMessage,
-        clientIdForAIService, // clientId if it's a patient
-        user?.role === 'patient' // therapeutic contact only for patients
+        chatHistory,
+        therapyContext
       );
-      
-      // Create the AI message with metadata
+
       const aiMessage: ChatMessage = {
-        id: Math.random().toString(36).substring(2, 11),
+        id: Date.now().toString(),
         sender: 'assistant',
-        content: chatResponse.contenuto,
+        content: response.content,
         timestamp: new Date().toISOString(),
-        metadata: {
-          emotionalContext: chatResponse.metadata.emozioniRilevate.join(', '),
-          triggerDetected: chatResponse.metadata.triggerIndividuati.join(', '),
-          copingToolSuggested: chatResponse.metadata.strategieSuggerite[0] || '',
-          therapistNotesUsed: chatResponse.metadata.riferimentiTerapeutici,
-          responseElements: {
-            validation: 'Supporto e validazione',
-            therapyReference: chatResponse.metadata.riferimentiTerapeutici.join(', '),
-            actionSuggestion: chatResponse.metadata.strategieSuggerite.join(', ')
-          }
-        }
+        metadata: response.metadata
       };
-      
-      console.log('💬 Adding AI message to chat:', aiMessage.content.substring(0, 50) + '...');
+
       setChatHistory(prev => [...prev, aiMessage]);
-      
+
+      // If mood was detected, add it to mood entries
+      if (response.metadata?.moodDetected) {
+        const moodEntry: MoodEntry = {
+          id: Date.now().toString(),
+          date: new Date().toISOString().split('T')[0],
+          mood: response.metadata.moodDetected,
+          context: 'chat',
+          notes: `Detected during conversation: "${userMessage.substring(0, 50)}..."`
+        };
+        setMoodEntries(prev => [...prev, moodEntry]);
+      }
+
     } catch (error) {
-      console.error('💥 Error generating AI response:', error);
-      
-      // Fallback error message
+      console.error('Error generating AI response:', error);
       const errorMessage: ChatMessage = {
-        id: Math.random().toString(36).substring(2, 11),
-        sender: 'assistant',
-        content: "I'm sorry, I'm having some technical difficulties at the moment. I'm still here to listen and support you. Your feelings are valid and important. Would you like to try one of the coping techniques we've discussed together?",
+        id: Date.now().toString(),
+        sender: 'system',
+        content: "I'm sorry, I'm having trouble responding right now. Please try again in a moment, or if this persists, you can always reach out to your therapist directly.",
         timestamp: new Date().toISOString(),
       };
-      
       setChatHistory(prev => [...prev, errorMessage]);
     } finally {
-      console.log('🏁 AI response generation completed');
       setIsGeneratingResponse(false);
     }
   };
 
-  // Removed unused generateStructuredFallbackResponse function - now handled in GeminiAIService
-
   const getRecommendedTools = (): CopingTool[] => {
-    return copingTools.filter(tool => tool.isRecommended);
+    return mockCopingTools.filter(tool => tool.isRecommended);
   };
 
   const addMoodEntry = (entry: Omit<MoodEntry, 'id'>): void => {
     const newEntry: MoodEntry = {
       ...entry,
-      id: Math.random().toString(36).substring(2, 11),
+      id: Date.now().toString(),
     };
     setMoodEntries(prev => [...prev, newEntry]);
   };
 
   const getProgressData = () => {
-    // Generate mock progress data for the last 30 days
-    const data = [];
-    const today = new Date();
-    
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(today.getDate() - i);
-      
-      data.push({
-        date: date.toISOString().split('T')[0],
-        mood: Math.floor(Math.random() * 5) + 1 + (i < 15 ? 1 : 0), // Show improvement over time
-      });
-    }
-    
-    return data;
+    return moodEntries
+      .slice(-30) // Last 30 entries
+      .map(entry => ({
+        date: entry.date,
+        mood: entry.mood
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
-  const value = {
+  const value: ZentiaContextType = {
     chatHistory,
     addMessage,
     isGeneratingResponse,
-    copingTools,
+    copingTools: mockCopingTools,
     getRecommendedTools,
-    sessionRecaps,
+    sessionRecaps: mockSessionRecaps,
     moodEntries,
     addMoodEntry,
     getProgressData,
   };
 
   return (
-    <ReflectMeContext.Provider value={value}>
+    <ZentiaContext.Provider value={value}>
       {children}
-    </ReflectMeContext.Provider>
+    </ZentiaContext.Provider>
   );
-};
+}; 

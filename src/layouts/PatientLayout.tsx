@@ -42,7 +42,7 @@ const PatientLayout: React.FC = () => {
               <div className="w-10 h-10 gradient-primary rounded-2xl flex items-center justify-center shadow-soft">
                 <Heart className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-xl font-semibold text-slate-900 ml-3 group-hover:text-primary-600 transition-colors">ReflectMe Companion</h1>
+              <h1 className="text-xl font-semibold text-slate-900 ml-3 group-hover:text-primary-600 transition-colors">Zentia Companion</h1>
             </Link>
           </div>
         </div>

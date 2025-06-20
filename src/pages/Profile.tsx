@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Bell, Shield, Save, LogOut, Heart, Calendar, TrendingUp, ArrowLeft } from 'lucide-react';
-import { useReflectMe } from '../contexts/ReflectMeContext';
+import { useZentia } from '../contexts/ZentiaContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Profile: React.FC = () => {
-  const { sessionRecaps, moodEntries } = useReflectMe();
+  const { sessionRecaps, moodEntries } = useZentia();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   
@@ -128,7 +128,7 @@ const Profile: React.FC = () => {
                         {key === 'progressUpdates' && 'Progress Updates'}
                       </h3>
                       <p className="text-sm text-neutral-600">
-                        {key === 'dailyCheckins' && 'Gentle reminders to check in with ReflectMe'}
+                        {key === 'dailyCheckins' && 'Gentle reminders to check in with Zentia'}
                         {key === 'sessionReminders' && 'Notifications about upcoming therapy sessions'}
                         {key === 'copingToolSuggestions' && 'Personalized coping tool recommendations'}
                         {key === 'progressUpdates' && 'Weekly summaries of your progress'}
@@ -171,7 +171,7 @@ const Profile: React.FC = () => {
 
                 <button className="w-full p-4 text-left border border-neutral-300 rounded-2xl hover:bg-neutral-50 transition-colors">
                   <h3 className="font-medium text-neutral-900">Download My Data</h3>
-                  <p className="text-sm text-neutral-600">Export all your ReflectMe data</p>
+                  <p className="text-sm text-neutral-600">Export all your Zentia data</p>
                 </button>
 
                 <button className="w-full p-4 text-left border border-error-300 rounded-2xl hover:bg-error-50 transition-colors text-error-700">

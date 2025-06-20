@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, TrendingUp, Target, Lightbulb, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
-import { useReflectMe } from '../contexts/ReflectMeContext';
+import { useZentia } from '../contexts/ZentiaContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
 
 const SessionRecaps: React.FC = () => {
-  const { sessionRecaps, getProgressData } = useReflectMe();
+  const { sessionRecaps, getProgressData } = useZentia();
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
 

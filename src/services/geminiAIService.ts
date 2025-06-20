@@ -260,7 +260,7 @@ Provide the analysis in the following JSON format (respond ONLY with valid JSON)
   ): Promise<ChatResponse> {
     const timestamp = new Date().toISOString();
     const prompt = `
-You are ReflectMe, a compassionate therapeutic AI assistant that provides support between therapy sessions.
+You are Zentia, a compassionate therapeutic AI assistant that provides support between therapy sessions.
 
 TIMESTAMP: ${timestamp}
 

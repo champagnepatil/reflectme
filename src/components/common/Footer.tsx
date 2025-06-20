@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="white"/>
                 </svg>
               </div>
-              <h2 className="text-2xl font-semibold text-neutral-800 ml-3">ReflectMe</h2>
+              <h2 className="text-2xl font-semibold text-neutral-800 ml-3">Zentia</h2>
             </Link>
             <p className="text-neutral-600 mb-6 leading-relaxed">Your personalized digital therapy companion, providing empathetic support between sessions.</p>
             <div className="flex items-center text-neutral-500">
@@ -60,7 +60,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="border-t border-neutral-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-neutral-500">&copy; {new Date().getFullYear()} ReflectMe Health. All rights reserved.</p>
+          <p className="text-neutral-500">&copy; {new Date().getFullYear()} Zentia Health. All rights reserved.</p>
           <div className="flex items-center mt-4 md:mt-0">
             <Link to="/help" className="text-neutral-500 hover:text-primary-600 flex items-center mr-6 transition-colors">
               <HelpCircle className="w-4 h-4 mr-2" />

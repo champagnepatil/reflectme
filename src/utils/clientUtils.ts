@@ -3,7 +3,7 @@ import { v5 as uuidv5 } from 'uuid';
 // Namespace UUID for client IDs (consistent across application)
 const CLIENT_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
 
-// Client ID normalization utilities for ReflectMe
+// Client ID normalization utilities for Zentia
 // Maps demo client IDs to actual UUIDs from Supabase database
 
 const DEMO_CLIENT_MAP: Record<string, string> = {

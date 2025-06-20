@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TherapyProvider } from './contexts/TherapyContext';
-import { ReflectMeProvider } from './contexts/ReflectMeContext';
+import { ZentiaProvider } from './contexts/ZentiaContext';
 import { AssessmentProvider } from './contexts/AssessmentContext';
 
 // Public Pages
@@ -37,7 +37,7 @@ import AssessmentPage from './pages/AssessmentPage';
 import ClientInsights from './pages/client/Insights';
 import Plan from './pages/client/Plan';
 
-// ReflectMe App Pages
+// Zentia App Pages
 import Chat from './pages/Chat';
 import CopingTools from './pages/CopingTools';
 import SessionRecaps from './pages/SessionRecaps';
@@ -140,7 +140,7 @@ function App() {
       <div className="App">
         <AuthProvider>
           <TherapyProvider>
-            <ReflectMeProvider>
+            <ZentiaProvider>
               <AssessmentProvider>
                 <Routes>
                 {/* Public routes */}
@@ -153,7 +153,7 @@ function App() {
                 {/* Assessment Route (standalone) */}
                 <Route path="/assessment/:clientId" element={<AssessmentPage />} />
                 
-                {/* Legacy ReflectMe App Routes - redirect to new client routes */}
+                {/* Legacy Zentia App Routes - redirect to new client routes */}
                 <Route path="/app" element={<Navigate to="/client" replace />} />
                 <Route path="/app/*" element={<Navigate to="/client" replace />} />
                 
@@ -232,7 +232,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </AssessmentProvider>
-            </ReflectMeProvider>
+            </ZentiaProvider>
           </TherapyProvider>
         </AuthProvider>
       </div>

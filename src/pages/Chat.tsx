@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Heart, Lightbulb, TrendingUp, Sparkles, Loader2 } from 'lucide-react';
-import { useReflectMe } from '../contexts/ReflectMeContext';
+import { useZentia } from '../contexts/ZentiaContext';
 import { EmotionPrivacyManager } from '../utils/emotionPrivacy';
 import { useAuth } from '../contexts/AuthContext';
 
 const Chat: React.FC = () => {
-  const { chatHistory, addMessage, getRecommendedTools, isGeneratingResponse } = useReflectMe();
+  const { chatHistory, addMessage, getRecommendedTools, isGeneratingResponse } = useZentia();
   const { user } = useAuth();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -144,7 +144,7 @@ const Chat: React.FC = () => {
               <div className="chat-bubble-assistant">
                 <div className="flex items-center space-x-2">
                   <Loader2 className="w-4 h-4 animate-spin text-primary-600" />
-                  <span className="text-sm text-neutral-600">ReflectMe is thinking...</span>
+                  <span className="text-sm text-neutral-600">Zentia is thinking...</span>
                 </div>
               </div>
             </motion.div>
