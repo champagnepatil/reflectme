@@ -246,8 +246,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error('Demo account password is incorrect. Use: demo123456');
         }
         
-        const role = email.includes('therapist') ? 'therapist' : 'patient';
-        const name = role === 'patient' ? 'Demo Client' : 'Demo Therapist';
+        let role: 'therapist' | 'patient' = 'patient';
+        let name = 'Demo User';
+        
+        // Determine role and name based on email
+        if (email.includes('therapist')) {
+          role = 'therapist';
+          name = 'Demo Therapist';
+        } else if (email.includes('admin')) {
+          role = 'therapist'; // Admin uses therapist role but has admin permissions via email
+          name = 'Demo Admin';
+        } else {
+          role = 'patient';
+          name = 'Demo Client';
+        }
         
         // Create mock demo user
         const mockDemoUser: AuthUser = {

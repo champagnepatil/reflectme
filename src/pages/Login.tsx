@@ -11,13 +11,13 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState<'patient' | 'therapist' | null>(null);
+  const [demoLoading, setDemoLoading] = useState<'patient' | 'therapist' | 'admin' | null>(null);
   const { login, user, register } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // Get role from URL params if provided
-  const roleFromUrl = searchParams.get('role') as 'patient' | 'therapist' | null;
+  const roleFromUrl = searchParams.get('role') as 'patient' | 'therapist' | 'admin' | null;
 
   // Redirect user if already logged in
   useEffect(() => {
@@ -32,7 +32,7 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     // If role is specified in URL, auto-trigger demo login
-    if (roleFromUrl && (roleFromUrl === 'patient' || roleFromUrl === 'therapist') && !user && !loading && !demoLoading) {
+    if (roleFromUrl && (roleFromUrl === 'patient' || roleFromUrl === 'therapist' || roleFromUrl === 'admin') && !user && !loading && !demoLoading) {
       handleDemoLogin(roleFromUrl);
     }
   }, [roleFromUrl, user, loading, demoLoading]);
@@ -65,12 +65,13 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleDemoLogin = async (role: 'patient' | 'therapist') => {
+  const handleDemoLogin = async (role: 'patient' | 'therapist' | 'admin') => {
     if (loading || demoLoading) return; // Prevent double clicks
 
     const demoCredentials = {
       patient: { email: 'democlient@mindtwin.demo', password: 'demo123456' },
-      therapist: { email: 'demotherapist@mindtwin.demo', password: 'demo123456' }
+      therapist: { email: 'demotherapist@mindtwin.demo', password: 'demo123456' },
+      admin: { email: 'admin@mindtwin.demo', password: 'demo123456' }
     };
 
     const { email: demoEmail, password: demoPassword } = demoCredentials[role];
@@ -198,34 +199,51 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <button
-                onClick={() => handleDemoLogin('patient')}
-                className="btn btn-outline"
-                disabled={loading || !!demoLoading}
-              >
-                {demoLoading === 'patient' ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  'Demo Client'
-                )}
-              </button>
+            <div className="mt-6 space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleDemoLogin('patient')}
+                  className="btn btn-outline"
+                  disabled={loading || !!demoLoading}
+                >
+                  {demoLoading === 'patient' ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Demo Client'
+                  )}
+                </button>
 
+                <button
+                  onClick={() => handleDemoLogin('therapist')}
+                  className="btn btn-outline"
+                  disabled={loading || !!demoLoading}
+                >
+                  {demoLoading === 'therapist' ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Demo Therapist'
+                  )}
+                </button>
+              </div>
+              
               <button
-                onClick={() => handleDemoLogin('therapist')}
-                className="btn btn-outline"
+                onClick={() => handleDemoLogin('admin')}
+                className="btn btn-primary w-full"
                 disabled={loading || !!demoLoading}
               >
-                {demoLoading === 'therapist' ? (
+                {demoLoading === 'admin' ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Loading...
                   </>
                 ) : (
-                  'Demo Therapist'
+                  '🔑 Demo Admin Access'
                 )}
               </button>
             </div>
