@@ -41,6 +41,11 @@ const EmailCampaignAdmin: React.FC<EmailCampaignAdminProps> = ({ className = '' 
     try {
       // Get all active subscribers
       const subscribers = await SupabaseWaitlistService.getAllSubscribers();
+      
+      if (subscribers.length === 0) {
+        throw new Error('No active subscribers found');
+      }
+
       const emails = subscribers.map(sub => sub.email);
       
       console.log(`📧 Starting ${selectedCampaign} email campaign to ${emails.length} subscribers`);
@@ -50,7 +55,7 @@ const EmailCampaignAdmin: React.FC<EmailCampaignAdminProps> = ({ className = '' 
       subscribers.forEach(sub => {
         subscribersData[sub.email] = {
           position_in_queue: sub.position_in_queue,
-          created_at: sub.created_at
+          subscribed_at: sub.subscribed_at
         };
       });
 

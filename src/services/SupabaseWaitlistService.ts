@@ -162,14 +162,35 @@ class SupabaseWaitlistService {
         .range(from, to);
 
       if (error) {
-        console.error('Error getting subscribers:', error);
+        console.error('❌ Error getting subscribers:', error);
         return { data: [], error, total: 0 };
       }
 
       return { data: data || [], error: null, total: count || 0 };
     } catch (err) {
-      console.error('Unexpected error getting subscribers:', err);
+      console.error('❌ Unexpected error getting subscribers:', err);
       return { data: [], error: err, total: 0 };
+    }
+  }
+
+  // Get ALL subscribers (for email campaigns) - no pagination limit
+  async getAllSubscribers(): Promise<WaitlistSubscriber[]> {
+    try {
+      const { data, error } = await supabase
+        .from('waitlist_subscribers')
+        .select('*')
+        .eq('status', 'active')
+        .order('subscribed_at', { ascending: true });
+
+      if (error) {
+        console.error('❌ Error getting all subscribers:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (err) {
+      console.error('❌ Unexpected error getting all subscribers:', err);
+      return [];
     }
   }
 
