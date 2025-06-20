@@ -69,11 +69,11 @@ export class GeminiAIService {
     try {
       console.log(`🤖 Starting notes analysis for client ${clientId}`);
 
-      // Recupera le note dal database
+      // Usa la tabella 'notes' che esiste invece di 'therapist_notes'
       let query = supabase
-        .from('therapist_notes')
+        .from('notes')
         .select('*')
-        .eq('client_id', clientId)
+        .eq('user_id', clientId)
         .order('created_at', { ascending: false });
 
       if (noteIds && noteIds.length > 0) {
@@ -84,7 +84,10 @@ export class GeminiAIService {
 
       const { data: note, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.warn('⚠️ Error fetching notes:', error);
+        return this.generaAnalisiVuota();
+      }
 
       if (!note || note.length === 0) {
         return this.generaAnalisiVuota();
@@ -93,9 +96,9 @@ export class GeminiAIService {
       // Prepara il contenuto per l'analisi
       const contenutoNote = note.map(nota => ({
         data: nota.created_at,
-        titolo: nota.title || 'Sessione senza titolo',
+        titolo: 'Note Entry',
         contenuto: nota.content,
-        tag: nota.tags || []
+        tag: []
       }));
 
       const model = this.getModel();
@@ -129,12 +132,18 @@ export class GeminiAIService {
       
       let noteRilevanti: any[] = [];
       if (clientId && contattoTerapeutico) {
-        const { data } = await supabase
-          .from('therapist_notes')
+        // Usa la tabella 'notes' che esiste invece di 'therapist_notes'
+        const { data, error } = await supabase
+          .from('notes')
           .select('*')
-          .eq('client_id', clientId)
+          .eq('user_id', clientId)
           .limit(5);
-        noteRilevanti = data || [];
+          
+        if (error) {
+          console.warn('⚠️ Error fetching notes for chat context:', error);
+        } else {
+          noteRilevanti = data || [];
+        }
         console.log('📝 Relevant notes found:', noteRilevanti.length);
       }
 
@@ -162,18 +171,17 @@ export class GeminiAIService {
       const dataInizio = new Date();
       dataInizio.setDate(dataInizio.getDate() - giorni);
 
-      // Recupera dati multipli
+      // Recupera dati multipli con le tabelle che esistono realmente
       const [noteResult, assessmentResult, monitoringResult] = await Promise.all([
         supabase
-          .from('therapist_notes')
+          .from('notes')
           .select('*')
-          .eq('client_id', clientId)
+          .eq('user_id', clientId)
           .gte('created_at', dataInizio.toISOString()),
         
         supabase
-          .from('assessments')
+          .from('assessment_results')
           .select('*')
-          .eq('client_id', clientId)
           .gte('completed_at', dataInizio.toISOString()),
         
         supabase
@@ -263,55 +271,58 @@ EMOTIONAL CONTEXT:
 - Identified triggers: ${(contesto.triggers || []).join(', ') || 'no specific triggers identified'}
 - Intensity: ${contesto.intensita || 'normal'}
 
-RELEVANT THERAPY NOTES:
-${noteRilevanti.map(nota => `- ${nota.title}: ${nota.content.substring(0, 200)}...`).join('\n')}
+RELEVANT THERAPY NOTES: ${noteRilevanti.length > 0 ? noteRilevanti.map(nota => nota.content).join('. ') : 'No therapy notes available'}
 
-INSTRUCTIONS:
-1. Carefully analyze the user's specific message: "${messaggio}"
-2. Respond with empathy and personalized validation for this message
-3. Adapt your response to the detected emotional context
-4. Reference therapy note strategies when appropriate
-5. Suggest specific coping techniques for the situation
-6. Maintain a professional but warm tone
-7. ALWAYS respond in English
-8. Limit response to 150-200 words
-9. IMPORTANT: Each response must be unique and specific to this message
-
-CRITICAL: Provide ONLY a valid JSON response with no additional text, explanations, or markdown. Use this exact format:
-
+Respond ONLY with a valid JSON object in this exact format (escape all quotes properly):
 {
-  "contenuto": "Your therapeutic response here in English - ensure all quotes are properly escaped",
+  "contenuto": "Your therapeutic response here as a single string, use \\" for any quotes",
   "metadata": {
-    "emozioniRilevate": ["detected emotions"],
-    "triggerIndividuati": ["identified triggers"], 
-    "strategieSuggerite": ["recommended strategies"],
+    "emozioniRilevate": ["emotion1", "emotion2"],
+    "triggerIndividuati": ["trigger1", "trigger2"],
+    "strategieSuggerite": ["strategy1", "strategy2"],
     "livelloUrgenza": "low",
-    "riferimentiTerapeutici": ["therapy references"]
+    "riferimentiTerapeutici": ["reference1", "reference2"]
   }
 }
 
 IMPORTANT: 
-- Use only "low", "medium", or "high" for livelloUrgenza
+- Respond ONLY with the JSON object, no additional text
+- Use proper JSON escaping for quotes and special characters
+- Keep the response compassionate and therapeutic
+- livelloUrgenza must be one of: "low", "medium", "high"
 - Escape all quotes and special characters properly in the contenuto field
 - Respond ONLY with the JSON object, no additional text`;
 
     try {
       const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
+      const responseText = result.response.text().trim();
       
-      console.log('🤖 Raw Gemini response:', responseText);
+      console.log('🤖 Raw Gemini response length:', responseText.length);
+      console.log('🤖 Raw Gemini response preview:', responseText.substring(0, 100) + '...');
       
       // Extract JSON from response with improved cleaning
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      let jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        // Try to find JSON even if wrapped in other text
+        const lines = responseText.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            jsonMatch = [trimmed];
+            break;
+          }
+        }
+      }
+      
       if (jsonMatch) {
         let jsonString = jsonMatch[0];
         
-        // Clean up common JSON issues
+        // Clean up common JSON issues more aggressively
         jsonString = this.sanitizeJsonString(jsonString);
         
         try {
           const parsedResponse = JSON.parse(jsonString);
-          console.log('✅ Gemini response parsed successfully:', parsedResponse.contenuto?.substring(0, 50) + '...');
+          console.log('✅ Gemini response parsed successfully');
           
           // Validate response structure
           if (parsedResponse.contenuto && parsedResponse.metadata) {
@@ -322,11 +333,12 @@ IMPORTANT:
           }
         } catch (parseError) {
           console.error('❌ JSON parsing failed:', parseError);
-          console.log('🔍 Problematic JSON:', jsonString.substring(0, 200) + '...');
+          console.log('🔍 Problematic JSON preview:', jsonString.substring(0, 100) + '...');
           throw parseError;
         }
       } else {
         console.warn('⚠️ No valid JSON in Gemini response, using fallback');
+        console.log('🔍 Full response for debugging:', responseText);
         throw new Error('No valid JSON in response');
       }
     } catch (error) {
@@ -463,18 +475,29 @@ The client's commitment to the therapeutic process is ${numNote > 0 ? 'good' : '
   private static sanitizeJsonString(jsonString: string): string {
     // Remove markdown code blocks if present
     jsonString = jsonString.replace(/```json\s*/, '').replace(/```\s*$/, '');
+    jsonString = jsonString.replace(/```\s*/, '');
     
-    // Fix common JSON issues
+    // Fix common JSON issues more aggressively
     jsonString = jsonString
       // Replace control characters that break JSON
       .replace(/[\x00-\x1F\x7F]/g, ' ')
-      // Fix unescaped quotes in strings (basic attempt)
-      .replace(/([^\\])"([^"]*)"([^"]*)"([^,:}\]]*)/g, '$1"$2\\"$3"$4')
+      // Fix unescaped newlines and tabs in strings
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '\\r')
+      .replace(/\t/g, '\\t')
+      // Fix unescaped quotes in strings (better regex)
+      .replace(/(?<!\\)"/g, '\\"')
+      .replace(/\\"/g, '"')
+      .replace(/([^\\])"/g, '$1\\"')
       // Remove trailing commas
       .replace(/,(\s*[}\]])/g, '$1')
       // Ensure proper spacing around colons and commas
       .replace(/:\s*/g, ': ')
-      .replace(/,\s*/g, ', ');
+      .replace(/,\s*/g, ', ')
+      // Fix missing quotes around property names
+      .replace(/(\w+):/g, '"$1":')
+      // Clean up any double escaping
+      .replace(/\\\\"/g, '\\"');
     
     return jsonString.trim();
   }
