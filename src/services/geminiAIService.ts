@@ -314,6 +314,24 @@ IMPORTANT:
         }
       }
       
+      // Try alternative extraction methods if first attempt fails
+      if (!jsonMatch) {
+        // Look for JSON in markdown code blocks
+        const markdownMatch = responseText.match(/```json\s*(\{[\s\S]*?\})\s*```/);
+        if (markdownMatch) {
+          jsonMatch = [markdownMatch[1]];
+        }
+      }
+      
+      if (!jsonMatch) {
+        // Last resort: try to find any JSON-like structure
+        const jsonStart = responseText.indexOf('{');
+        const jsonEnd = responseText.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+          jsonMatch = [responseText.substring(jsonStart, jsonEnd + 1)];
+        }
+      }
+      
       if (jsonMatch) {
         let jsonString = jsonMatch[0];
         
@@ -333,7 +351,8 @@ IMPORTANT:
           }
         } catch (parseError) {
           console.error('❌ JSON parsing failed:', parseError);
-          console.log('🔍 Problematic JSON preview:', jsonString.substring(0, 100) + '...');
+          console.log('🔍 Problematic JSON preview:', jsonString.substring(0, 200) + '...');
+          console.log('🔍 Full JSON for debugging:', jsonString);
           throw parseError;
         }
       } else {
@@ -474,32 +493,59 @@ The client's commitment to the therapeutic process is ${numNote > 0 ? 'good' : '
 
   private static sanitizeJsonString(jsonString: string): string {
     // Remove markdown code blocks if present
-    jsonString = jsonString.replace(/```json\s*/, '').replace(/```\s*$/, '');
-    jsonString = jsonString.replace(/```\s*/, '');
+    jsonString = jsonString.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+    jsonString = jsonString.replace(/```/g, '');
     
-    // Fix common JSON issues more aggressively
-    jsonString = jsonString
-      // Replace control characters that break JSON
-      .replace(/[\x00-\x1F\x7F]/g, ' ')
-      // Fix unescaped newlines and tabs in strings
-      .replace(/\n/g, '\\n')
-      .replace(/\r/g, '\\r')
-      .replace(/\t/g, '\\t')
-      // Fix unescaped quotes in strings (better regex)
-      .replace(/(?<!\\)"/g, '\\"')
-      .replace(/\\"/g, '"')
-      .replace(/([^\\])"/g, '$1\\"')
-      // Remove trailing commas
-      .replace(/,(\s*[}\]])/g, '$1')
-      // Ensure proper spacing around colons and commas
-      .replace(/:\s*/g, ': ')
-      .replace(/,\s*/g, ', ')
-      // Fix missing quotes around property names
-      .replace(/(\w+):/g, '"$1":')
-      // Clean up any double escaping
-      .replace(/\\\\"/g, '\\"');
+    // Remove any leading/trailing whitespace
+    jsonString = jsonString.trim();
     
-    return jsonString.trim();
+    // Find the actual JSON object boundaries
+    const startIndex = jsonString.indexOf('{');
+    const lastIndex = jsonString.lastIndexOf('}');
+    
+    if (startIndex !== -1 && lastIndex !== -1 && lastIndex > startIndex) {
+      jsonString = jsonString.substring(startIndex, lastIndex + 1);
+    }
+    
+    try {
+      // First try to parse as-is, it might already be valid
+      JSON.parse(jsonString);
+      return jsonString;
+    } catch (error) {
+      console.log('🔧 JSON needs sanitization, applying fixes...');
+      
+      // Apply sanitization only if parsing fails
+      jsonString = jsonString
+        // Remove control characters that break JSON
+        .replace(/[\x00-\x1F\x7F]/g, ' ')
+        // Remove trailing commas
+        .replace(/,(\s*[}\]])/g, '$1')
+        // Fix spacing around colons and commas
+        .replace(/:\s*/g, ': ')
+        .replace(/,\s*/g, ', ')
+        // Remove any extra whitespace
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      try {
+        // Try parsing again after basic cleanup
+        JSON.parse(jsonString);
+        return jsonString;
+      } catch (secondError) {
+        console.log('🔧 Advanced JSON sanitization needed...');
+        
+        // More aggressive fixes as last resort
+        jsonString = jsonString
+          // Fix newlines and tabs in strings
+          .replace(/(?<!\\)\n/g, '\\n')
+          .replace(/(?<!\\)\r/g, '\\r')
+          .replace(/(?<!\\)\t/g, '\\t')
+          // Remove any remaining problematic characters
+          .replace(/[^\x20-\x7E\s]/g, '');
+        
+        return jsonString;
+      }
+    }
   }
 
   private static analizzaContestoEmotivo(messaggio: string) {
