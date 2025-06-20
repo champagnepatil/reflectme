@@ -7,6 +7,7 @@ import { AssessmentProvider } from './contexts/AssessmentContext';
 
 // Public Pages
 import Home from './pages/Home';
+import About from './pages/About';
 import Register from './pages/Register';
 import Demo from './pages/Demo';
 import HeroDemo from './pages/HeroDemo';
@@ -145,6 +146,7 @@ function App() {
                 <Routes>
                 {/* Public routes */}
                 <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/demo" element={<Demo />} />

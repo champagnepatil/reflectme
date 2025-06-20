@@ -95,6 +95,9 @@ const Header: React.FC<HeaderProps> = ({ title = 'Zentia' }) => {
           </div>
         ) : (
           <div className="flex items-center space-x-4">
+            <Link to="/about" className="text-neutral-600 hover:text-primary-600 font-medium transition-colors">
+              About Us
+            </Link>
             <Link to="/login" className="btn btn-ghost">
               Login
             </Link>
