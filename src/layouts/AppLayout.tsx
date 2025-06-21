@@ -51,40 +51,77 @@ const AppLayout: React.FC = () => {
             })}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <button
+          {/* Mobile Menu Button - Optimized for touch */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-3 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 rounded-2xl transition-colors"
+            className="md:hidden p-4 -mr-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 active:bg-neutral-200 rounded-2xl transition-colors"
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+            <motion.div
+              animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </motion.div>
+          </motion.button>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - Optimized for touch */}
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.nav
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden mt-4 pt-4 border-t border-neutral-200"
+              transition={{ 
+                duration: 0.3,
+                ease: [0.04, 0.62, 0.23, 0.98]
+              }}
+              className="md:hidden mt-4 pt-6 border-t border-neutral-200 bg-neutral-50/50 -mx-4 px-4 pb-4"
             >
-              <div className="space-y-2">
-                {navItems.map((item) => {
+              <div className="space-y-3">
+                {navItems.map((item, index) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path || 
                     (item.path === '/app/chat' && location.pathname === '/app');
                   
                   return (
-                    <Link
+                    <motion.div
                       key={item.path}
-                      to={item.path}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
                     >
-                      <Icon className="w-5 h-5 mr-3" />
-                      {item.label}
-                    </Link>
+                      <Link
+                        to={item.path}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`
+                          flex items-center p-4 rounded-2xl transition-all duration-200 group
+                          ${isActive 
+                            ? 'bg-primary-50 text-primary-700 border border-primary-200 shadow-sm' 
+                            : 'text-neutral-700 hover:bg-white active:bg-neutral-100'
+                          }
+                        `}
+                      >
+                        <div className={`
+                          w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200
+                          ${isActive 
+                            ? 'bg-primary-100 text-primary-600' 
+                            : 'bg-neutral-100 text-neutral-600 group-hover:bg-neutral-200'
+                          }
+                        `}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <span className="ml-4 font-medium text-base">
+                          {item.label}
+                        </span>
+                        <div className={`
+                          ml-auto w-2 h-2 rounded-full transition-all duration-200
+                          ${isActive ? 'bg-primary-400' : 'bg-transparent'}
+                        `} />
+                      </Link>
+                    </motion.div>
                   );
                 })}
               </div>

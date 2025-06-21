@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import MobileMenu from '../components/common/MobileMenu';
 import { 
   // Common icons
   Heart, ArrowLeft, LogOut, Settings, Bell, Search, Menu, X,
@@ -107,12 +108,22 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex bg-neutral-50">
-      {/* Sidebar */}
+      {/* Mobile Menu */}
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        items={navItems}
+        title={config.title}
+        subtitle={config.subtitle}
+        user={user}
+        onLogout={handleLogout}
+      />
+
+      {/* Desktop Sidebar */}
       <aside className={`
         ${isCollapsed ? 'w-16' : 'w-20 md:w-72'} 
         bg-white border-r border-neutral-200 flex-shrink-0 transition-all duration-300
-        ${isMobileMenuOpen ? 'fixed inset-y-0 left-0 z-50' : 'hidden md:flex'}
-        flex flex-col
+        hidden md:flex flex-col
       `}>
         {/* Header */}
         <div className="p-4 border-b border-neutral-200">
@@ -257,39 +268,41 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
         </div>
       </aside>
 
-      {/* Mobile overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
+
 
       {/* Main Content */}
       <div className="flex-grow flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="bg-white border-b border-neutral-200 px-4 md:px-6 py-4">
+        <header className="bg-white border-b border-neutral-200 px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              {/* Mobile menu button */}
-              <button
+              {/* Mobile menu button - Larger touch target for mobile */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="md:hidden p-2 rounded-lg hover:bg-neutral-100 transition-colors mr-4"
+                className="md:hidden p-3 -ml-1 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 transition-colors mr-2"
+                aria-label="Open menu"
               >
-                <Menu className="w-5 h-5 text-neutral-600" />
-              </button>
+                <Menu className="w-6 h-6 text-neutral-600" />
+              </motion.button>
               
-              {/* Back button */}
-              <Link to="/" className="p-2 rounded-lg hover:bg-neutral-100 transition-colors mr-3">
-                <ArrowLeft className="w-5 h-5 text-neutral-600" />
-              </Link>
+              {/* Back button - Mobile optimized */}
+              <motion.div whileTap={{ scale: 0.95 }}>
+                <Link 
+                  to="/" 
+                  className="p-2 md:p-2 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 transition-colors mr-2 md:mr-3"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft className="w-5 h-5 text-neutral-600" />
+                </Link>
+              </motion.div>
               
               {/* Page breadcrumb */}
-              <div>
-                <h1 className="text-xl font-semibold text-neutral-900 capitalize">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg md:text-xl font-semibold text-neutral-900 capitalize truncate">
                   {location.pathname.split('/').pop() || 'Dashboard'}
                 </h1>
-                <p className="text-sm text-neutral-500">
+                <p className="text-xs md:text-sm text-neutral-500 hidden sm:block">
                   {new Date().toLocaleDateString('en-US', { 
                     weekday: 'long', 
                     year: 'numeric', 
@@ -300,18 +313,26 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
               </div>
             </div>
 
-            {/* Header actions */}
-            <div className="flex items-center space-x-4">
-              {/* Search (placeholder) */}
-              <button className="p-2 rounded-lg hover:bg-neutral-100 transition-colors">
+            {/* Header actions - Mobile optimized */}
+            <div className="flex items-center space-x-1 md:space-x-2">
+              {/* Search (placeholder) - Hidden on small screens */}
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                className="hidden sm:flex p-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
+                aria-label="Search"
+              >
                 <Search className="w-5 h-5 text-neutral-600" />
-              </button>
+              </motion.button>
               
-              {/* Notifications */}
-              <button className="p-2 rounded-lg hover:bg-neutral-100 transition-colors relative">
+              {/* Notifications - Larger touch target */}
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                className="p-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 transition-colors relative"
+                aria-label="Notifications"
+              >
                 <Bell className="w-5 h-5 text-neutral-600" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full"></span>
-              </button>
+                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-error-500 rounded-full border-2 border-white"></span>
+              </motion.button>
             </div>
           </div>
         </header>
