@@ -290,7 +290,7 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
                   {location.pathname.split('/').pop() || 'Dashboard'}
                 </h1>
                 <p className="text-sm text-neutral-500">
-                  {new Date().toLocaleDateString('it-IT', { 
+                  {new Date().toLocaleDateString('en-US', { 
                     weekday: 'long', 
                     year: 'numeric', 
                     month: 'long', 

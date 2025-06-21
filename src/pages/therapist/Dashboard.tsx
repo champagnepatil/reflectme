@@ -401,7 +401,7 @@ const Dashboard: React.FC = () => {
         clientId={selectedClientForTask}
         onTaskCreated={(task) => {
           console.log('✅ New task created:', task);
-          // Qui si potrebbe aggiornare lo stato locale o ricaricare i dati
+          // Here we could update local state or reload data
         }}
       />
     </div>

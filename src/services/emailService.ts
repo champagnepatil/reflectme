@@ -54,7 +54,7 @@ const getAssessmentReminderTemplate = (data: AssessmentReminderData): EmailTempl
             <p>È il momento di completare il tuo assessment <strong>${instrumentName}</strong>.</p>
             <p>Questo breve questionario aiuta te e il tuo terapista a monitorare i tuoi progressi nel percorso di benessere mentale.</p>
             
-            <p><strong>Scadenza:</strong> ${new Date(dueDate).toLocaleDateString('it-IT')}</p>
+            <p><strong>Due date:</strong> ${new Date(dueDate).toLocaleDateString('en-US')}</p>
             
             <a href="${magicLink}" class="button">
               Completa Assessment (5-10 min)
@@ -86,7 +86,7 @@ const getAssessmentReminderTemplate = (data: AssessmentReminderData): EmailTempl
       Ciao ${clientName},
       
       È il momento di completare il tuo assessment ${instrumentName}.
-      Scadenza: ${new Date(dueDate).toLocaleDateString('it-IT')}
+      Due date: ${new Date(dueDate).toLocaleDateString('en-US')}
       
       Completa qui: ${magicLink}
       
@@ -193,7 +193,7 @@ export const sendCrisisAlert = async (
               <p><strong>Paziente:</strong> ${clientName}</p>
               <p><strong>Assessment:</strong> ${assessmentData.instrument}</p>
               <p><strong>Punteggio:</strong> ${assessmentData.score}</p>
-              <p><strong>Data/Ora:</strong> ${new Date().toLocaleString('it-IT')}</p>
+              <p><strong>Date/Time:</strong> ${new Date().toLocaleString('en-US')}</p>
               
               ${assessmentData.instrument === 'PHQ-9' && assessmentData.responses['phq9_9'] > 0 ? `
                 <p class="urgent">⚠️ IDEAZIONE SUICIDARIA RILEVATA</p>
@@ -219,7 +219,7 @@ export const sendCrisisAlert = async (
         
         Assessment: ${assessmentData.instrument}
         Punteggio: ${assessmentData.score}
-        Data/Ora: ${new Date().toLocaleString('it-IT')}
+        Date/Time: ${new Date().toLocaleString('en-US')}
         
         ${assessmentData.instrument === 'PHQ-9' && assessmentData.responses['phq9_9'] > 0 ? 
           'IDEAZIONE SUICIDARIA RILEVATA - Contattare immediatamente il paziente' : ''

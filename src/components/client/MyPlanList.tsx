@@ -363,7 +363,7 @@ export const MyPlanList: React.FC<MyPlanListProps> = ({
                           <div className="flex items-center">
                             <Calendar className="w-3 h-3 mr-1" />
                             <span>
-                              Scadenza: {new Date(task.due_at).toLocaleDateString('it-IT')}
+                              Due date: {new Date(task.due_at).toLocaleDateString('en-US')}
                             </span>
                           </div>
                         )}
@@ -372,7 +372,7 @@ export const MyPlanList: React.FC<MyPlanListProps> = ({
                           <div className="flex items-center">
                             <Clock className="w-3 h-3 mr-1" />
                             <span>
-                              Ultimo aggiornamento: {new Date(status.lastActivity).toLocaleDateString('it-IT')}
+                              Last update: {new Date(status.lastActivity).toLocaleDateString('en-US')}
                             </span>
                           </div>
                         )}

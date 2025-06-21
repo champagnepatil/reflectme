@@ -226,7 +226,7 @@ const Patterns: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-neutral-900">Pattern Analysis</h1>
-            <p className="text-neutral-600">Analisi cross-client e identificazione pattern</p>
+            <p className="text-neutral-600">Cross-client analysis and pattern identification</p>
           </div>
         </div>
 
@@ -240,10 +240,10 @@ const Patterns: React.FC = () => {
               onChange={(e) => setSelectedTimeRange(e.target.value as any)}
               className="border border-neutral-300 rounded-lg px-3 py-2 text-sm"
             >
-              <option value="week">Ultima settimana</option>
-              <option value="month">Ultimo mese</option>
-              <option value="quarter">Ultimo trimestre</option>
-              <option value="year">Ultimo anno</option>
+              <option value="week">Last week</option>
+              <option value="month">Last month</option>
+              <option value="quarter">Last quarter</option>
+              <option value="year">Last year</option>
             </select>
           </div>
 
@@ -255,9 +255,9 @@ const Patterns: React.FC = () => {
               onChange={(e) => setSelectedFilter(e.target.value as any)}
               className="border border-neutral-300 rounded-lg px-3 py-2 text-sm"
             >
-              <option value="all">Tutti i pattern</option>
-              <option value="concerning">Pattern preoccupanti</option>
-              <option value="improving">Pattern in miglioramento</option>
+              <option value="all">All patterns</option>
+              <option value="concerning">Concerning patterns</option>
+              <option value="improving">Improving patterns</option>
             </select>
           </div>
         </div>
@@ -274,7 +274,7 @@ const Patterns: React.FC = () => {
             <Users className="w-5 h-5 text-primary-600" />
           </div>
           <div className="text-2xl font-bold text-neutral-900">{clients.length}</div>
-          <div className="text-sm text-neutral-600">Clienti Attivi</div>
+          <div className="text-sm text-neutral-600">Active Clients</div>
         </motion.div>
 
         <motion.div
@@ -287,7 +287,7 @@ const Patterns: React.FC = () => {
             <Cloud className="w-5 h-5 text-teal-600" />
           </div>
           <div className="text-2xl font-bold text-neutral-900">{patterns.length}</div>
-          <div className="text-sm text-neutral-600">Pattern Identificati</div>
+          <div className="text-sm text-neutral-600">Identified Patterns</div>
         </motion.div>
 
         <motion.div
@@ -302,7 +302,7 @@ const Patterns: React.FC = () => {
           <div className="text-2xl font-bold text-neutral-900">
             {patterns.filter(p => p.severity === 'high').length}
           </div>
-          <div className="text-sm text-neutral-600">Alta Priorità</div>
+          <div className="text-sm text-neutral-600">High Priority</div>
         </motion.div>
 
         <motion.div
@@ -317,7 +317,7 @@ const Patterns: React.FC = () => {
           <div className="text-2xl font-bold text-neutral-900">
             {correlations.filter(c => c.significance === 'high').length}
           </div>
-          <div className="text-sm text-neutral-600">Correlazioni Forti</div>
+          <div className="text-sm text-neutral-600">Strong Correlations</div>
         </motion.div>
       </div>
 
@@ -340,7 +340,7 @@ const Patterns: React.FC = () => {
             <div className="flex items-center mb-4">
               <Brain className="w-6 h-6 text-primary-600 mr-3" />
               <h2 className="text-lg font-semibold text-neutral-900">
-                Pattern Identificati
+                Identified Patterns
               </h2>
             </div>
             
@@ -364,12 +364,12 @@ const Patterns: React.FC = () => {
                   </div>
                   
                   <div className="flex items-center space-x-4 text-sm text-neutral-600 mb-3">
-                    <span>📊 {pattern.frequency} occorrenze</span>
-                    <span>👥 {pattern.clients_affected} clienti</span>
+                    <span>📊 {pattern.frequency} occurrences</span>
+                    <span>👥 {pattern.clients_affected} clients</span>
                   </div>
                   
                   <div className="text-sm">
-                    <p className="text-neutral-700 mb-2">Raccomandazioni:</p>
+                    <p className="text-neutral-700 mb-2">Recommendations:</p>
                     <ul className="space-y-1">
                       {pattern.recommendations.slice(0, 2).map((rec, idx) => (
                         <li key={idx} className="text-neutral-600 text-xs flex items-start">
@@ -395,7 +395,7 @@ const Patterns: React.FC = () => {
             <div className="flex items-center mb-6">
               <BarChart3 className="w-6 h-6 text-secondary-600 mr-3" />
               <h2 className="text-lg font-semibold text-neutral-900">
-                Correlazioni Cross-Client
+                Cross-Client Correlations
               </h2>
             </div>
             
@@ -432,12 +432,12 @@ const Patterns: React.FC = () => {
                       correlation.significance === 'medium' ? 'bg-warning-100 text-warning-700' :
                       'bg-neutral-100 text-neutral-700'
                     }`}>
-                      Significatività: {correlation.significance}
+                      Significance: {correlation.significance}
                     </span>
                     
                     <button className="text-xs text-primary-600 hover:text-primary-700 flex items-center">
                       <Eye className="w-3 h-3 mr-1" />
-                      Dettagli
+                                              Details
                     </button>
                   </div>
                 </motion.div>
@@ -450,7 +450,7 @@ const Patterns: React.FC = () => {
             <div className="flex items-center mb-4">
               <Target className="w-6 h-6 text-warning-600 mr-3" />
               <h2 className="text-lg font-semibold text-neutral-900">
-                Azioni Raccomandate
+                Recommended Actions
               </h2>
             </div>
             
@@ -458,9 +458,9 @@ const Patterns: React.FC = () => {
               <div className="flex items-start p-3 bg-error-50 border border-error-200 rounded-lg">
                 <AlertTriangle className="w-5 h-5 text-error-600 mr-3 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-error-900 text-sm">Urgente</p>
+                  <p className="font-medium text-error-900 text-sm">Urgent</p>
                   <p className="text-error-700 text-sm">
-                    Monitorare da vicino i 3 clienti con pattern di ansia mattutina crescente
+                    Monitor closely the 3 clients with increasing morning anxiety patterns
                   </p>
                 </div>
               </div>
@@ -468,9 +468,9 @@ const Patterns: React.FC = () => {
               <div className="flex items-start p-3 bg-warning-50 border border-warning-200 rounded-lg">
                 <Calendar className="w-5 h-5 text-warning-600 mr-3 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-warning-900 text-sm">Questa settimana</p>
+                  <p className="font-medium text-warning-900 text-sm">This week</p>
                   <p className="text-warning-700 text-sm">
-                    Implementare workshop su gestione stress lavorativo per 8 clienti
+                    Implement work stress management workshop for 8 clients
                   </p>
                 </div>
               </div>
@@ -478,9 +478,9 @@ const Patterns: React.FC = () => {
               <div className="flex items-start p-3 bg-primary-50 border border-primary-200 rounded-lg">
                 <Brain className="w-5 h-5 text-primary-600 mr-3 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-primary-900 text-sm">Ricerca</p>
+                  <p className="font-medium text-primary-900 text-sm">Research</p>
                   <p className="text-primary-700 text-sm">
-                    Approfondire la correlazione sonno-ansia per personalizzare i trattamenti
+                    Investigate sleep-anxiety correlation to personalize treatments
                   </p>
                 </div>
               </div>
