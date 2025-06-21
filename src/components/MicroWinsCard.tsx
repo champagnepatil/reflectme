@@ -217,13 +217,13 @@ export const MicroWinsCard: React.FC<MicroWinsCardProps> = ({
 
   const addTestWin = () => {
     const testWins = [
-      "Ho finito tutti i compiti della giornata con successo",
-      "Sono riuscito a fare una passeggiata anche se non ne avevo voglia",
-      "Ho chiamato un amico per chiacchierare e mi sono sentito meglio",
-      "Ho cucinato un pasto sano invece di ordinare cibo da asporto",
-      "Ho rispettato il mio programma di sonno per tutta la settimana",
-      "Sono riuscito a gestire una situazione stressante con calma",
-      "Ho praticato la gratitudine e ho apprezzato le piccole cose"
+      "I successfully completed all my daily tasks",
+      "I managed to take a walk even though I didn't feel like it",
+      "I called a friend to chat and felt better afterwards",
+      "I cooked a healthy meal instead of ordering takeout",
+      "I followed my sleep schedule for the entire week",
+      "I managed to handle a stressful situation calmly",
+      "I practiced gratitude and appreciated the small things"
     ];
     
     const randomWin = testWins[Math.floor(Math.random() * testWins.length)];
@@ -307,12 +307,12 @@ export const MicroWinsCard: React.FC<MicroWinsCardProps> = ({
         {microWins.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <div className="text-4xl mb-2">🌱</div>
-            <p className="font-medium text-gray-700">Inizia il tuo percorso di micro-vittorie!</p>
+            <p className="font-medium text-gray-700">Start your micro-wins journey!</p>
             <p className="text-sm mt-1">
-              I tuoi successi saranno automaticamente identificati dai tuoi diari e conversazioni.
+              Your successes will be automatically identified from your journals and conversations.
             </p>
             <p className="text-sm mt-1 text-blue-600">
-              Prova ad aggiungere una micro-vittoria per iniziare! ⬇️
+              Try adding a micro-win to get started! ⬇️
             </p>
           </div>
         ) : (
@@ -389,7 +389,7 @@ export const MicroWinsCard: React.FC<MicroWinsCardProps> = ({
               className="w-full text-sm hover:bg-blue-50 text-blue-600"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Aggiungi Micro-Vittoria
+              Add Micro-Win
             </Button>
           </div>
         )}

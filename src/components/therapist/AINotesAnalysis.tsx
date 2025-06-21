@@ -118,7 +118,7 @@ export const AINotesAnalysis: React.FC<AINotesAnalysisProps> = ({
           <div className="card p-6">
             <div className="flex items-center mb-4">
               <BookOpen className="w-5 h-5 text-primary-600 mr-2" />
-              <h4 className="text-lg font-semibold text-neutral-900">Riassunto Generale</h4>
+              <h4 className="text-lg font-semibold text-neutral-900">General Summary</h4>
             </div>
             <p className="text-neutral-700 leading-relaxed">{analysis.riassunto}</p>
           </div>
@@ -141,7 +141,7 @@ export const AINotesAnalysis: React.FC<AINotesAnalysisProps> = ({
               <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getBenessereColor(analysis.punteggioBenessere)}`}>
                 {getBenessereLabel(analysis.punteggioBenessere)}
               </div>
-              <p className="text-neutral-600 text-sm mt-2">Indice di Benessere</p>
+              <p className="text-neutral-600 text-sm mt-2">Wellness Index</p>
             </motion.div>
 
             {/* Temi principali */}
@@ -153,7 +153,7 @@ export const AINotesAnalysis: React.FC<AINotesAnalysisProps> = ({
             >
               <div className="flex items-center mb-4">
                 <Target className="w-5 h-5 text-primary-600 mr-2" />
-                <h5 className="font-semibold text-neutral-900">Temi Principali</h5>
+                <h5 className="font-semibold text-neutral-900">Main Themes</h5>
               </div>
               <div className="space-y-2">
                 {analysis.temiPrincipali.slice(0, 4).map((tema, index) => (
@@ -163,7 +163,7 @@ export const AINotesAnalysis: React.FC<AINotesAnalysisProps> = ({
                   </div>
                 ))}
                 {analysis.temiPrincipali.length === 0 && (
-                  <p className="text-neutral-500 text-sm">Nessun tema specifico identificato</p>
+                  <p className="text-neutral-500 text-sm">No specific themes identified</p>
                 )}
               </div>
             </motion.div>
