@@ -121,17 +121,17 @@ serve(async (req) => {
  */
 async function extractTagsWithGemini(content: string, apiKey: string): Promise<ExtractedTag[]> {
   const prompt = `
-Analizza questo messaggio e estrai i tag più rilevanti per il supporto terapeutico.
+Analyze this message and extract the most relevant tags for therapeutic support.
 
-MESSAGGIO: "${content}"
+MESSAGE: "${content}"
 
-Estrai fino a 5 tag per emozioni, argomenti, sintomi, strategie di coping o trigger.
+Extract up to 5 tags for emotions, topics, symptoms, coping strategies or triggers.
 
-Rispondi SOLO con JSON valido:
+Respond ONLY with valid JSON:
 {
   "tags": [
     {
-      "tag": "ansia",
+      "tag": "anxiety",
       "score": 0.8,
       "category": "emotion",
       "confidence": 0.9
@@ -181,17 +181,17 @@ function extractTagsWithRules(content: string): ExtractedTag[] {
 
   // Emotion detection
   const emotions = [
-    { keywords: ['ansioso', 'ansia', 'preoccupato'], tag: 'ansia', score: 0.8 },
-    { keywords: ['triste', 'depresso', 'giù'], tag: 'tristezza', score: 0.7 },
-    { keywords: ['arrabbiato', 'furioso'], tag: 'rabbia', score: 0.8 },
-    { keywords: ['stressato', 'stress'], tag: 'stress', score: 0.7 }
+    { keywords: ['anxious', 'anxiety', 'worried', 'concern'], tag: 'anxiety', score: 0.8 },
+    { keywords: ['sad', 'depressed', 'down', 'depression'], tag: 'sadness', score: 0.7 },
+    { keywords: ['angry', 'furious', 'anger', 'mad'], tag: 'anger', score: 0.8 },
+    { keywords: ['stressed', 'stress', 'pressure'], tag: 'stress', score: 0.7 }
   ]
 
   // Topic detection  
   const topics = [
-    { keywords: ['lavoro', 'ufficio'], tag: 'lavoro', score: 0.7 },
-    { keywords: ['famiglia', 'genitori'], tag: 'famiglia', score: 0.7 },
-    { keywords: ['relazione', 'partner'], tag: 'relazioni', score: 0.8 }
+    { keywords: ['work', 'office', 'job', 'boss'], tag: 'work', score: 0.7 },
+    { keywords: ['family', 'parents', 'mother', 'father'], tag: 'family', score: 0.7 },
+    { keywords: ['relationship', 'partner', 'boyfriend', 'girlfriend'], tag: 'relationships', score: 0.8 }
   ]
 
   // Check emotions

@@ -164,44 +164,44 @@ GROUP BY client_id, DATE_TRUNC('day', ts)
 ORDER BY client_id, day;
 
 -- 1.5 Populate Initial Knowledge Graph Data
--- Inserisco relazioni base tra tag e risorse terapeutiche
+-- Insert base relationships between tags and therapeutic resources
 INSERT INTO public.kg_edges (src_tag, dst_resource, weight, edge_type, confidence, source) VALUES
--- Ansia → Tecniche di coping
-('ansia', 'Respirazione 4-7-8', 0.9, 'suggests', 0.95, 'expert-knowledge'),
-('ansia', 'Grounding 5-4-3-2-1', 0.8, 'suggests', 0.90, 'expert-knowledge'),
-('ansia', 'Mindfulness body scan', 0.7, 'suggests', 0.85, 'expert-knowledge'),
-('ansia', 'Progressive muscle relaxation', 0.6, 'suggests', 0.80, 'expert-knowledge'),
+-- Anxiety → Coping techniques
+('anxiety', '4-7-8 breathing', 0.9, 'suggests', 0.95, 'expert-knowledge'),
+('anxiety', '5-4-3-2-1 grounding', 0.8, 'suggests', 0.90, 'expert-knowledge'),
+('anxiety', 'Mindfulness body scan', 0.7, 'suggests', 0.85, 'expert-knowledge'),
+('anxiety', 'Progressive muscle relaxation', 0.6, 'suggests', 0.80, 'expert-knowledge'),
 
--- Depressione → Attività comportamentali
-('depressione', 'Attivazione comportamentale', 0.9, 'suggests', 0.95, 'expert-knowledge'),
-('depressione', 'Diario gratitudine', 0.8, 'suggests', 0.85, 'expert-knowledge'),
-('depressione', 'Esercizio fisico leggero', 0.7, 'suggests', 0.80, 'expert-knowledge'),
-('depressione', 'Socializzazione graduale', 0.6, 'suggests', 0.75, 'expert-knowledge'),
+-- Depression → Behavioral activities
+('depression', 'Behavioral activation', 0.9, 'suggests', 0.95, 'expert-knowledge'),
+('depression', 'Gratitude journal', 0.8, 'suggests', 0.85, 'expert-knowledge'),
+('depression', 'Light exercise', 0.7, 'suggests', 0.80, 'expert-knowledge'),
+('depression', 'Gradual socialization', 0.6, 'suggests', 0.75, 'expert-knowledge'),
 
--- Stress → Gestione e rilassamento
+-- Stress → Management and relaxation
 ('stress', 'Time management', 0.8, 'suggests', 0.85, 'expert-knowledge'),
-('stress', 'Meditazione guidata', 0.7, 'suggests', 0.80, 'expert-knowledge'),
-('stress', 'Tecnica STOP', 0.6, 'suggests', 0.75, 'expert-knowledge'),
+('stress', 'Guided meditation', 0.7, 'suggests', 0.80, 'expert-knowledge'),
+('stress', 'STOP technique', 0.6, 'suggests', 0.75, 'expert-knowledge'),
 
--- Insonnia → Igiene del sonno
-('insonnia', 'Sleep hygiene checklist', 0.9, 'suggests', 0.90, 'expert-knowledge'),
-('insonnia', 'Rilassamento progressivo', 0.8, 'suggests', 0.85, 'expert-knowledge'),
-('insonnia', 'Diario del sonno', 0.7, 'suggests', 0.80, 'expert-knowledge'),
+-- Insomnia → Sleep hygiene
+('insomnia', 'Sleep hygiene checklist', 0.9, 'suggests', 0.90, 'expert-knowledge'),
+('insomnia', 'Progressive relaxation', 0.8, 'suggests', 0.85, 'expert-knowledge'),
+('insomnia', 'Sleep diary', 0.7, 'suggests', 0.80, 'expert-knowledge'),
 
--- Rabbia → Regolazione emotiva
-('rabbia', 'Tecnica time-out', 0.8, 'suggests', 0.85, 'expert-knowledge'),
-('rabbia', 'Ristrutturazione cognitiva', 0.7, 'suggests', 0.80, 'expert-knowledge'),
-('rabbia', 'Comunicazione assertiva', 0.6, 'suggests', 0.75, 'expert-knowledge'),
+-- Anger → Emotional regulation
+('anger', 'Time-out technique', 0.8, 'suggests', 0.85, 'expert-knowledge'),
+('anger', 'Cognitive restructuring', 0.7, 'suggests', 0.80, 'expert-knowledge'),
+('anger', 'Assertive communication', 0.6, 'suggests', 0.75, 'expert-knowledge'),
 
--- Relazioni → Competenze sociali
-('relazioni', 'Ascolto attivo', 0.8, 'suggests', 0.85, 'expert-knowledge'),
-('relazioni', 'Confini sani', 0.7, 'suggests', 0.80, 'expert-knowledge'),
-('relazioni', 'Risoluzione conflitti', 0.6, 'suggests', 0.75, 'expert-knowledge'),
+-- Relationships → Social skills
+('relationships', 'Active listening', 0.8, 'suggests', 0.85, 'expert-knowledge'),
+('relationships', 'Healthy boundaries', 0.7, 'suggests', 0.80, 'expert-knowledge'),
+('relationships', 'Conflict resolution', 0.6, 'suggests', 0.75, 'expert-knowledge'),
 
--- Autostima → Sviluppo personale
-('autostima', 'Diario successi quotidiani', 0.8, 'suggests', 0.85, 'expert-knowledge'),
-('autostima', 'Autocompassione', 0.7, 'suggests', 0.80, 'expert-knowledge'),
-('autostima', 'Affermazioni positive', 0.6, 'suggests', 0.75, 'expert-knowledge')
+-- Self-esteem → Personal development
+('self-esteem', 'Daily success journal', 0.8, 'suggests', 0.85, 'expert-knowledge'),
+('self-esteem', 'Self-compassion', 0.7, 'suggests', 0.80, 'expert-knowledge'),
+('self-esteem', 'Positive affirmations', 0.6, 'suggests', 0.75, 'expert-knowledge')
 
 ON CONFLICT (src_tag, dst_resource, edge_type) DO UPDATE SET
   weight = EXCLUDED.weight,
@@ -209,20 +209,20 @@ ON CONFLICT (src_tag, dst_resource, edge_type) DO UPDATE SET
   updated_at = NOW();
 
 -- 1.6 Demo Data per Testing
--- Inserisco alcuni task di esempio per i clienti demo
+-- Insert some example tasks for demo clients
 INSERT INTO public.tasks (client_id, title, description, due_at, task_type, priority, category, completion_criteria) VALUES
-('demo-client-1', 'Pratica respirazione quotidiana', 'Praticare la tecnica di respirazione 4-7-8 per 5 minuti ogni mattina', NOW() + INTERVAL '7 days', 'practice', 'high', 'mindfulness', 'Completare per 5 giorni consecutivi'),
-('demo-client-1', 'Diario degli stati d''animo', 'Registrare l''umore 3 volte al giorno con note sui trigger', NOW() + INTERVAL '3 days', 'homework', 'medium', 'emotional-regulation', 'Almeno 15 entry nel diario'),
-('demo-client-1', 'Esercizio di grounding', 'Utilizzare la tecnica 5-4-3-2-1 quando si sente ansia', NOW() + INTERVAL '5 days', 'exercise', 'high', 'cbt', 'Applicare la tecnica almeno 3 volte'),
+('demo-client-1', 'Daily breathing practice', 'Practice the 4-7-8 breathing technique for 5 minutes every morning', NOW() + INTERVAL '7 days', 'practice', 'high', 'mindfulness', 'Complete for 5 consecutive days'),
+('demo-client-1', 'Mood diary', 'Record mood 3 times a day with notes on triggers', NOW() + INTERVAL '3 days', 'homework', 'medium', 'emotional-regulation', 'At least 15 diary entries'),
+('demo-client-1', 'Grounding exercise', 'Use the 5-4-3-2-1 technique when feeling anxious', NOW() + INTERVAL '5 days', 'exercise', 'high', 'cbt', 'Apply the technique at least 3 times'),
 
-('demo-client-2', 'Attivazione comportamentale', 'Pianificare e svolgere una attività piacevole ogni giorno', NOW() + INTERVAL '7 days', 'practice', 'medium', 'behavioral', '7 attività completate'),
-('demo-client-2', 'Ristrutturazione pensieri negativi', 'Identificare e sfidare 3 pensieri negativi automatici', NOW() + INTERVAL '4 days', 'homework', 'high', 'cbt', 'Analizzare almeno 9 pensieri'),
+  ('demo-client-2', 'Behavioral activation', 'Plan and engage in one pleasant activity every day', NOW() + INTERVAL '7 days', 'practice', 'medium', 'behavioral', '7 activities completed'),
+('demo-client-2', 'Negative thought restructuring', 'Identify and challenge 3 automatic negative thoughts', NOW() + INTERVAL '4 days', 'homework', 'high', 'cbt', 'Analyze at least 9 thoughts'),
 
-('demo-client-3', 'Igiene del sonno', 'Seguire la routine di igiene del sonno per una settimana', NOW() + INTERVAL '7 days', 'practice', 'high', 'behavioral', 'Seguire routine per 6/7 notti')
+('demo-client-3', 'Sleep hygiene', 'Follow sleep hygiene routine for one week', NOW() + INTERVAL '7 days', 'practice', 'high', 'behavioral', 'Follow routine for 6/7 nights')
 
 ON CONFLICT (id) DO NOTHING;
 
--- Inserisco alcuni progressi di esempio
+-- Insert some example progress records
 INSERT INTO public.homework_progress (task_id, client_id, pct, notes, mood_after, difficulty_rating, completion_time_minutes) 
 SELECT 
   t.id,
@@ -233,17 +233,17 @@ SELECT
     ELSE FLOOR(random() * 50)
   END,
   CASE 
-    WHEN random() < 0.5 THEN 'Completato senza problemi'
-    ELSE 'Un po'' difficile ma ce l''ho fatta'
+    WHEN random() < 0.5 THEN 'Completed without problems'
+    ELSE 'A bit difficult but I managed it'
   END,
-  FLOOR(random() * 4 + 6), -- Mood tra 6-9
-  FLOOR(random() * 3 + 2), -- Difficoltà tra 2-4
-  FLOOR(random() * 20 + 10) -- Tempo tra 10-30 minuti
+  FLOOR(random() * 4 + 6), -- Mood between 6-9
+  FLOOR(random() * 3 + 2), -- Difficulty between 2-4
+  FLOOR(random() * 20 + 10) -- Time between 10-30 minutes
 FROM public.tasks t
-WHERE random() < 0.6; -- 60% dei task hanno progresso
+WHERE random() < 0.6; -- 60% of tasks have progress
 
--- 1.7 Functions per automazione
--- Funzione per calcolare score di completamento task
+-- 1.7 Functions for automation
+-- Function to calculate task completion score
 CREATE OR REPLACE FUNCTION calculate_task_completion_score(task_uuid UUID)
 RETURNS NUMERIC AS $$
 DECLARE
@@ -266,7 +266,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Funzione per ottenere suggerimenti basati sui tag più frequenti
+-- Function to get suggestions based on most frequent tags
 CREATE OR REPLACE FUNCTION get_smart_suggestions(client_uuid TEXT, limit_count INTEGER DEFAULT 3)
 RETURNS TABLE(
   tag TEXT,
@@ -287,7 +287,7 @@ BEGIN
     AND ct.ts >= NOW() - INTERVAL '7 days'
     AND kg.edge_type = 'suggests'
   GROUP BY ct.tag, kg.dst_resource, kg.confidence
-  HAVING COUNT(ct.id) >= 2 -- Tag deve apparire almeno 2 volte
+  HAVING COUNT(ct.id) >= 2 -- Tag must appear at least 2 times
   ORDER BY COUNT(ct.id) DESC, kg.confidence DESC
   LIMIT limit_count;
 END;
