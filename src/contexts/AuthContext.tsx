@@ -6,7 +6,7 @@ interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: 'therapist' | 'patient';
+  role: 'therapist' | 'patient' | 'admin';
   avatar?: string;
   isDemo?: boolean;
 }
@@ -20,7 +20,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (name: string, email: string, password: string, role: 'therapist' | 'patient') => Promise<void>;
+  register: (name: string, email: string, password: string, role: 'therapist' | 'patient' | 'admin') => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,7 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const isDemo = authUser.email?.endsWith('@mindtwin.demo') || false;
     const role = isDemo 
-      ? authUser.email?.includes('therapist') ? 'therapist' : 'patient'
+      ? authUser.email?.includes('therapist') 
+        ? 'therapist' 
+        : authUser.email?.includes('admin') 
+          ? 'admin' 
+          : 'patient'
       : authUser.user_metadata?.role || 'patient';
 
     // For demo users, always return a valid user object (no database interactions needed)
@@ -47,6 +51,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: role as 'therapist' | 'patient',
         avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
         isDemo: true,
+      };
+    }
+
+    // Check if user should have admin role based on email
+    if (authUser.email?.includes('admin') || authUser.email?.includes('l.de.angelis')) {
+      return {
+        id: authUser.id,
+        name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Admin User',
+        email: authUser.email || '',
+        role: 'admin',
+        avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
+        isDemo: false,
       };
     }
 
@@ -65,31 +81,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: authUser.id,
           name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
           email: authUser.email || '',
-          role: role as 'therapist' | 'patient',
+          role: role as 'therapist' | 'patient' | 'admin',
           avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
           isDemo: false,
         };
       }
 
-      return {
-        id: profile.id,
-        name: profile.name || (profile.first_name + ' ' + profile.last_name).trim(),
-        email: authUser.email || '',
-        role: profile.role || role as 'therapist' | 'patient',
-        avatar: profile.avatar_url || `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
-        isDemo: false,
-      };
+              return {
+          id: profile.id,
+          name: profile.name || (profile.first_name + ' ' + profile.last_name).trim(),
+          email: authUser.email || '',
+          role: profile.role || role as 'therapist' | 'patient' | 'admin',
+          avatar: profile.avatar_url || `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
+          isDemo: false,
+        };
     } catch (error) {
       console.error('Error mapping user with profile:', error);
       // Always return a fallback user object instead of null
-      return {
-        id: authUser.id,
-        name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
-        email: authUser.email || '',
-        role: role as 'therapist' | 'patient',
-        avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
-        isDemo: false,
-      };
+              return {
+          id: authUser.id,
+          name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+          email: authUser.email || '',
+          role: role as 'therapist' | 'patient' | 'admin',
+          avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
+          isDemo: false,
+        };
     }
   };
 
@@ -229,7 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signOut();
   };
 
-  const register = async (name: string, email: string, password: string, role: 'therapist' | 'patient') => {
+  const register = async (name: string, email: string, password: string, role: 'therapist' | 'patient' | 'admin') => {
     await signUp(email, password, { name, role });
   };
 
@@ -254,7 +270,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role = 'therapist';
           name = 'Demo Therapist';
         } else if (email.includes('admin')) {
-          role = 'therapist'; // Admin uses therapist role but has admin permissions via email
+          role = 'admin'; // Admin has dedicated admin role
           name = 'Demo Admin';
         } else {
           role = 'patient';

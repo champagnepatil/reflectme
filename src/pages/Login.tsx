@@ -22,7 +22,9 @@ const Login: React.FC = () => {
   // Redirect user if already logged in
   useEffect(() => {
     if (user) {
-      if (user.role === 'therapist') {
+      if (user.role === 'admin') {
+        navigate('/'); // Admin users stay on homepage to access admin features
+      } else if (user.role === 'therapist') {
         navigate('/therapist');
       } else {
         navigate('/client');

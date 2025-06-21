@@ -45,7 +45,11 @@ const Register: React.FC = () => {
       await login(email, password);
       
       // Redirect based on user role
-      navigate(role === 'therapist' ? '/therapist' : '/client');
+      if (role === 'admin') {
+        navigate('/');
+      } else {
+        navigate(role === 'therapist' ? '/therapist' : '/client');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create an account');
       console.error('Registration error:', err);
@@ -66,7 +70,11 @@ const Register: React.FC = () => {
       setError('');
       setDemoLoading(role);
       await login(demoEmail, demoPassword);
-      navigate(role === 'therapist' ? '/therapist' : '/client');
+      if (role === 'admin') {
+        navigate('/');
+      } else {
+        navigate(role === 'therapist' ? '/therapist' : '/client');
+      }
     } catch (err: any) {
       const errorMessage = err.message.includes('password is incorrect') || err.message.includes('Please use password')
         ? err.message

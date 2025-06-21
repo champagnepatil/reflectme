@@ -67,15 +67,15 @@ const Header: React.FC<HeaderProps> = ({ title = 'Zentia' }) => {
                 className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-large py-2 z-10 border border-neutral-200"
               >
                 <Link
-                  to={user.role === 'therapist' ? '/therapist' : '/app'}
+                  to={user.role === 'admin' ? '/waitlist-admin' : user.role === 'therapist' ? '/therapist' : '/app'}
                   className="block px-4 py-3 text-sm text-neutral-700 hover:bg-neutral-50 flex items-center rounded-xl mx-2 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <User className="w-4 h-4 mr-3" />
-                  Dashboard
+                  {user.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
                 </Link>
                 <Link
-                  to={`/${user.role}/settings`}
+                  to={user.role === 'admin' ? '/settings' : `/${user.role}/settings`}
                   className="block px-4 py-3 text-sm text-neutral-700 hover:bg-neutral-50 flex items-center rounded-xl mx-2 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
