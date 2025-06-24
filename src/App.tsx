@@ -11,6 +11,7 @@ import About from './pages/About';
 import Register from './pages/Register';
 import Demo from './pages/Demo';
 import HeroDemo from './pages/HeroDemo';
+import EnhancedAIDemo from './pages/EnhancedAIDemo';
 import Login from './pages/Login';
 
 // Therapist Pages
@@ -151,6 +152,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/demo" element={<Demo />} />
                 <Route path="/hero-demo" element={<HeroDemo />} />
+                <Route path="/enhanced-ai-demo" element={<EnhancedAIDemo />} />
                 
                 {/* Assessment Route (standalone) */}
                 <Route path="/assessment/:clientId" element={<AssessmentPage />} />
