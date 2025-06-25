@@ -302,11 +302,12 @@ export const ZentiaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         userMessage,
         user?.id
       );
+      console.log('Gemini response:', response);
 
       const aiMessage: ChatMessage = {
         id: Date.now().toString(),
         sender: 'assistant',
-        content: response.content,
+        content: response.contenuto,
         timestamp: new Date().toISOString(),
         metadata: response.metadata
       };
