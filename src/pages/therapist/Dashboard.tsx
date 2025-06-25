@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useTherapy } from '../../contexts/TherapyContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Calendar, Clock, BarChart2, FileText, ArrowRight, Users, UserCheck, AlertCircle, Plus, Target, TrendingUp, Brain, AlertTriangle, Download, Settings, Filter, Bell, BarChart3, FileDown, Calendar as CalendarIcon, Video, Upload } from 'lucide-react';
+import { CalendarIcon, Clock, BarChart2, FileText, ArrowRight, Users, UserCheck, AlertCircle, Plus, Target, TrendingUp, Brain, AlertTriangle, Download, Settings, Filter, Bell, BarChart3, FileDown, Video, Upload } from 'lucide-react';
 import { TopicCloud } from '../../components/therapist/TopicCloud';
 import { TaskCreator } from '../../components/therapist/TaskCreator';
 import { AdherenceGauge } from '../../components/therapist/AdherenceGauge';
@@ -234,7 +234,7 @@ const Dashboard: React.FC = () => {
     switch (type) {
       case 'mood_drop': return TrendingUp;
       case 'overdue_activity': return Clock;
-      case 'session_reminder': return Calendar;
+      case 'session_reminder': return CalendarIcon;
       case 'progress_milestone': return Brain;
       default: return Bell;
     }
