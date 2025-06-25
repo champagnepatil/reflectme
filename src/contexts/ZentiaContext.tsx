@@ -298,10 +298,9 @@ export const ZentiaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         copingTools: mockCopingTools.filter(tool => tool.therapistApproved)
       };
 
-      const response = await GeminiAIService.generateTherapeuticResponse(
+      const response = await GeminiAIService.generaRispostaChat(
         userMessage,
-        chatHistory,
-        therapyContext
+        user?.id
       );
 
       const aiMessage: ChatMessage = {

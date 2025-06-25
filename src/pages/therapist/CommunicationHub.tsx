@@ -27,7 +27,8 @@ import {
   Award,
   Lightbulb,
   MessageCircle,
-  Headphones
+  Headphones,
+  Calendar
 } from 'lucide-react';
 import * as Sentry from "@sentry/react";
 
