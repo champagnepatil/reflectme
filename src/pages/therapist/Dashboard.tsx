@@ -4,22 +4,40 @@ import { motion } from 'framer-motion';
 import { useTherapy } from '../../contexts/TherapyContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { CalendarIcon, Clock, BarChart2, FileText, ArrowRight, Users, UserCheck, AlertCircle, Plus, Target, TrendingUp, Brain, AlertTriangle, Download, Settings, Filter, Bell, BarChart3, FileDown, Video, Upload } from 'lucide-react';
+import { 
+  CalendarIcon, 
+  Clock, 
+  BarChart2, 
+  FileText, 
+  ArrowRight, 
+  Users, 
+  UserCheck, 
+  AlertCircle, 
+  Plus, 
+  Target, 
+  TrendingUp, 
+  Brain, 
+  AlertTriangle, 
+  Download, 
+  Settings, 
+  Filter, 
+  Bell, 
+  BarChart3, 
+  FileDown, 
+  Video, 
+  Upload,
+  MessageSquare, 
+  Award, 
+  Sparkles, 
+  BarChart,
+  Play,
+  Star
+} from 'lucide-react';
 import { TopicCloud } from '../../components/therapist/TopicCloud';
 import { TaskCreator } from '../../components/therapist/TaskCreator';
 import { AdherenceGauge } from '../../components/therapist/AdherenceGauge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { 
-  MessageSquare, 
-  Award, 
-  Sparkles, 
-  AlertTriangle, 
-  TrendingUp, 
-  BarChart,
-  Play,
-  Star
-} from 'lucide-react';
 import * as Sentry from "@sentry/react";
 
 // New interfaces for therapist features
