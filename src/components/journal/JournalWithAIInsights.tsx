@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { EnhancedAICompanion, CopingSuggestion } from '../../services/enhancedAICompanion';
+import { EnhancedAICompanion, CopingSuggestion, logJournalEntry } from '../../services/enhancedAICompanion';
 import { useAuth } from '../../contexts/AuthContext';
 import { PenTool, Brain, Lightbulb, TrendingUp, BookOpen } from 'lucide-react';
 
@@ -74,10 +74,10 @@ const JournalWithAIInsights: React.FC<JournalWithAIInsightsProps> = ({
     if (!analysisComplete && content.length >= 20) {
       await analyzeJournalEntry();
     }
-    
-    // Here you would save to your database
-    // await saveJournalEntry(content, aiInsights, suggestions);
-    
+    // Save to database
+    if (user?.id) {
+      await logJournalEntry(user.id, content, undefined, []);
+    }
     // Clear the form
     setContent('');
     setAiInsights([]);

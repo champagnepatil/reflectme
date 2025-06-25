@@ -1,98 +1,137 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { MessageSquare, BookOpen, Target, Sparkles, Users, Brain, Analytics } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
-interface BottomNavItem {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  href: string;
-  badge?: number;
-}
-
-interface MobileBottomNavProps {
-  items: BottomNavItem[];
-  className?: string;
-}
-
-const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ items, className = '' }) => {
+const MobileBottomNav: React.FC = () => {
   const location = useLocation();
+  const { user } = useAuth();
 
-  const isActive = (href: string) => {
-    if (href === '/client' || href === '/therapist') {
-      return location.pathname === href;
+  if (!user) return null;
+
+  const isActive = (path: string) => {
+    if (path === '/client' || path === '/therapist') {
+      return location.pathname === path;
     }
-    return location.pathname.startsWith(href);
+    return location.pathname.startsWith(path);
   };
 
+  const patientNavItems = [
+    {
+      icon: MessageSquare,
+      label: 'AI Chat',
+      href: '/client/chat',
+      emoji: '🤖',
+      color: 'text-blue-600'
+    },
+    {
+      icon: BookOpen,
+      label: 'Journal',
+      href: '/client/journal',
+      emoji: '📝',
+      color: 'text-green-600'
+    },
+    {
+      icon: Target,
+      label: 'Progress',
+      href: '/client',
+      emoji: '🎯',
+      color: 'text-orange-600'
+    },
+    {
+      icon: Sparkles,
+      label: 'Insights',
+      href: '/client/insights',
+      emoji: '✨',
+      color: 'text-purple-600'
+    }
+  ];
+
+  const therapistNavItems = [
+    {
+      icon: Users,
+      label: 'Clients',
+      href: '/therapist/clients',
+      emoji: '👥',
+      color: 'text-blue-600'
+    },
+    {
+      icon: Brain,
+      label: 'AI Tools',
+      href: '/therapist/ai-toolbox',
+      emoji: '🧠',
+      color: 'text-purple-600'
+    },
+    {
+      icon: Analytics,
+      label: 'Analytics',
+      href: '/therapist/analytics-hub',
+      emoji: '📊',
+      color: 'text-green-600'
+    },
+    {
+      icon: MessageSquare,
+      label: 'Secure Chat',
+      href: '/therapist/communication-hub',
+      emoji: '💬',
+      color: 'text-orange-600'
+    }
+  ];
+
+  const navItems = user.role === 'therapist' ? therapistNavItems : patientNavItems;
+
   return (
-    <nav className={`
-      fixed bottom-0 left-0 right-0 z-30 md:hidden
-      bg-white/95 backdrop-blur-sm border-t border-neutral-200
-      px-2 py-2 safe-area-inset-bottom
-      ${className}
-    `}>
-      <div className="flex items-center justify-around max-w-sm mx-auto">
-        {items.slice(0, 5).map((item) => {
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-2xl md:hidden">
+      <div className="grid grid-cols-4 h-20">
+        {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
           
           return (
-            <motion.div
+            <Link
               key={item.href}
-              whileTap={{ scale: 0.95 }}
-              className="relative"
+              to={item.href}
+              className={`
+                flex flex-col items-center justify-center p-2 relative transition-all duration-200
+                ${active 
+                  ? 'text-white' 
+                  : 'text-gray-500'
+                }
+              `}
             >
-              <Link
-                to={item.href}
-                className={`
-                  flex flex-col items-center p-2 rounded-xl transition-all duration-200
-                  min-w-[60px] min-h-[60px] justify-center
-                  ${active 
-                    ? 'text-primary-600' 
-                    : 'text-neutral-500 hover:text-neutral-700'
-                  }
-                `}
-              >
+              {/* Active Background */}
+              {active && (
                 <div className={`
-                  relative p-2 rounded-xl transition-all duration-200
-                  ${active 
-                    ? 'bg-primary-50 scale-110' 
-                    : 'hover:bg-neutral-50'
+                  absolute inset-1 rounded-2xl bg-gradient-to-r 
+                  ${user.role === 'therapist' 
+                    ? 'from-purple-500 to-blue-600' 
+                    : 'from-emerald-500 to-teal-600'
                   }
-                `}>
-                  <Icon className="w-6 h-6" />
-                  
-                  {item.badge && (
-                    <span className="absolute -top-1 -right-1 bg-error-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white">
-                      {item.badge > 99 ? '99+' : item.badge}
-                    </span>
-                  )}
+                  shadow-lg
+                `} />
+              )}
+              
+              {/* Content */}
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="mb-1">
+                  <span className="text-lg">{item.emoji}</span>
                 </div>
-                
-                <span className={`
-                  text-xs font-medium mt-1 truncate max-w-[50px]
-                  ${active ? 'text-primary-600' : 'text-neutral-500'}
-                `}>
+                <span className={`text-xs font-medium ${
+                  active ? 'text-white' : item.color
+                }`}>
                   {item.label}
                 </span>
-
-                {/* Active indicator */}
-                {active && (
-                  <motion.div
-                    layoutId="activeBottomNavIndicator"
-                    className="absolute -top-0.5 left-1/2 w-1 h-1 bg-primary-500 rounded-full transform -translate-x-1/2"
-                    transition={{ type: "spring", stiffness: 400, damping: 40 }}
-                  />
+                
+                {/* Notification Badge */}
+                {(item.href === '/client/chat' || item.href === '/therapist/clients') && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
                 )}
-              </Link>
-            </motion.div>
+              </div>
+            </Link>
           );
         })}
       </div>
-      
-      {/* Safe area spacer for devices with home indicator */}
-      <div className="h-safe-area-inset-bottom" />
-    </nav>
+    </div>
   );
 };
 

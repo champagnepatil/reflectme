@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import * as Sentry from "@sentry/react";
+import { setSentryUserContext, clearSentryUserContext } from '../utils/sentryUtils';
 
 interface AuthUser {
   id: string;
@@ -87,25 +89,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-              return {
-          id: profile.id,
-          name: profile.name || (profile.first_name + ' ' + profile.last_name).trim(),
-          email: authUser.email || '',
+      return {
+        id: profile.id,
+        name: profile.name || (profile.first_name + ' ' + profile.last_name).trim(),
+        email: authUser.email || '',
           role: profile.role || role as 'therapist' | 'patient' | 'admin',
-          avatar: profile.avatar_url || `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
-          isDemo: false,
-        };
+        avatar: profile.avatar_url || `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
+        isDemo: false,
+      };
     } catch (error) {
       console.error('Error mapping user with profile:', error);
       // Always return a fallback user object instead of null
-              return {
-          id: authUser.id,
-          name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
-          email: authUser.email || '',
+      return {
+        id: authUser.id,
+        name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+        email: authUser.email || '',
           role: role as 'therapist' | 'patient' | 'admin',
-          avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
-          isDemo: false,
-        };
+        avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
+        isDemo: false,
+      };
     }
   };
 
@@ -126,6 +128,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: mappedUser?.email 
         });
         setUser(mappedUser);
+        
+        // Set Sentry user context
+        if (mappedUser) {
+          setSentryUserContext({
+            id: mappedUser.id,
+            email: mappedUser.email,
+            role: mappedUser.role,
+            isTherapist: mappedUser.role === 'therapist'
+          });
+          
+          const { logger } = Sentry;
+          logger.info("User authenticated", {
+            role: mappedUser.role,
+            isDemo: mappedUser.isDemo,
+            hasEmail: !!mappedUser.email
+          });
+        }
       }
       setLoading(false);
     });
@@ -148,8 +167,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: mappedUser?.role 
         });
         setUser(mappedUser);
+        
+        // Set Sentry user context
+        if (mappedUser) {
+          setSentryUserContext({
+            id: mappedUser.id,
+            email: mappedUser.email,
+            role: mappedUser.role,
+            isTherapist: mappedUser.role === 'therapist'
+          });
+          
+          const { logger } = Sentry;
+          logger.info("User authenticated", {
+            role: mappedUser.role,
+            isDemo: mappedUser.isDemo,
+            hasEmail: !!mappedUser.email
+          });
+        }
       } else {
         setUser(null);
+        clearSentryUserContext();
       }
       setLoading(false);
     });
@@ -226,11 +263,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     console.log('🚪 Signing out user');
     
+    const { logger } = Sentry;
+    logger.info("User signing out", {
+      role: user?.role,
+      isDemo: user?.isDemo
+    });
+    
     // Check if it's a demo user
     if (user?.isDemo) {
       console.log('🎭 Demo user logout - skipping Supabase signOut');
       setUser(null);
       setSession(null);
+      clearSentryUserContext();
       return;
     }
     
@@ -239,6 +283,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
     setUser(null);
     setSession(null);
+    clearSentryUserContext();
   };
 
   const logout = async () => {

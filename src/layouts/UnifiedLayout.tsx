@@ -10,6 +10,8 @@ import {
   MessageSquare, LineChart, BookOpen, Brain, Target, Sparkles,
   // Therapist icons
   Users, FileText, BarChart2, Activity, Cloud, Download, Plus,
+  // Enhanced therapist icons
+  Shield, Video, BookOpen as Training, TrendingUp as Analytics,
   // Status icons
   CheckCircle, AlertCircle, Clock
 } from 'lucide-react';
@@ -46,24 +48,19 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
 
     if (user.role === 'patient' || user.role === 'client') {
       return [
-        { icon: LineChart, label: 'Dashboard', href: '/client' },
-        { icon: MessageSquare, label: 'Chat AI', href: '/client/chat' },
-        { icon: Activity, label: 'Monitoring', href: '/client/monitoring' },
-        { icon: Target, label: 'Plan', href: '/client/plan' },
-        { icon: Sparkles, label: 'Insights', href: '/client/insights' },
-        { icon: BookOpen, label: 'Journal', href: '/client/journal' }
+        { icon: MessageSquare, label: '🤖 AI Companion', href: '/client/chat', badge: 2 },
+        { icon: BookOpen, label: '📝 Smart Journal', href: '/client/journal' },
+        { icon: Target, label: '🎯 My Progress', href: '/client' },
+        { icon: Sparkles, label: '✨ Insights', href: '/client/insights' }
       ];
     }
 
     if (user.role === 'therapist') {
       return [
-        { icon: BarChart2, label: 'Dashboard', href: '/therapist' },
-        { icon: Users, label: 'Active Clients', href: '/therapist/clients' },
-        { icon: Activity, label: 'Monitoring', href: '/therapist/monitoring' },
-  
-        { icon: Cloud, label: 'Patterns', href: '/therapist/patterns' },
-        { icon: FileText, label: 'Clinical Notes', href: '/therapist/notes-overview' },
-        { icon: Download, label: 'Reports', href: '/therapist/reports' }
+        { icon: Users, label: '👥 My Clients', href: '/therapist/clients', badge: 3 },
+        { icon: Brain, label: '🧠 AI Assistant', href: '/therapist/ai-toolbox' },
+        { icon: Analytics, label: '📊 Smart Analytics', href: '/therapist/analytics-hub' },
+        { icon: MessageSquare, label: '💬 Secure Chat', href: '/therapist/communication-hub' }
       ];
     }
 
@@ -93,14 +90,14 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
 
   const roleConfig = {
     client: {
-      title: 'Zentia Companion',
-      subtitle: 'Your digital companion for mental wellness',
-      gradient: 'from-primary-600 to-secondary-600'
+      title: 'Zentia AI',
+      subtitle: '🤖 Your smart mental wellness companion',
+      gradient: 'from-emerald-500 to-teal-600'
     },
     therapist: {
-      title: 'Zentia Professional',
-      subtitle: 'Advanced clinical platform with AI',
-      gradient: 'from-secondary-600 to-teal-600'
+      title: 'Zentia Pro',
+      subtitle: '🧠 AI-powered clinical excellence',
+      gradient: 'from-purple-500 to-blue-600'
     }
   };
 
@@ -223,23 +220,26 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
         </nav>
 
         {/* Quick Actions */}
-        {!isCollapsed && user.role === 'therapist' && (
+        {!isCollapsed && (
           <div className="p-4 border-t border-neutral-200">
             <div className="space-y-2">
-              <Link
-                to="/analytics-demo"
-                className="flex items-center p-2 text-sm text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-              >
-                <Brain className="w-4 h-4 mr-2" />
-                <span className="hidden md:block">Analytics Demo</span>
-              </Link>
-              <Link
-                to="/data-seeder"
-                className="flex items-center p-2 text-sm text-secondary-600 hover:bg-secondary-50 rounded-lg transition-colors"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                <span className="hidden md:block">Generate Data</span>
-              </Link>
+              {user.role === 'therapist' ? (
+                <Link
+                  to="/therapist/ai-toolbox"
+                  className="flex items-center p-3 text-sm bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl hover:from-purple-600 hover:to-blue-600 transition-all duration-200 shadow-md"
+                >
+                  <Brain className="w-4 h-4 mr-2" />
+                  <span className="hidden md:block font-medium">🚀 AI Power Tools</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/client/chat"
+                  className="flex items-center p-3 text-sm bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl hover:from-green-600 hover:to-teal-600 transition-all duration-200 shadow-md"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  <span className="hidden md:block font-medium">💬 Talk to AI</span>
+                </Link>
+              )}
             </div>
           </div>
         )}

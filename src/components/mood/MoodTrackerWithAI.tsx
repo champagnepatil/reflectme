@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { EnhancedAICompanion, CopingSuggestion } from '../../services/enhancedAICompanion';
+import { EnhancedAICompanion, CopingSuggestion, logMoodEntry } from '../../services/enhancedAICompanion';
 import { useAuth } from '../../contexts/AuthContext';
 import { Heart, Zap, Lightbulb, Clock } from 'lucide-react';
 
@@ -69,17 +69,16 @@ const MoodTrackerWithAI: React.FC<MoodTrackerWithAIProps> = ({ onMoodLogged, cla
     setIsLoading(true);
     
     try {
-      // Log mood to database (implement this based on your data structure)
-      // await logMoodEntry(selectedMood, trigger);
-      
+      // Log mood to database
+      if (user?.id) {
+        await logMoodEntry(user.id, selectedMood, trigger);
+      }
       // Trigger AI support if not already triggered
       if (!showAISupport && selectedMood <= 5) {
         await triggerAISupport(selectedMood, trigger);
       }
-      
       // Call parent callback
       onMoodLogged?.(selectedMood, trigger);
-      
     } catch (error) {
       console.error('Error logging mood:', error);
     } finally {

@@ -340,14 +340,14 @@ export const ConnectHealthPage: React.FC = () => {
         <div className="text-center">
           <Button 
             variant="outline" 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(user?.role === 'therapist' ? '/therapist' : '/client')}
             className="mr-4"
           >
             ← Back to Dashboard
           </Button>
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(user?.role === 'therapist' ? '/therapist' : '/client')}
           >
             Skip for Now
           </Button>

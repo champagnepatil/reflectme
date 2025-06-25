@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from '../lib/supabase';
+import * as Sentry from "@sentry/react";
 
 // Inizializzazione Gemini con controllo errori
 const initializeGemini = () => {
@@ -122,43 +123,90 @@ export class GeminiAIService {
     clientId?: string,
     contattoTerapeutico?: boolean
   ): Promise<ChatResponse> {
-    try {
-      console.log('🤖 Generating chat response for:', messaggioUtente.substring(0, 50) + '...');
-      const model = this.getModel();
-      console.log('🔍 Gemini model status:', model ? 'Available' : 'Not available');
+    const { logger } = Sentry;
+    
+    return Sentry.startSpan(
+      {
+        op: "ai.chat_generation",
+        name: "Generate Chat Response",
+      },
+      async (span) => {
+        span.setAttribute("message_length", messaggioUtente.length);
+        span.setAttribute("has_client_id", !!clientId);
+        span.setAttribute("therapeutic_contact", !!contattoTerapeutico);
+        
+        logger.info("Starting chat response generation", {
+          messageLength: messaggioUtente.length,
+          hasClientId: !!clientId,
+          therapeuticContact: !!contattoTerapeutico
+        });
 
-      const contattoEmotivo = this.analizzaContestoEmotivo(messaggioUtente);
-      console.log('🧠 Emotional context analyzed:', contattoEmotivo);
-      
-      let noteRilevanti: any[] = [];
-      if (clientId && contattoTerapeutico) {
-        // Usa la tabella 'notes' che esiste invece di 'therapist_notes'
-        const { data, error } = await supabase
-          .from('notes')
-          .select('*')
-          .eq('user_id', clientId)
-          .limit(5);
+        try {
+          console.log('🤖 Generating chat response for:', messaggioUtente.substring(0, 50) + '...');
+          const model = this.getModel();
+          console.log('🔍 Gemini model status:', model ? 'Available' : 'Not available');
+
+          const contattoEmotivo = this.analizzaContestoEmotivo(messaggioUtente);
+          console.log('🧠 Emotional context analyzed:', contattoEmotivo);
           
-        if (error) {
-          console.warn('⚠️ Error fetching notes for chat context:', error);
-        } else {
-          noteRilevanti = data || [];
+          let noteRilevanti: any[] = [];
+          if (clientId && contattoTerapeutico) {
+            // Usa la tabella 'notes' che esiste invece di 'therapist_notes'
+            const { data, error } = await supabase
+              .from('notes')
+              .select('*')
+              .eq('user_id', clientId)
+              .limit(5);
+              
+            if (error) {
+              console.warn('⚠️ Error fetching notes for chat context:', error);
+            } else {
+              noteRilevanti = data || [];
+            }
+            console.log('📝 Relevant notes found:', noteRilevanti.length);
+          }
+
+          span.setAttribute("relevant_notes_count", noteRilevanti.length);
+          span.setAttribute("emotional_intensity", contattoEmotivo.intensita || 'unknown');
+
+          let response: ChatResponse;
+          if (model) {
+            console.log('✅ Using Gemini AI for response');
+            span.setAttribute("ai_model_used", "gemini");
+            response = await this.generaRispostaChatConGemini(messaggioUtente, contattoEmotivo, noteRilevanti, model);
+          } else {
+            console.log('⚠️ Gemini model not available, using fallback');
+            span.setAttribute("ai_model_used", "fallback");
+            response = this.generaRispostaChatFallback(messaggioUtente, contattoEmotivo);
+          }
+
+          span.setAttribute("response_length", response.contenuto.length);
+          span.setAttribute("urgency_level", response.metadata.livelloUrgenza);
+          span.setAttribute("success", true);
+
+          logger.info("Successfully generated chat response", {
+            responseLength: response.contenuto.length,
+            urgencyLevel: response.metadata.livelloUrgenza,
+            emotionsDetected: response.metadata.emozioniRilevate.length,
+            strategiesSuggested: response.metadata.strategieSuggerite.length
+          });
+
+          return response;
+        } catch (error) {
+          span.setAttribute("success", false);
+          span.setAttribute("error", error instanceof Error ? error.message : 'Unknown error');
+          
+          logger.error('Error generating chat response', {
+            messageLength: messaggioUtente.length,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            hasClientId: !!clientId
+          });
+          
+          Sentry.captureException(error);
+          return this.generaRispostaChatFallback(messaggioUtente, { emozioni: ['neutral'], triggers: [], intensita: 'bassa' });
         }
-        console.log('📝 Relevant notes found:', noteRilevanti.length);
       }
-
-      if (model) {
-        console.log('✅ Using Gemini AI for response');
-        return await this.generaRispostaChatConGemini(messaggioUtente, contattoEmotivo, noteRilevanti, model);
-      } else {
-        console.log('⚠️ Gemini model not available, using fallback');
-        return this.generaRispostaChatFallback(messaggioUtente, contattoEmotivo);
-      }
-
-    } catch (error) {
-      console.error('❌ Error generating chat response:', error);
-      return this.generaRispostaChatFallback(messaggioUtente, { emozioni: ['neutral'], triggers: [], intensita: 'bassa' });
-    }
+    );
   }
 
   /**

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTherapy, ChatMessage } from '../../contexts/TherapyContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { Send, Info, HelpCircle, Mic, Square, X } from 'lucide-react';
+import { Send, Info, HelpCircle, Mic, Square, X, Brain, AlertCircle, Calendar } from 'lucide-react';
+import { EnhancedAICompanionMCP, CopingSuggestion, EnhancedChatMessage } from '../../services/enhancedAICompanionMCP';
 
 const Chat: React.FC = () => {
   const { chatHistory, addChatMessage } = useTherapy();
@@ -13,6 +14,11 @@ const Chat: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showInfo, setShowInfo] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  
+  // Enhanced AI features
+  const [proactiveMessage, setProactiveMessage] = useState<string | null>(null);
+  const [showProactivePanel, setShowProactivePanel] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<CopingSuggestion[]>([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -21,6 +27,37 @@ const Chat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [chatHistory]);
+
+  // STEP 4: Proactive Check-ins
+  useEffect(() => {
+    const checkForProactiveSupport = async () => {
+      if (!user?.id) return;
+      
+      try {
+        // Simulate checking patterns (in real implementation, this would query mood history)
+        const shouldCheckIn = Math.random() > 0.7; // 30% chance for demo
+        
+        if (shouldCheckIn && !proactiveMessage) {
+          const checkInMessages = [
+            "Hi! I noticed it's been a few days since we last talked. How are you feeling today?",
+            "Just wanted to check in - I see you have a therapy session coming up. Would you like to prepare or discuss anything?",
+            "I've noticed some patterns in your recent mood entries. Would you like to explore some coping strategies together?",
+            "Hey there! How has your week been going? I'm here if you need support or just want to chat."
+          ];
+          
+          const randomMessage = checkInMessages[Math.floor(Math.random() * checkInMessages.length)];
+          setProactiveMessage(randomMessage);
+          setShowProactivePanel(true);
+        }
+      } catch (error) {
+        console.error('Error checking for proactive support:', error);
+      }
+    };
+
+    // Check for proactive support after a delay (simulate real-world timing)
+    const timer = setTimeout(checkForProactiveSupport, 3000);
+    return () => clearTimeout(timer);
+  }, [user?.id, proactiveMessage]);
 
   const startRecording = async () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
@@ -72,7 +109,7 @@ const Chat: React.FC = () => {
     setIsRecording(false);
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!inputValue.trim()) return;
@@ -84,13 +121,64 @@ const Chat: React.FC = () => {
       timestamp: new Date().toISOString(),
     });
     
+    const userMessage = inputValue;
     setInputValue('');
     setIsTyping(true);
     
-    // Simulate typing delay for bot
-    setTimeout(() => {
+    try {
+      // STEP 3: Therapy History Integration & Context-Aware Responses
+      const userId = user?.id || 'demo-user';
+      
+      // Analyze message for mood and themes
+      const isLowMoodMessage = /\b(sad|depressed|down|awful|terrible|anxious|worried|stressed)\b/i.test(userMessage);
+      const moodScore = isLowMoodMessage ? 2 : 4; // Simple mood detection
+      
+      // Get AI response with therapy context
+      let aiResponse: EnhancedChatMessage;
+      let suggestions: CopingSuggestion[] = [];
+      
+      if (isLowMoodMessage) {
+        // Handle as mood trigger
+        const moodResponse = await EnhancedAICompanionMCP.handleMoodTrigger(
+          moodScore,
+          userMessage,
+          userId
+        );
+        aiResponse = moodResponse.message;
+        suggestions = moodResponse.suggestions;
+      } else {
+        // Analyze as journal-like entry for themes
+        const analysis = await EnhancedAICompanionMCP.analyzeJournalEntry(
+          userMessage,
+          userId,
+          moodScore
+        );
+        aiResponse = analysis.message;
+        suggestions = analysis.suggestions;
+      }
+      
+      // Add AI response to chat
+      addChatMessage({
+        sender: 'assistant',
+        content: aiResponse.content,
+        timestamp: new Date().toISOString(),
+      });
+      
+      // Store suggestions for quick access
+      setAiSuggestions(suggestions);
+      
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      
+      // Fallback response
+      addChatMessage({
+        sender: 'assistant',
+        content: "Thank you for sharing that with me. I'm here to listen and support you. How can I help you feel better today?",
+        timestamp: new Date().toISOString(),
+      });
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -196,6 +284,82 @@ const Chat: React.FC = () => {
           </button>
         </div>
       </form>
+
+      {/* Proactive Check-in Panel */}
+      <AnimatePresence>
+        {showProactivePanel && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-20 left-4 right-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg p-4 text-white z-50"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-start">
+                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                  <Brain className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-1">AI Companion Check-in</h4>
+                  <p className="text-sm opacity-90">{proactiveMessage}</p>
+                  
+                  {aiSuggestions.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs opacity-75 mb-2">Quick coping tools available:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {aiSuggestions.slice(0, 2).map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            className="bg-white bg-opacity-20 text-xs px-2 py-1 rounded"
+                            onClick={() => {
+                              addChatMessage({
+                                sender: 'assistant',
+                                content: `Here's a quick technique: ${suggestion.title}\n\n${suggestion.description}\n\nSteps:\n${suggestion.steps.map((step, i) => `${i + 1}. ${step}`).join('\n')}`,
+                                timestamp: new Date().toISOString(),
+                              });
+                              setShowProactivePanel(false);
+                            }}
+                          >
+                            {suggestion.title}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center space-x-3 mt-3">
+                    <button
+                      onClick={() => {
+                        addChatMessage({
+                          sender: 'assistant',
+                          content: proactiveMessage || '',
+                          timestamp: new Date().toISOString(),
+                        });
+                        setShowProactivePanel(false);
+                      }}
+                      className="bg-white bg-opacity-20 text-xs px-3 py-1 rounded hover:bg-opacity-30 transition-colors"
+                    >
+                      Let's chat
+                    </button>
+                    <button
+                      onClick={() => setShowProactivePanel(false)}
+                      className="text-xs opacity-75 hover:opacity-100"
+                    >
+                      Maybe later
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowProactivePanel(false)}
+                className="text-white opacity-75 hover:opacity-100 ml-2"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Info Modal */}
       <AnimatePresence>

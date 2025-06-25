@@ -48,7 +48,7 @@ const Register: React.FC = () => {
       if (role === 'admin') {
         navigate('/');
       } else {
-        navigate(role === 'therapist' ? '/therapist' : '/client');
+      navigate(role === 'therapist' ? '/therapist' : '/client');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create an account');
@@ -73,7 +73,7 @@ const Register: React.FC = () => {
       if (role === 'admin') {
         navigate('/');
       } else {
-        navigate(role === 'therapist' ? '/therapist' : '/client');
+      navigate(role === 'therapist' ? '/therapist' : '/client');
       }
     } catch (err: any) {
       const errorMessage = err.message.includes('password is incorrect') || err.message.includes('Please use password')

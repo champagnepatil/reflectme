@@ -129,11 +129,22 @@ const EmailPreview: React.FC<EmailPreviewProps> = ({ email, isOpen, onClose }) =
               <p>Thank you for being part of our mission to transform mental health support.</p>
               <p className="mt-2">
                 Questions? Reply to this email or visit{' '}
-                <a href="#" className="text-primary-600 hover:underline">support@reflectme.app</a>
+                <a 
+                  href="mailto:support@zentiahealth.com"
+                  className="text-primary-600 hover:underline"
+                >
+                  support@zentiahealth.com
+                </a>
               </p>
               <p className="mt-4 text-xs">
                 You're receiving this because you signed up for the ReflectMe waitlist.<br/>
-                To unsubscribe, click <a href="#" className="text-primary-600 hover:underline">here</a>.
+                To unsubscribe, click{' '}
+                <a 
+                  href="mailto:unsubscribe@zentiahealth.com?subject=Unsubscribe%20Request"
+                  className="text-primary-600 hover:underline"
+                >
+                  here
+                </a>.
               </p>
             </div>
           </div>

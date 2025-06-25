@@ -11,7 +11,8 @@ import About from './pages/About';
 import Register from './pages/Register';
 import Demo from './pages/Demo';
 import HeroDemo from './pages/HeroDemo';
-import EnhancedAIDemo from './pages/EnhancedAIDemo';
+import EnhancedAIMCPDemo from './pages/EnhancedAIMCPDemo';
+import GenAIDemoPage from './pages/GenAIDemoPage';
 import Login from './pages/Login';
 
 // Therapist Pages
@@ -28,6 +29,15 @@ import MonitoringReview from './pages/therapist/MonitoringReview';
 import ActiveClients from './pages/therapist/ActiveClients';
 import Monitoring from './pages/therapist/Monitoring';
 import Patterns from './pages/therapist/Patterns';
+
+// Enhanced Therapist Features
+import TherapistCustomReports from './pages/therapist/CustomReports';
+import TherapistSecureCommunication from './pages/therapist/SecureCommunication';
+import TherapistTrainingSupport from './pages/therapist/TrainingSupport';
+import TherapistPredictiveAnalytics from './pages/therapist/PredictiveAnalytics';
+import TherapistAIToolbox from './pages/therapist/AIToolbox';
+import TherapistAnalyticsHub from './pages/therapist/AnalyticsHub';
+import TherapistCommunicationHub from './pages/therapist/CommunicationHub';
 
 // Patient Pages (Original)
 import PatientDashboard from './pages/patient/Dashboard';
@@ -152,7 +162,8 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/demo" element={<Demo />} />
                 <Route path="/hero-demo" element={<HeroDemo />} />
-                <Route path="/enhanced-ai-demo" element={<EnhancedAIDemo />} />
+                <Route path="/enhanced-ai-mcp-demo" element={<EnhancedAIMCPDemo />} />
+                <Route path="/gen-ai-demo" element={<GenAIDemoPage />} />
                 
                 {/* Assessment Route (standalone) */}
                 <Route path="/assessment/:clientId" element={<AssessmentPage />} />
@@ -191,6 +202,15 @@ function App() {
                   <Route path="case-history/:id" element={<CaseHistoryView />} />
                   <Route path="session-recap/:clientId" element={<SessionRecap />} />
                   <Route path="settings" element={<Settings />} />
+                  
+                  {/* New Enhanced Therapist Features */}
+                  <Route path="ai-toolbox" element={<TherapistAIToolbox />} />
+                  <Route path="analytics-hub" element={<TherapistAnalyticsHub />} />
+                  <Route path="communication-hub" element={<TherapistCommunicationHub />} />
+                  <Route path="custom-reports" element={<TherapistCustomReports />} />
+                  <Route path="secure-communication" element={<TherapistSecureCommunication />} />
+                  <Route path="training-support" element={<TherapistTrainingSupport />} />
+                  <Route path="predictive-analytics" element={<TherapistPredictiveAnalytics />} />
                   
                   {/* Legacy routes - keep for backwards compatibility */}
                   <Route path="active-clients" element={<Navigate to="/therapist/clients" replace />} />

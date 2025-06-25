@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { GeminiAIService } from '../../services/GeminiAIService';
+import { EnhancedAICompanionMCP, CopingSuggestion, EnhancedChatMessage } from '../../services/enhancedAICompanionMCP';
 
 interface JournalCluster {
   id: string;
@@ -64,6 +65,13 @@ const Journal: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
   const [expandedClusters, setExpandedClusters] = useState<Set<string>>(new Set());
+  
+  // Enhanced AI Companion state
+  const [aiResponse, setAiResponse] = useState<EnhancedChatMessage | null>(null);
+  const [copingSuggestions, setCopingSuggestions] = useState<CopingSuggestion[]>([]);
+  const [journalInsights, setJournalInsights] = useState<string[]>([]);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  const [isGettingAIResponse, setIsGettingAIResponse] = useState(false);
   
   useEffect(() => {
     if (journalEntries.length > 0) {
@@ -355,17 +363,72 @@ const Journal: React.FC = () => {
     setExpandedClusters(newExpanded);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!content.trim()) return;
     
+    // Add journal entry first
     addJournalEntry({
       date: format(new Date(), 'yyyy-MM-dd'),
       mood,
       content,
       tags,
     });
+    
+    // STEP 1 & 2: Enhanced AI Integration
+    setIsGettingAIResponse(true);
+    setShowAIPanel(true);
+    
+    try {
+      const userId = user?.id || 'demo-user';
+      
+      // If mood is low (≤2), trigger mood-based coping suggestions
+      if (mood <= 2) {
+        const moodResponse = await EnhancedAICompanionMCP.handleMoodTrigger(
+          mood, 
+          tags.join(', ') || 'Low mood entry',
+          userId
+        );
+        setAiResponse(moodResponse.message);
+        setCopingSuggestions(moodResponse.suggestions);
+      }
+      
+      // Always analyze journal entry for themes and insights
+      const journalAnalysis = await EnhancedAICompanionMCP.analyzeJournalEntry(
+        content,
+        userId,
+        mood
+      );
+      
+      // Combine responses if both exist
+      if (mood <= 2) {
+        setJournalInsights(journalAnalysis.insights);
+        // Merge suggestions, prioritizing mood-based ones
+        const combinedSuggestions = [
+          ...copingSuggestions,
+          ...journalAnalysis.suggestions.filter(s => 
+            !copingSuggestions.some(existing => existing.title === s.title)
+          )
+        ];
+        setCopingSuggestions(combinedSuggestions);
+      } else {
+        setAiResponse(journalAnalysis.message);
+        setCopingSuggestions(journalAnalysis.suggestions);
+        setJournalInsights(journalAnalysis.insights);
+      }
+      
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      setAiResponse({
+        id: 'error-msg',
+        role: 'assistant',
+        content: "Thank you for sharing your thoughts. I'm here to support you on your journey.",
+        timestamp: new Date().toISOString()
+      });
+    } finally {
+      setIsGettingAIResponse(false);
+    }
     
     // Reset form
     setContent('');
@@ -638,7 +701,126 @@ const Journal: React.FC = () => {
             </div>
           </form>
         </motion.div>
-      ) : journalEntries.length > 0 ? (
+      ) : null}
+
+      {/* AI Response Panel */}
+      <AnimatePresence>
+        {showAIPanel && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="card p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
+                  <Brain className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">AI Companion Response</h3>
+                  <p className="text-sm text-gray-600">Personalized insights and support</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAIPanel(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {isGettingAIResponse ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-gray-600">Analyzing your entry and generating personalized support...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* AI Message */}
+                {aiResponse && (
+                  <div className="bg-white rounded-lg p-4 border border-blue-200">
+                    <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                      <Heart className="w-4 h-4 mr-2 text-pink-500" />
+                      Supportive Message
+                    </h4>
+                    <p className="text-gray-700">{aiResponse.content}</p>
+                  </div>
+                )}
+
+                {/* Journal Insights */}
+                {journalInsights.length > 0 && (
+                  <div className="bg-white rounded-lg p-4 border border-purple-200">
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <Lightbulb className="w-4 h-4 mr-2 text-yellow-500" />
+                      Insights from Your Entry
+                    </h4>
+                    <div className="space-y-2">
+                      {journalInsights.map((insight, index) => (
+                        <div key={index} className="flex items-start">
+                          <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                          <p className="text-gray-700 text-sm">{insight}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Coping Suggestions */}
+                {copingSuggestions.length > 0 && (
+                  <div className="bg-white rounded-lg p-4 border border-green-200">
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <Target className="w-4 h-4 mr-2 text-green-500" />
+                      Recommended Coping Strategies
+                    </h4>
+                    <div className="space-y-4">
+                      {copingSuggestions.map((suggestion) => (
+                        <div key={suggestion.id} className="border border-gray-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="font-medium text-gray-900">{suggestion.title}</h5>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              suggestion.priority === 'high' ? 'bg-red-100 text-red-800' :
+                              suggestion.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {suggestion.priority} priority
+                            </span>
+                          </div>
+                          <p className="text-gray-600 text-sm mb-3">{suggestion.description}</p>
+                          <div className="mb-3">
+                            <h6 className="font-medium text-gray-800 mb-1">Steps:</h6>
+                            <ol className="list-decimal list-inside text-sm text-gray-600 space-y-1">
+                              {suggestion.steps.map((step, index) => (
+                                <li key={index}>{step}</li>
+                              ))}
+                            </ol>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>Duration: {suggestion.duration}</span>
+                            <span>Type: {suggestion.type}</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2 italic">{suggestion.reasoning}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-center pt-4">
+                  <button
+                    onClick={() => setShowAIPanel(false)}
+                    className="btn btn-outline"
+                  >
+                    Continue Journaling
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {journalEntries.length > 0 ? (
         <AnimatePresence mode="wait">
           {viewMode === 'clusters' && (
             <motion.div
