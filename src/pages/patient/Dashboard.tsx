@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import MoodTrackerWithAI from '../../components/mood/MoodTrackerWithAI';
-import EnhancedAICompanionMCP from '../../services/enhancedAICompanionMCP';
+import { EnhancedAICompanionMCP } from '../../services/enhancedAICompanionMCP';
 import * as Sentry from "@sentry/react";
 
 const PatientDashboard: React.FC = () => {
@@ -80,14 +80,13 @@ const PatientDashboard: React.FC = () => {
     
     if (mood <= 2) {
       try {
-        const response = await EnhancedAICompanionMCP.handleMoodTrigger({
+        const response = await EnhancedAICompanionMCP.handleMoodTrigger(
           mood,
-          context: 'dashboard_mood_selection',
-          userPreferences: ['gentle', 'supportive'],
-          recentJournal: []
-        });
+          'dashboard_mood_selection',
+          user?.id || 'anonymous'
+        );
         
-        setAiInsights(`🤗 ${response.message}`);
+        setAiInsights(`🤗 ${response.message.content}`);
         setShowProactiveSupport(true);
       } catch (error) {
         console.error('Error handling mood trigger:', error);
