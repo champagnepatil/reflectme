@@ -4,6 +4,7 @@ import { useTherapy, ChatMessage } from '../../contexts/TherapyContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Send, Info, HelpCircle, Mic, Square, X, Brain, AlertCircle, Calendar } from 'lucide-react';
 import { EnhancedAICompanionMCP, CopingSuggestion, EnhancedChatMessage } from '../../services/enhancedAICompanionMCP';
+import AudioRecorder from '../../components/audio/AudioRecorder';
 
 const Chat: React.FC = () => {
   const { chatHistory, addChatMessage } = useTherapy();
@@ -186,241 +187,315 @@ const Chat: React.FC = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const handleVoiceMessage = async (audioBlob: Blob) => {
+    // Placeholder for voice message handling
+    const voiceMessage: ChatMessage = {
+      id: Date.now().toString(),
+      content: "🎤 Voice message received. (Voice processing coming soon!)",
+      sender: 'user',
+      timestamp: new Date()
+    };
+    addChatMessage(voiceMessage);
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Chat Messages */}
-      <div className="flex-grow overflow-y-auto p-4 space-y-4">
-        {chatHistory.map((message, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[80%] rounded-lg p-3 ${
-                message.sender === 'user'
-                  ? 'bg-primary-100 text-primary-900'
-                  : 'bg-neutral-100 text-neutral-900'
-              }`}
-            >
-              <p className="text-sm">{message.content}</p>
-              <span className="text-xs text-neutral-500 mt-1 block">
-                {formatTimestamp(message.timestamp)}
-              </span>
-            </div>
-          </motion.div>
-        ))}
-        
-        {isTyping && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-start"
-          >
-            <div className="bg-neutral-100 rounded-lg p-3">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce delay-100" />
-                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce delay-200" />
-              </div>
-            </div>
-          </motion.div>
-        )}
-        
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Area */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t border-neutral-200">
-        <div className="flex items-end space-x-2">
-          <button
-            type="button"
-            onClick={isRecording ? stopRecording : startRecording}
-            className={`p-2 rounded-full transition-colors flex-shrink-0 ${
-              isRecording 
-                ? 'bg-red-500 hover:bg-red-600 text-white' 
-                : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600'
-            }`}
-          >
-            {isRecording ? (
-              <Square className="w-5 h-5" />
-            ) : (
-              <Mic className="w-5 h-5" />
-            )}
-          </button>
-          
-          <textarea
-            value={inputValue}
-            onChange={(e) => {
-              setInputValue(e.target.value);
-              // Auto-resize textarea
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = Math.min(target.scrollHeight, 128) + 'px';
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(e);
-              }
-            }}
-            placeholder="Type your message... (Enter to send, Shift+Enter for new line)"
-            rows={1}
-            className="flex-grow p-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none min-h-[44px] max-h-32 overflow-y-auto leading-tight"
-            style={{
-              height: 'auto',
-              minHeight: '44px',
-              maxHeight: '128px'
-            }}
-          />
-          
-          <button
-            type="submit"
-            disabled={!inputValue.trim()}
-            className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-          >
-            <Send className="w-5 h-5" />
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 animate-fade-in">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-6 animate-fade-in-down">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4 animate-scale-in hover-lift">
+            <Brain className="h-8 w-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">🤖 AI Companion</h1>
+          <p className="text-gray-600 max-w-md mx-auto">
+            Your personal AI therapist is here to listen, support, and guide you.
+          </p>
         </div>
-      </form>
 
-      {/* Proactive Check-in Panel */}
-      <AnimatePresence>
-        {showProactivePanel && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-20 left-4 right-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg p-4 text-white z-50"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-start">
-                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                  <Brain className="w-5 h-5" />
+        {/* Chat Container */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
+          {/* Chat Header */}
+          <div className="border-b border-gray-100 p-4 bg-white/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-pulse">
+                  <Brain className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold mb-1">AI Companion Check-in</h4>
-                  <p className="text-sm opacity-90">{proactiveMessage}</p>
-                  
-                  {aiSuggestions.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-xs opacity-75 mb-2">Quick coping tools available:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {aiSuggestions.slice(0, 2).map((suggestion) => (
-                          <button
-                            key={suggestion.id}
-                            className="bg-white bg-opacity-20 text-xs px-2 py-1 rounded"
-                            onClick={() => {
-                              addChatMessage({
-                                sender: 'assistant',
-                                content: `Here's a quick technique: ${suggestion.title}\n\n${suggestion.description}\n\nSteps:\n${suggestion.steps.map((step, i) => `${i + 1}. ${step}`).join('\n')}`,
-                                timestamp: new Date().toISOString(),
-                              });
-                              setShowProactivePanel(false);
-                            }}
-                          >
-                            {suggestion.title}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center space-x-3 mt-3">
-                    <button
-                      onClick={() => {
-                        addChatMessage({
-                          sender: 'assistant',
-                          content: proactiveMessage || '',
-                          timestamp: new Date().toISOString(),
-                        });
-                        setShowProactivePanel(false);
-                      }}
-                      className="bg-white bg-opacity-20 text-xs px-3 py-1 rounded hover:bg-opacity-30 transition-colors"
-                    >
-                      Let's chat
-                    </button>
-                    <button
-                      onClick={() => setShowProactivePanel(false)}
-                      className="text-xs opacity-75 hover:opacity-100"
-                    >
-                      Maybe later
-                    </button>
-                  </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">AI Companion</h3>
+                  <p className="text-sm text-gray-600 flex items-center">
+                    <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                    Online & Ready to Help
+                  </p>
                 </div>
               </div>
               <button
-                onClick={() => setShowProactivePanel(false)}
-                className="text-white opacity-75 hover:opacity-100 ml-2"
+                onClick={() => setShowInfo(!showInfo)}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors hover-scale"
               >
-                <X className="w-4 h-4" />
+                <Info className="w-5 h-5 text-gray-600" />
               </button>
+            </div>
+          </div>
+
+          {/* Info Panel */}
+          {showInfo && (
+            <div className="border-b border-gray-100 bg-blue-50 p-4 animate-fade-in-down">
+              <div className="flex items-start space-x-3">
+                <HelpCircle className="w-5 h-5 text-blue-500 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium mb-1">💡 Tips for Better Conversations:</p>
+                  <ul className="space-y-1 text-blue-700">
+                    <li>• Be open and honest about your feelings</li>
+                    <li>• Ask for specific advice or coping strategies</li>
+                    <li>• Share what's working or not working for you</li>
+                    <li>• Remember: I'm here to support, not replace professional therapy</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Messages Area */}
+          <div className="h-96 overflow-y-auto p-4 space-y-4 mobile-scroll">
+            <AnimatePresence>
+              {chatHistory.map((message, index) => (
+                <motion.div
+                  key={message.id || index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className="flex items-start space-x-2 max-w-[85%]">
+                    {message.sender === 'assistant' && (
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 hover-scale">
+                        <Brain className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                    
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className={`chat-bubble ${
+                        message.sender === 'user'
+                          ? 'chat-bubble-user'
+                          : message.sender === 'assistant'
+                          ? 'chat-bubble-assistant'
+                          : 'chat-bubble-system'
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      <p className="text-xs opacity-70 mt-2">
+                        {formatTimestamp(message.timestamp)}
+                      </p>
+                    </motion.div>
+                    
+                    {message.sender === 'user' && (
+                      <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center flex-shrink-0 hover-scale">
+                        <span className="text-white text-sm font-medium">
+                          {user?.name?.charAt(0) || 'U'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {/* Typing Indicator */}
+            {isTyping && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="flex items-center space-x-2"
+              >
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <Brain className="w-4 h-4 text-white" />
+                </div>
+                <div className="bg-gray-100 rounded-2xl px-4 py-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Area */}
+          <form onSubmit={handleSendMessage} className="border-t border-gray-100 p-4 bg-white/50">
+            <div className="flex items-end space-x-3">
+              {/* Voice Recording Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`p-3 rounded-full transition-all duration-200 ${
+                  isRecording
+                    ? 'bg-red-500 text-white animate-pulse'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {isRecording ? <Square className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </motion.button>
+
+              {/* Text Input */}
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder={isRecording ? "🎤 Listening..." : "Type your message here..."}
+                  disabled={isRecording}
+                  className="input w-full pr-12 focus:scale-105 transition-transform duration-200"
+                />
+                {inputValue && (
+                  <motion.button
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    type="button"
+                    onClick={() => setInputValue('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hover-scale"
+                  >
+                    <X className="w-4 h-4" />
+                  </motion.button>
+                )}
+              </div>
+
+              {/* Send Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                type="submit"
+                disabled={!inputValue.trim() || isRecording}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                <Send className="w-5 h-5" />
+              </motion.button>
+            </div>
+          </form>
+        </div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3"
+        >
+          {[
+            { emoji: '😊', text: 'Improve mood', message: 'How can I improve my mood today?' },
+            { emoji: '😰', text: 'Manage anxiety', message: 'I\'m feeling anxious. Can you help me?' },
+            { emoji: '😴', text: 'Sleep better', message: 'I\'m having trouble sleeping. Any advice?' },
+            { emoji: '🎯', text: 'Set goals', message: 'Help me set some wellness goals' }
+          ].map((item, index) => (
+            <motion.button
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 + (index * 0.1) }}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setInputValue(item.message)}
+              className="p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-gray-200 hover:bg-white/80 transition-all duration-200 text-center"
+            >
+              <div className="text-2xl mb-1">{item.emoji}</div>
+              <div className="text-xs text-gray-600 font-medium">{item.text}</div>
+            </motion.button>
+          ))}
+        </motion.div>
+
+        {/* AI Suggestions */}
+        {aiSuggestions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 bg-blue-50/80 backdrop-blur-sm rounded-xl p-4"
+          >
+            <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
+              <Brain className="w-4 h-4 mr-2" />
+              AI Suggestions for You
+            </h4>
+            <div className="grid gap-2">
+              {aiSuggestions.map((suggestion, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white/70 rounded-lg p-3 hover:bg-white/90 transition-colors cursor-pointer hover-lift"
+                  onClick={() => setInputValue(`Tell me more about: ${suggestion.title}`)}
+                >
+                  <h5 className="font-medium text-blue-900">{suggestion.title}</h5>
+                  <p className="text-sm text-blue-700">{suggestion.description}</p>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
 
-      {/* Info Modal */}
-      <AnimatePresence>
-        {showInfo && (
+        {/* Proactive Support Panel */}
+        {showProactivePanel && proactiveMessage && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="modal-overlay"
+            onClick={() => setShowProactivePanel(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-lg p-6 max-w-lg w-full"
+              initial={{ y: 50 }}
+              animate={{ y: 0 }}
+              exit={{ y: 50 }}
+              className="modal-content max-w-md"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-neutral-900">About Your Companion</h3>
-                <button
-                  onClick={() => setShowInfo(false)}
-                  className="text-neutral-500 hover:text-neutral-700"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <p className="text-neutral-600">
-                  Your AI companion is here to support you between therapy sessions. You can:
-                </p>
+              <div className="p-6">
+                <div className="text-center mb-6">
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                    className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4"
+                  >
+                    <Brain className="w-8 h-8 text-white" />
+                  </motion.div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">💙 Just Checking In</h3>
+                  <p className="text-gray-600">{proactiveMessage}</p>
+                </div>
                 
-                <ul className="space-y-2">
-                  <li className="flex items-start">
-                    <HelpCircle className="w-5 h-5 text-primary-600 mr-2 mt-0.5" />
-                    <span className="text-neutral-700">Share your thoughts and feelings</span>
-                  </li>
-                  <li className="flex items-start">
-                    <HelpCircle className="w-5 h-5 text-primary-600 mr-2 mt-0.5" />
-                    <span className="text-neutral-700">Get support during difficult moments</span>
-                  </li>
-                  <li className="flex items-start">
-                    <HelpCircle className="w-5 h-5 text-primary-600 mr-2 mt-0.5" />
-                    <span className="text-neutral-700">Practice coping strategies</span>
-                  </li>
-                  <li className="flex items-start">
-                    <HelpCircle className="w-5 h-5 text-primary-600 mr-2 mt-0.5" />
-                    <span className="text-neutral-700">Track your progress over time</span>
-                  </li>
-                </ul>
-                
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    Remember: This is a supportive tool, not a replacement for professional help. 
-                    If you're in crisis, please contact your therapist or emergency services.
-                  </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setShowProactivePanel(false);
+                      setInputValue("Hi! I'd like to talk about how I'm feeling.");
+                    }}
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-4 rounded-lg font-medium hover-lift"
+                  >
+                    Let's Chat
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowProactivePanel(false)}
+                    className="border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 hover-lift"
+                  >
+                    Not Right Now
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 };

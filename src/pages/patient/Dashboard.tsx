@@ -32,6 +32,7 @@ const PatientDashboard: React.FC = () => {
   const [aiInsights, setAiInsights] = useState<string>('');
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [showProactiveSupport, setShowProactiveSupport] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [todayStats, setTodayStats] = useState({
     journalEntries: 2,
     moodScore: 7.2,
@@ -46,6 +47,9 @@ const PatientDashboard: React.FC = () => {
       category: 'navigation',
       level: 'info'
     });
+    
+    // Simulate loading state
+    setTimeout(() => setIsLoading(false), 800);
   }, []);
 
   // AI-powered daily insights
@@ -58,7 +62,9 @@ const PatientDashboard: React.FC = () => {
         "🧠 AI analysis suggests you respond well to mindfulness exercises.",
         "⭐ Your consistency in mood tracking is helping identify patterns."
       ];
-      setAiInsights(insights[Math.floor(Math.random() * insights.length)]);
+      setTimeout(() => {
+        setAiInsights(insights[Math.floor(Math.random() * insights.length)]);
+      }, 1200);
     };
 
     generateDailyInsights();
@@ -67,7 +73,6 @@ const PatientDashboard: React.FC = () => {
   // Proactive AI support check
   useEffect(() => {
     const checkProactiveSupport = () => {
-      // 40% chance to show proactive support
       if (Math.random() < 0.4) {
         setTimeout(() => setShowProactiveSupport(true), 3000);
       }
@@ -152,46 +157,57 @@ const PatientDashboard: React.FC = () => {
     { label: 'Journal Entries', value: todayStats.journalEntries, icon: BookOpen, color: 'text-green-600' }
   ];
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center animate-fade-in">
+          <div className="loader mx-auto mb-4"></div>
+          <p className="text-gray-600 animate-pulse">Loading your wellness dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 animate-fade-in">
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl mb-6">
+        <div className="text-center mb-12 animate-fade-in-down">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl mb-6 animate-scale-in hover-lift">
             <Heart className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4 animate-fade-in-up">
             Welcome back, {user?.name?.split(' ')[0] || 'Friend'}! 🌟
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto animate-fade-in-up" style={{animationDelay: '200ms'}}>
             Your AI-powered wellness companion is ready to support your mental health journey.
           </p>
         </div>
 
         {/* AI Daily Insight */}
         {aiInsights && (
-          <Card className="mb-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none shadow-2xl">
+          <Card className="mb-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none shadow-2xl animate-scale-in hover-glow">
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-start">
-                  <Brain className="w-6 h-6 mr-3 mt-1 text-blue-100" />
+                  <Brain className="w-6 h-6 mr-3 mt-1 text-blue-100 animate-bounce" />
                   <div>
                     <h3 className="text-lg font-bold mb-1">🤖 AI Daily Insight</h3>
                     <p className="text-blue-100 leading-relaxed">{aiInsights}</p>
                   </div>
                 </div>
-                <Sparkles className="w-6 h-6 text-blue-200" />
+                <Sparkles className="w-6 h-6 text-blue-200 animate-pulse" />
               </div>
             </CardContent>
           </Card>
         )}
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-stagger">
           {quickStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="bg-white/70 backdrop-blur-sm shadow-xl">
+              <Card key={index} className="bg-white/70 backdrop-blur-sm shadow-xl hover-lift card-interactive">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -206,11 +222,123 @@ const PatientDashboard: React.FC = () => {
           })}
         </div>
 
-        {/* Quick Mood Check */}
-        <Card className="mb-8 bg-white/70 backdrop-blur-sm shadow-xl">
+        {/* Killer Functions Grid */}
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          {killerFunctions.map((func, index) => (
+            <Card 
+              key={func.id} 
+              className="group card-interactive bg-white/80 backdrop-blur-sm border-0 shadow-xl overflow-hidden animate-fade-in-up"
+              style={{animationDelay: `${index * 150}ms`}}
+            >
+              <div className={`h-2 bg-gradient-to-r ${func.color} group-hover:h-3 transition-all duration-300`}></div>
+              
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-xl font-bold text-gray-900">{func.title}</h3>
+                      {func.badge && (
+                        <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full font-medium animate-bounce">
+                          {func.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 mb-2">{func.description}</p>
+                    <p className="text-sm text-gray-500 italic">{func.value}</p>
+                  </div>
+                  <div className="ml-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${func.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                      <Star className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="pt-0">
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-4 mb-4 text-center">
+                  {Object.entries(func.stats).map(([key, value], idx) => (
+                    <div key={key} className="animate-fade-in" style={{animationDelay: `${(index * 150) + (idx * 50)}ms`}}>
+                      <div className="text-lg font-bold text-gray-900">{value}</div>
+                      <div className="text-xs text-gray-500 capitalize">{key.replace(/([A-Z])/g, ' $1')}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Features */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {func.features.map((feature, idx) => (
+                    <span 
+                      key={feature} 
+                      className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full animate-fade-in"
+                      style={{animationDelay: `${(index * 150) + 300 + (idx * 100)}ms`}}
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+
+                {/* CTA Button */}
+                <Link to={func.href}>
+                  <Button 
+                    className={`w-full bg-gradient-to-r ${func.color} text-white border-none hover:scale-105 transition-all duration-300 font-medium text-lg py-3 group-hover:shadow-lg`}
+                  >
+                    {func.cta}
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Proactive Support Modal */}
+        {showProactiveSupport && (
+          <div className="modal-overlay" onClick={() => setShowProactiveSupport(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center">
+                    <Brain className="w-6 h-6 text-blue-500 mr-3 animate-bounce" />
+                    <h3 className="text-lg font-bold">🤖 AI Support</h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowProactiveSupport(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors hover-scale"
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="bg-blue-50 p-4 rounded-xl mb-4 animate-fade-in-up">
+                  <p className="text-blue-800">{aiInsights}</p>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => navigate('/client/chat')} 
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white hover-lift"
+                  >
+                    Start Chat
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowProactiveSupport(false)}
+                    className="flex-1 hover-lift"
+                  >
+                    Later
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mood Tracker Section */}
+        <Card className="bg-white/80 backdrop-blur-sm shadow-xl animate-fade-in-up" style={{animationDelay: '600ms'}}>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Heart className="w-5 h-5 mr-2 text-red-500" />
+            <CardTitle className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-red-500 animate-pulse" />
               Quick Mood Check
             </CardTitle>
             <CardDescription>
@@ -218,120 +346,7 @@ const PatientDashboard: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <MoodTrackerWithAI 
-              onMoodSelect={handleMoodSelection}
-              className="mb-4"
-            />
-          </CardContent>
-        </Card>
-
-        {/* Killer Functions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          {killerFunctions.map((func) => (
-            <Card key={func.id} className="bg-white/70 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 group">
-              <CardHeader className="relative">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <CardTitle className="text-xl font-bold">{func.title}</CardTitle>
-                      {func.badge && (
-                        <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium">
-                          {func.badge}
-                        </span>
-                      )}
-                    </div>
-                    <CardDescription className="text-base">{func.description}</CardDescription>
-                    <p className="text-sm text-gray-500 mt-1 italic">{func.value}</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {Object.entries(func.stats).map(([key, value]) => (
-                    <div key={key} className="text-center p-2 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-bold text-gray-900">{value}</p>
-                      <p className="text-xs text-gray-600 capitalize">{key}</p>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Features */}
-                <div className="mb-4">
-                  <div className="flex flex-wrap gap-1">
-                    {func.features.map((feature, index) => (
-                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                <Button 
-                  className={`w-full bg-gradient-to-r ${func.color} text-white border-none hover:scale-105 transition-transform font-medium`}
-                  onClick={() => navigate(func.href)}
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  {func.cta}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Proactive AI Support */}
-        {showProactiveSupport && (
-          <Card className="mb-8 bg-gradient-to-r from-green-500 to-emerald-600 text-white border-none shadow-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start">
-                  <Shield className="w-6 h-6 mr-3 mt-1 text-green-100" />
-                  <div>
-                    <h3 className="text-lg font-bold mb-2">🤗 Your AI Companion is Here</h3>
-                    <p className="text-green-100 mb-3">
-                      I noticed you might need some extra support today. I'm here to listen and help you work through whatever you're experiencing.
-                    </p>
-                    <div className="flex gap-3">
-                      <Button 
-                        variant="secondary" 
-                        size="sm"
-                        onClick={() => navigate('/client/chat')}
-                        className="bg-white text-green-600 hover:bg-green-50"
-                      >
-                        <MessageSquare className="w-4 h-4 mr-1" />
-                        Talk Now
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setShowProactiveSupport(false)}
-                        className="border-white text-white hover:bg-white hover:text-green-600"
-                      >
-                        Maybe Later
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Achievement Badge */}
-        <Card className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-none shadow-xl">
-          <CardContent className="p-6">
-            <div className="text-center">
-              <Award className="w-12 h-12 mx-auto mb-4 text-yellow-100" />
-              <h3 className="text-xl font-bold mb-2">🏆 You're Doing Great!</h3>
-              <p className="text-yellow-100 mb-4">
-                You've been consistent with your mental wellness journey. Keep up the amazing work!
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <span className="px-3 py-1 bg-white/20 rounded-full text-sm">12-day streak</span>
-                <span className="px-3 py-1 bg-white/20 rounded-full text-sm">5 insights unlocked</span>
-                <span className="px-3 py-1 bg-white/20 rounded-full text-sm">Mood improver</span>
-              </div>
-            </div>
+            <MoodTrackerWithAI onMoodSelect={handleMoodSelection} selectedMood={selectedMood} />
           </CardContent>
         </Card>
       </div>

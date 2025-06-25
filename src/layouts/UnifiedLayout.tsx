@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,7 +13,7 @@ import {
   // Enhanced therapist icons
   Shield, Video, BookOpen as Training, TrendingUp as Analytics,
   // Status icons
-  CheckCircle, AlertCircle, Clock
+  CheckCircle, AlertCircle, Clock, ChevronRight
 } from 'lucide-react';
 
 interface NavItem {
@@ -34,6 +34,8 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Redirect logic
   React.useEffect(() => {
@@ -41,6 +43,11 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
       navigate('/login');
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    // Simulate loading state for smooth transitions
+    setTimeout(() => setIsLoading(false), 300);
+  }, [location.pathname]);
 
   // Get navigation items based on user role
   const getNavItems = (): NavItem[] => {
@@ -84,8 +91,19 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
     }
   };
 
-  if (!user) {
-    return null;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="loader mx-auto mb-4"></div>
+          <p className="text-gray-600 animate-pulse">Loading...</p>
+        </motion.div>
+      </div>
+    );
   }
 
   const roleConfig = {
@@ -267,8 +285,6 @@ const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
           </button>
         </div>
       </aside>
-
-
 
       {/* Main Content */}
       <div className="flex-grow flex flex-col min-w-0">
