@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { EnhancedAICompanionMCP, CopingSuggestion, EnhancedChatMessage } from '../services/enhancedAICompanionMCP';
 import { Brain, Heart, MessageSquare, Database, Activity } from 'lucide-react';

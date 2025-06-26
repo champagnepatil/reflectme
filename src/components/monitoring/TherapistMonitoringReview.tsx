@@ -14,10 +14,14 @@ import {
   Moon,
   Users,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Target
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getClientDisplayName, getClientEmail, getAllDemoClientUUIDs, normalizeClientId } from '../../utils/clientUtils';
+import EmptyState from '../ui/EmptyState';
 
 interface TherapistMonitoringReviewProps {
   clientId?: string;
@@ -343,13 +347,43 @@ export const TherapistMonitoringReview: React.FC<TherapistMonitoringReviewProps>
             </div>
             
             {monitoringEntries.length === 0 ? (
-              <div className="p-12 text-center">
-                <FileText className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-neutral-800 mb-2">No Data Available</h3>
-                <p className="text-neutral-600">
-                  No monitoring entries found for the selected date range.
-                </p>
-              </div>
+              <EmptyState
+                type="analytics"
+                title="No Monitoring Data Available"
+                description="No monitoring entries found for the selected date range. Start tracking client progress to see meaningful analytics and insights."
+                primaryAction={{
+                  label: 'Schedule Assessment',
+                  onClick: () => context?.onScheduleAssessment?.(),
+                  variant: 'default',
+                  icon: <Target className="w-5 h-5" />
+                }}
+                secondaryActions={[
+                  {
+                    label: 'View Client Progress',
+                    onClick: () => context?.onViewProgress?.(),
+                    variant: 'outline',
+                    icon: <BarChart3 className="w-4 h-4" />
+                  },
+                  {
+                    label: 'Set Up Monitoring',
+                    onClick: () => context?.onSetupMonitoring?.(),
+                    variant: 'outline',
+                    icon: <Activity className="w-4 h-4" />
+                  }
+                ]}
+                sampleData={{
+                  title: 'Monitoring Features',
+                  items: [
+                    '📊 Daily mood and symptom tracking',
+                    '🎯 Goal progress monitoring',
+                    '📈 Trend analysis and insights',
+                    '⚠️ Risk assessment alerts',
+                    '📝 Automated progress reports',
+                    '🧠 AI-powered recommendations'
+                  ]
+                }}
+                userRole="therapist"
+              />
             ) : (
               <div className="divide-y divide-neutral-200">
                 {monitoringEntries.slice(0, 10).map((entry, index) => (

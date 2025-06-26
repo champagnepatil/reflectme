@@ -3,6 +3,15 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import * as Sentry from "@sentry/react";
 import { setSentryUserContext, clearSentryUserContext } from '../utils/sentryUtils';
+import { 
+  logError, 
+  AppError, 
+  ErrorType, 
+  ErrorSeverity, 
+  withRetry, 
+  safeAsync,
+  getUserErrorMessage 
+} from '../utils/errorHandling';
 
 interface AuthUser {
   id: string;
@@ -198,92 +207,291 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('📝 Signing up user:', { email, role: userData.role });
     
     try {
-      // Try to sign up first
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: userData.name,
-            role: userData.role,
-          },
-        },
-      });
-
-      if (error) {
-        // If user already exists, try to sign in
-        if (error.message.includes('User already registered')) {
-          console.log('👤 User already exists, attempting sign in');
-          return await signIn(email, password);
-        }
-        throw error;
+      // Validate input
+      if (!email || !password || !userData.name || !userData.role) {
+        throw new AppError(
+          'Missing required fields for signup',
+          ErrorType.VALIDATION,
+          ErrorSeverity.MEDIUM,
+          { email: !!email, password: !!password, name: !!userData.name, role: !!userData.role },
+          'Please fill in all required fields.'
+        );
       }
 
-      if (data.user) {
-        // Split name into first_name and last_name
-        const nameParts = (userData.name || '').split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new AppError(
+          'Invalid email format',
+          ErrorType.VALIDATION,
+          ErrorSeverity.MEDIUM,
+          { email },
+          'Please enter a valid email address.'
+        );
+      }
 
-        // Create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: data.user.id,
-              email: email,
-              first_name: firstName,
-              last_name: lastName,
+      // Password validation
+      if (password.length < 6) {
+        throw new AppError(
+          'Password too short',
+          ErrorType.VALIDATION,
+          ErrorSeverity.MEDIUM,
+          { passwordLength: password.length },
+          'Password must be at least 6 characters long.'
+        );
+      }
+
+      // Try to sign up with retry logic
+      const signUpResult = await withRetry(async () => {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name: userData.name,
               role: userData.role,
             },
-          ]);
+          },
+        });
 
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-          // Don't throw here as the user is created
+        if (error) {
+          // Handle specific Supabase errors
+          if (error.message.includes('User already registered')) {
+            console.log('👤 User already exists, attempting sign in');
+            return await signIn(email, password);
+          }
+          
+          if (error.message.includes('Invalid email')) {
+            throw new AppError(
+              error.message,
+              ErrorType.VALIDATION,
+              ErrorSeverity.MEDIUM,
+              { email },
+              'Please enter a valid email address.'
+            );
+          }
+          
+          if (error.message.includes('Password')) {
+            throw new AppError(
+              error.message,
+              ErrorType.VALIDATION,
+              ErrorSeverity.MEDIUM,
+              { passwordLength: password.length },
+              'Password does not meet requirements. Please try a stronger password.'
+            );
+          }
+          
+          throw new AppError(
+            error.message,
+            ErrorType.AUTHENTICATION,
+            ErrorSeverity.HIGH,
+            { supabaseError: error }
+          );
+        }
+
+        return data;
+      }, {
+        maxAttempts: 2,
+        shouldRetry: (error) => {
+          // Only retry on network errors, not validation errors
+          return error instanceof AppError && error.type === ErrorType.NETWORK;
+        }
+      });
+
+      if (signUpResult.user) {
+        // Create profile with error handling
+        const { error: profileResult } = await safeAsync(async () => {
+          const nameParts = (userData.name || '').split(' ');
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: signUpResult.user!.id,
+                email: email,
+                first_name: firstName,
+                last_name: lastName,
+                role: userData.role,
+              },
+            ]);
+
+          if (profileError) {
+            throw new AppError(
+              `Profile creation failed: ${profileError.message}`,
+              ErrorType.DATABASE,
+              ErrorSeverity.MEDIUM,
+              { profileError, userId: signUpResult.user!.id }
+            );
+          }
+        }, {
+          action: 'create_user_profile',
+          userId: signUpResult.user.id,
+          additionalData: { email, role: userData.role }
+        });
+
+        if (profileResult) {
+          logError(profileResult, {
+            action: 'signup_profile_creation',
+            userId: signUpResult.user.id,
+            additionalData: { email, role: userData.role }
+          });
+          // Don't throw here as the user is created, just log the error
         }
       }
     } catch (error) {
-      console.error('❌ Error during signup:', error);
-      throw error;
+      const appError = error instanceof AppError ? error : new AppError(
+        error instanceof Error ? error.message : 'Unknown signup error',
+        ErrorType.AUTHENTICATION,
+        ErrorSeverity.HIGH,
+        { email, role: userData.role }
+      );
+      
+      logError(appError, {
+        action: 'user_signup',
+        additionalData: { email, role: userData.role }
+      });
+      
+      throw appError;
     }
   };
 
   const signIn = async (email: string, password: string) => {
     console.log('🔑 Signing in user:', email);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      // Validate input
+      if (!email || !password) {
+        throw new AppError(
+          'Email and password are required',
+          ErrorType.VALIDATION,
+          ErrorSeverity.MEDIUM,
+          { email: !!email, password: !!password },
+          'Please enter both email and password.'
+        );
+      }
 
-    if (error) throw error;
+      const signInResult = await withRetry(async () => {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            throw new AppError(
+              'Invalid email or password',
+              ErrorType.AUTHENTICATION,
+              ErrorSeverity.MEDIUM,
+              { email },
+              'Invalid email or password. Please check your credentials and try again.'
+            );
+          }
+          
+          if (error.message.includes('Email not confirmed')) {
+            throw new AppError(
+              'Email not confirmed',
+              ErrorType.AUTHENTICATION,
+              ErrorSeverity.MEDIUM,
+              { email },
+              'Please check your email and click the confirmation link before signing in.'
+            );
+          }
+          
+          throw new AppError(
+            error.message,
+            ErrorType.AUTHENTICATION,
+            ErrorSeverity.HIGH,
+            { supabaseError: error, email }
+          );
+        }
+      }, {
+        maxAttempts: 2,
+        shouldRetry: (error) => {
+          return error instanceof AppError && error.type === ErrorType.NETWORK;
+        }
+      });
+    } catch (error) {
+      const appError = error instanceof AppError ? error : new AppError(
+        error instanceof Error ? error.message : 'Unknown signin error',
+        ErrorType.AUTHENTICATION,
+        ErrorSeverity.HIGH,
+        { email }
+      );
+      
+      logError(appError, {
+        action: 'user_signin',
+        additionalData: { email }
+      });
+      
+      throw appError;
+    }
   };
 
   const signOut = async () => {
     console.log('🚪 Signing out user');
     
-    const { logger } = Sentry;
-    logger.info("User signing out", {
-      role: user?.role,
-      isDemo: user?.isDemo
-    });
-    
-    // Check if it's a demo user
-    if (user?.isDemo) {
-      console.log('🎭 Demo user logout - skipping Supabase signOut');
+    try {
+      const { logger } = Sentry;
+      logger.info("User signing out", {
+        role: user?.role,
+        isDemo: user?.isDemo
+      });
+      
+      // Check if it's a demo user
+      if (user?.isDemo) {
+        console.log('🎭 Demo user logout - skipping Supabase signOut');
+        setUser(null);
+        setSession(null);
+        clearSentryUserContext();
+        return;
+      }
+      
+      // Regular user logout with retry
+      await withRetry(async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          throw new AppError(
+            error.message,
+            ErrorType.AUTHENTICATION,
+            ErrorSeverity.MEDIUM,
+            { supabaseError: error, userId: user?.id }
+          );
+        }
+      }, {
+        maxAttempts: 3,
+        shouldRetry: (error) => {
+          return error instanceof AppError && error.type === ErrorType.NETWORK;
+        }
+      });
+      
       setUser(null);
       setSession(null);
       clearSentryUserContext();
-      return;
+    } catch (error) {
+      const appError = error instanceof AppError ? error : new AppError(
+        error instanceof Error ? error.message : 'Unknown signout error',
+        ErrorType.AUTHENTICATION,
+        ErrorSeverity.MEDIUM,
+        { userId: user?.id }
+      );
+      
+      logError(appError, {
+        action: 'user_signout',
+        userId: user?.id
+      });
+      
+      // Even if signout fails, clear local state
+      setUser(null);
+      setSession(null);
+      clearSentryUserContext();
+      
+      // Only throw if it's a critical error
+      if (appError.severity === ErrorSeverity.HIGH || appError.severity === ErrorSeverity.CRITICAL) {
+        throw appError;
+      }
     }
-    
-    // Regular user logout
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    setUser(null);
-    setSession(null);
-    clearSentryUserContext();
   };
 
   const logout = async () => {
@@ -298,16 +506,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🔐 Attempting login for:', email);
       
+      // Validate input
+      if (!email || !password) {
+        throw new AppError(
+          'Email and password are required',
+          ErrorType.VALIDATION,
+          ErrorSeverity.MEDIUM,
+          { email: !!email, password: !!password },
+          'Please enter both email and password.'
+        );
+      }
+      
       // For demo accounts, create a mock session instead of real auth
       const isDemoAccount = email.endsWith('@mindtwin.demo');
       if (isDemoAccount) {
         console.log('🎭 Demo account detected - creating mock session');
         
         if (password !== 'demo123456') {
-          throw new Error('Demo account password is incorrect. Use: demo123456');
+          throw new AppError(
+            'Invalid demo account password',
+            ErrorType.AUTHENTICATION,
+            ErrorSeverity.MEDIUM,
+            { email },
+            'Demo account password is incorrect. Use: demo123456'
+          );
         }
         
-        let role: 'therapist' | 'patient' = 'patient';
+        let role: 'therapist' | 'patient' | 'admin' = 'patient';
         let name = 'Demo User';
         
         // Determine role and name based on email
@@ -315,7 +540,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role = 'therapist';
           name = 'Demo Therapist';
         } else if (email.includes('admin')) {
-          role = 'admin'; // Admin has dedicated admin role
+          role = 'admin';
           name = 'Demo Admin';
         } else {
           role = 'patient';
@@ -345,8 +570,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('✅ Regular login successful');
       
     } catch (error) {
-      console.error('❌ Login error:', error);
-      throw error;
+      const appError = error instanceof AppError ? error : new AppError(
+        error instanceof Error ? error.message : 'Unknown login error',
+        ErrorType.AUTHENTICATION,
+        ErrorSeverity.HIGH,
+        { email }
+      );
+      
+      logError(appError, {
+        action: 'user_login',
+        additionalData: { email }
+      });
+      
+      throw appError;
     }
   };
 

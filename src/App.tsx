@@ -4,11 +4,20 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TherapyProvider } from './contexts/TherapyContext';
 import { ZentiaProvider } from './contexts/ZentiaContext';
 import { AssessmentProvider } from './contexts/AssessmentContext';
+import ErrorBoundary from './components/ErrorBoundary';
+import { logError, AppError, ErrorType, ErrorSeverity } from './utils/errorHandling';
+import { Toaster } from 'sonner';
+import { SystemStatusBanner, ProgressIndicators } from './components/ui/FeedbackComponents';
+import { startNetworkMonitoring } from './utils/feedbackUtils';
 
 // Public Pages
 import Home from './pages/Home';
 import About from './pages/About';
 import Register from './pages/Register';
+import Welcome from './pages/Welcome';
+import EmailVerification from './pages/EmailVerification';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import Demo from './pages/Demo';
 import HeroDemo from './pages/HeroDemo';
 import EnhancedAIMCPDemo from './pages/EnhancedAIMCPDemo';
@@ -29,6 +38,11 @@ import MonitoringReview from './pages/therapist/MonitoringReview';
 import ActiveClients from './pages/therapist/ActiveClients';
 import Monitoring from './pages/therapist/Monitoring';
 import Patterns from './pages/therapist/Patterns';
+
+// New CRUD Management Pages
+import ClientManagement from './pages/therapist/ClientManagement';
+import TaskManagement from './pages/therapist/TaskManagement';
+import AssessmentManagement from './pages/therapist/AssessmentManagement';
 
 // Enhanced Therapist Features
 import TherapistCustomReports from './pages/therapist/CustomReports';
@@ -77,9 +91,25 @@ import AppLayout from './layouts/AppLayout';
 
 import { AITestPanel } from './components/AITestPanel';
 
-// Access Denied Component
+// Enhanced Access Denied Component with error handling
 const AccessDenied: React.FC = () => {
   const navigate = useNavigate();
+  
+  const handleNavigation = (path: string) => {
+    try {
+      navigate(path);
+    } catch (error) {
+      logError(new AppError(
+        `Navigation failed to ${path}`,
+        ErrorType.UNKNOWN,
+        ErrorSeverity.LOW,
+        { targetPath: path }
+      ), {
+        action: 'access_denied_navigation',
+        component: 'AccessDenied'
+      });
+    }
+  };
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-50">
@@ -96,13 +126,13 @@ const AccessDenied: React.FC = () => {
         </p>
         <div className="space-y-3">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => handleNavigation('/')}
             className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           >
             Return to Homepage
           </button>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => handleNavigation('/login')}
             className="w-full px-6 py-3 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors"
           >
             Login as Admin
@@ -113,7 +143,7 @@ const AccessDenied: React.FC = () => {
   );
 };
 
-// Admin Route Protection Component
+// Enhanced Admin Route Protection Component with error handling
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
   
@@ -129,6 +159,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     );
   }
   
+  try {
   // Check if user is admin (same logic as in Home.tsx)
   const isAdmin = user?.email?.includes('admin') || 
                   user?.email?.includes('l.de.angelis') || 
@@ -137,130 +168,473 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // If not loading and not admin, show access denied page
   if (!loading && !isAdmin) {
+      logError(new AppError(
+        'Unauthorized admin access attempt',
+        ErrorType.PERMISSION,
+        ErrorSeverity.MEDIUM,
+        { 
+          userEmail: user?.email,
+          userRole: user?.role,
+          isAdmin
+        }
+      ), {
+        action: 'admin_access_check',
+        component: 'AdminRoute',
+        userId: user?.id
+      });
     return <AccessDenied />;
   }
 
   return <>{children}</>;
+  } catch (error) {
+    logError(new AppError(
+      `Admin route protection error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      ErrorType.UNKNOWN,
+      ErrorSeverity.HIGH,
+      { userEmail: user?.email, userRole: user?.role }
+    ), {
+      action: 'admin_route_protection',
+      component: 'AdminRoute',
+      userId: user?.id
+    });
+    
+    return <AccessDenied />;
+  }
 };
 
 function App() {
+  // Global error handler for unhandled promise rejections
+  React.useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      logError(new AppError(
+        `Unhandled promise rejection: ${event.reason}`,
+        ErrorType.UNKNOWN,
+        ErrorSeverity.HIGH,
+        { reason: event.reason }
+      ), {
+        action: 'unhandled_promise_rejection',
+        component: 'App'
+      });
+    };
+
+    const handleError = (event: ErrorEvent) => {
+      logError(new AppError(
+        `Global error: ${event.message}`,
+        ErrorType.UNKNOWN,
+        ErrorSeverity.HIGH,
+        { 
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno
+        }
+      ), {
+        action: 'global_error',
+        component: 'App'
+      });
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
+
+    // Start network monitoring for feedback system
+    const cleanupNetworkMonitoring = startNetworkMonitoring();
+
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
+      cleanupNetworkMonitoring();
+    };
+  }, []);
+
   return (
+    <ErrorBoundary componentName="App">
     <Router future={{ 
       v7_startTransition: true,
       v7_relativeSplatPath: true 
     }}>
       <div className="App">
+          <ErrorBoundary componentName="AuthProvider">
         <AuthProvider>
+              <ErrorBoundary componentName="TherapyProvider">
           <TherapyProvider>
+                  <ErrorBoundary componentName="ZentiaProvider">
             <ZentiaProvider>
+                      <ErrorBoundary componentName="AssessmentProvider">
               <AssessmentProvider>
+                          <ErrorBoundary componentName="AppRoutes">
                 <Routes>
                 {/* Public routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/demo" element={<Demo />} />
-                <Route path="/hero-demo" element={<HeroDemo />} />
-                <Route path="/enhanced-ai-mcp-demo" element={<EnhancedAIMCPDemo />} />
-                <Route path="/gen-ai-demo" element={<GenAIDemoPage />} />
+                              <Route path="/" element={
+                                <ErrorBoundary componentName="Home">
+                                  <Home />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/about" element={
+                                <ErrorBoundary componentName="About">
+                                  <About />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/login" element={
+                                <ErrorBoundary componentName="Login">
+                                  <Login />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/register" element={
+                                <ErrorBoundary componentName="Register">
+                                  <Register />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/welcome" element={
+                                <ErrorBoundary componentName="Welcome">
+                                  <Welcome />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/verify-email" element={
+                                <ErrorBoundary componentName="EmailVerification">
+                                  <EmailVerification />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/terms" element={
+                                <ErrorBoundary componentName="TermsOfService">
+                                  <TermsOfService />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/privacy" element={
+                                <ErrorBoundary componentName="PrivacyPolicy">
+                                  <PrivacyPolicy />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/demo" element={
+                                <ErrorBoundary componentName="Demo">
+                                  <Demo />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/hero-demo" element={
+                                <ErrorBoundary componentName="HeroDemo">
+                                  <HeroDemo />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/enhanced-ai-mcp-demo" element={
+                                <ErrorBoundary componentName="EnhancedAIMCPDemo">
+                                  <EnhancedAIMCPDemo />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/gen-ai-demo" element={
+                                <ErrorBoundary componentName="GenAIDemoPage">
+                                  <GenAIDemoPage />
+                                </ErrorBoundary>
+                              } />
                 
                 {/* Assessment Route (standalone) */}
-                <Route path="/assessment/:clientId" element={<AssessmentPage />} />
+                              <Route path="/assessment/:clientId" element={
+                                <ErrorBoundary componentName="AssessmentPage">
+                                  <AssessmentPage />
+                                </ErrorBoundary>
+                              } />
                 
                 {/* Legacy Zentia App Routes - redirect to new client routes */}
                 <Route path="/app" element={<Navigate to="/client" replace />} />
                 <Route path="/app/*" element={<Navigate to="/client" replace />} />
                 
                 {/* NEW UNIFIED CLIENT ROUTES */}
-                <Route path="/client" element={<UnifiedLayout />}>
-                  <Route index element={<PatientDashboard />} />
-                  <Route path="chat" element={<Chat />} />
-                  <Route path="monitoring" element={<PatientMonitoring />} />
-                  <Route path="plan" element={<Plan />} />
-                  <Route path="insights" element={<ClientInsights />} />
-                  <Route path="journal" element={<PatientJournal />} />
-                  <Route path="settings" element={<Settings />} />
+                              <Route path="/client" element={
+                                <ErrorBoundary componentName="UnifiedLayout-Client">
+                                  <UnifiedLayout />
+                                </ErrorBoundary>
+                              }>
+                                <Route index element={
+                                  <ErrorBoundary componentName="PatientDashboard">
+                                    <PatientDashboard />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="chat" element={
+                                  <ErrorBoundary componentName="Chat">
+                                    <Chat />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="monitoring" element={
+                                  <ErrorBoundary componentName="PatientMonitoring">
+                                    <PatientMonitoring />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="plan" element={
+                                  <ErrorBoundary componentName="Plan">
+                                    <Plan />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="insights" element={
+                                  <ErrorBoundary componentName="ClientInsights">
+                                    <ClientInsights />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="journal" element={
+                                  <ErrorBoundary componentName="PatientJournal">
+                                    <PatientJournal />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="settings" element={
+                                  <ErrorBoundary componentName="Settings">
+                                    <Settings />
+                                  </ErrorBoundary>
+                                } />
                 </Route>
 
                 {/* NEW UNIFIED THERAPIST ROUTES */}
-                <Route path="/therapist" element={<UnifiedLayout />}>
-                  <Route index element={<TherapistDashboard />} />
-                  <Route path="clients" element={<ActiveClients />} />
-                  <Route path="clients/:clientId" element={<TherapistClientDetails />} />
-                  <Route path="client/:clientId" element={<TherapistClientDetails />} />
-                  <Route path="monitoring" element={<Monitoring />} />
-                  <Route path="monitoring/:clientId" element={<MonitoringReview />} />
-
-                  <Route path="patterns" element={<Patterns />} />
-                  <Route path="reports" element={<CaseHistories />} /> {/* Reusing case histories as reports */}
+                              <Route path="/therapist" element={
+                                <ErrorBoundary componentName="UnifiedLayout-Therapist">
+                                  <UnifiedLayout />
+                                </ErrorBoundary>
+                              }>
+                                <Route index element={
+                                  <ErrorBoundary componentName="TherapistDashboard">
+                                    <TherapistDashboard />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="clients" element={
+                                  <ErrorBoundary componentName="ActiveClients">
+                                    <ActiveClients />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="clients/:clientId" element={
+                                  <ErrorBoundary componentName="TherapistClientDetails">
+                                    <TherapistClientDetails />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="client/:clientId" element={
+                                  <ErrorBoundary componentName="TherapistClientDetails">
+                                    <TherapistClientDetails />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="monitoring" element={
+                                  <ErrorBoundary componentName="Monitoring">
+                                    <Monitoring />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="monitoring-review" element={
+                                  <ErrorBoundary componentName="MonitoringReview">
+                                    <MonitoringReview />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="session-recap/:clientId" element={
+                                  <ErrorBoundary componentName="SessionRecap">
+                                    <SessionRecap />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="patterns" element={
+                                  <ErrorBoundary componentName="Patterns">
+                                    <Patterns />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="reports" element={
+                                  <ErrorBoundary componentName="CaseHistories">
+                                    <CaseHistories />
+                                  </ErrorBoundary>
+                                } />
                   <Route path="notes" element={<Navigate to="/therapist/notes-overview" replace />} />
-                  <Route path="notes/:clientId" element={<TherapistNotes />} />
-                  <Route path="notes-overview" element={<TherapistNotesOverview />} />
-                  <Route path="case-histories" element={<CaseHistories />} />
-                  <Route path="case-histories/new" element={<CaseHistoryForm />} />
-                  <Route path="case-history/:id" element={<CaseHistoryView />} />
-                  <Route path="session-recap/:clientId" element={<SessionRecap />} />
-                  <Route path="settings" element={<Settings />} />
+                                <Route path="notes/:clientId" element={
+                                  <ErrorBoundary componentName="TherapistNotes">
+                                    <TherapistNotes />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="notes-overview" element={
+                                  <ErrorBoundary componentName="TherapistNotesOverview">
+                                    <TherapistNotesOverview />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="case-histories" element={
+                                  <ErrorBoundary componentName="CaseHistories">
+                                    <CaseHistories />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="case-histories/new" element={
+                                  <ErrorBoundary componentName="CaseHistoryForm">
+                                    <CaseHistoryForm />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="case-history/:id" element={
+                                  <ErrorBoundary componentName="CaseHistoryView">
+                                    <CaseHistoryView />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="session-recap/:clientId" element={
+                                  <ErrorBoundary componentName="SessionRecap">
+                                    <SessionRecap />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="settings" element={
+                                  <ErrorBoundary componentName="Settings">
+                                    <Settings />
+                                  </ErrorBoundary>
+                                } />
                   
                   {/* New Enhanced Therapist Features */}
-                  <Route path="ai-toolbox" element={<TherapistAIToolbox />} />
-                  <Route path="analytics-hub" element={<TherapistAnalyticsHub />} />
-                  <Route path="communication-hub" element={<TherapistCommunicationHub />} />
-                  <Route path="custom-reports" element={<TherapistCustomReports />} />
-                  <Route path="secure-communication" element={<TherapistSecureCommunication />} />
-                  <Route path="training-support" element={<TherapistTrainingSupport />} />
-                  <Route path="predictive-analytics" element={<TherapistPredictiveAnalytics />} />
+                                <Route path="ai-toolbox" element={
+                                  <ErrorBoundary componentName="TherapistAIToolbox">
+                                    <TherapistAIToolbox />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="analytics-hub" element={
+                                  <ErrorBoundary componentName="TherapistAnalyticsHub">
+                                    <TherapistAnalyticsHub />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="communication-hub" element={
+                                  <ErrorBoundary componentName="TherapistCommunicationHub">
+                                    <TherapistCommunicationHub />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="custom-reports" element={
+                                  <ErrorBoundary componentName="TherapistCustomReports">
+                                    <TherapistCustomReports />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="secure-communication" element={
+                                  <ErrorBoundary componentName="TherapistSecureCommunication">
+                                    <TherapistSecureCommunication />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="training-support" element={
+                                  <ErrorBoundary componentName="TherapistTrainingSupport">
+                                    <TherapistTrainingSupport />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="predictive-analytics" element={
+                                  <ErrorBoundary componentName="TherapistPredictiveAnalytics">
+                                    <TherapistPredictiveAnalytics />
+                                  </ErrorBoundary>
+                                } />
+                                
+                                {/* CRUD Management Routes */}
+                                <Route path="clients-management" element={
+                                  <ErrorBoundary componentName="ClientManagement">
+                                    <ClientManagement />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="tasks-management" element={
+                                  <ErrorBoundary componentName="TaskManagement">
+                                    <TaskManagement />
+                                  </ErrorBoundary>
+                                } />
+                                <Route path="assessments-management" element={
+                                  <ErrorBoundary componentName="AssessmentManagement">
+                                    <AssessmentManagement />
+                                  </ErrorBoundary>
+                                } />
                   
                   {/* Legacy routes - keep for backwards compatibility */}
                   <Route path="active-clients" element={<Navigate to="/therapist/clients" replace />} />
                 </Route>
 
                 {/* Health & OAuth routes */}
-                <Route path="/connect-health" element={<ConnectHealthPage />} />
-                <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+                              <Route path="/connect-health" element={
+                                <ErrorBoundary componentName="ConnectHealthPage">
+                                  <ConnectHealthPage />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/oauth/callback" element={
+                                <ErrorBoundary componentName="OAuthCallbackPage">
+                                  <OAuthCallbackPage />
+                                </ErrorBoundary>
+                              } />
 
                 {/* Settings standalone */}
-                <Route path="/settings" element={<Settings />} />
+                              <Route path="/settings" element={
+                                <ErrorBoundary componentName="Settings">
+                                  <Settings />
+                                </ErrorBoundary>
+                              } />
                 
                 {/* Prototype Overview */}
-                <Route path="/prototype" element={<PrototypeOverview />} />
+                              <Route path="/prototype" element={
+                                <ErrorBoundary componentName="PrototypeOverview">
+                                  <PrototypeOverview />
+                                </ErrorBoundary>
+                              } />
                 
                 {/* PROTECTED ADMIN ROUTES */}
                 <Route path="/waitlist-admin" element={
                   <AdminRoute>
+                                  <ErrorBoundary componentName="WaitlistAdmin">
                     <WaitlistAdmin />
+                                  </ErrorBoundary>
                   </AdminRoute>
                 } />
                 
                 <Route path="/email-campaigns" element={
                   <AdminRoute>
+                                  <ErrorBoundary componentName="EmailCampaignAdmin">
                     <EmailCampaignAdmin />
+                                  </ErrorBoundary>
                   </AdminRoute>
                 } />
 
                 {/* Test Routes (Development Only) */}
-                <Route path="/test/pdf" element={<PDFTestComponent />} />
-                <Route path="/analytics-demo" element={<Phase4Test />} />
-                <Route path="/data-seeder" element={<DataSeeder />} />
+                              <Route path="/test/pdf" element={
+                                <ErrorBoundary componentName="PDFTestComponent">
+                                  <PDFTestComponent />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/analytics-demo" element={
+                                <ErrorBoundary componentName="Phase4Test">
+                                  <Phase4Test />
+                                </ErrorBoundary>
+                              } />
+                              <Route path="/data-seeder" element={
+                                <ErrorBoundary componentName="DataSeeder">
+                                  <DataSeeder />
+                                </ErrorBoundary>
+                              } />
 
                 {/* Development AI Test Panel */}
                 {import.meta.env.MODE === 'development' && (
                   <>
-                    <Route path="/ai-test" element={<AITestPanel />} />
-                    <Route path="/gemini-test" element={<GeminiTest />} />
+                                  <Route path="/ai-test" element={
+                                    <ErrorBoundary componentName="AITestPanel">
+                                      <AITestPanel />
+                                    </ErrorBoundary>
+                                  } />
+                                  <Route path="/gemini-test" element={
+                                    <ErrorBoundary componentName="GeminiTest">
+                                      <GeminiTest />
+                                    </ErrorBoundary>
+                                  } />
                   </>
                 )}
 
                 {/* Catch-all redirect */}
                 <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
+                          </ErrorBoundary>
               </AssessmentProvider>
+                      </ErrorBoundary>
             </ZentiaProvider>
+                  </ErrorBoundary>
           </TherapyProvider>
+              </ErrorBoundary>
         </AuthProvider>
+          </ErrorBoundary>
       </div>
+      
+      {/* Feedback System Components */}
+      <SystemStatusBanner />
+      <ProgressIndicators />
+      
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: 'white',
+            color: '#374151',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+          },
+        }}
+      />
     </Router>
+    </ErrorBoundary>
   );
 }
 

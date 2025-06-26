@@ -1,6 +1,16 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from '../lib/supabase';
 import * as Sentry from "@sentry/react";
+import { 
+  logError, 
+  AppError, 
+  ErrorType, 
+  ErrorSeverity, 
+  withRetry, 
+  safeAsync,
+  handleAPIResponse,
+  isNetworkError
+} from '../utils/errorHandling';
 
 // Inizializzazione Gemini con controllo errori
 const initializeGemini = () => {
@@ -14,7 +24,17 @@ const initializeGemini = () => {
   });
   
   if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-    console.warn('⚠️ Gemini API key not configured. Using fallback responses.');
+    const warning = new AppError(
+      'Gemini API key not configured',
+      ErrorType.EXTERNAL_SERVICE,
+      ErrorSeverity.MEDIUM,
+      { apiKeyExists: !!apiKey, isPlaceholder: apiKey === 'your_gemini_api_key_here' },
+      'AI service temporarily unavailable. Using fallback responses.'
+    );
+    logError(warning, { 
+      action: 'initialize_gemini',
+      component: 'GeminiAIService'
+    });
     return null;
   }
   
@@ -32,7 +52,17 @@ const initializeGemini = () => {
     console.log('✅ Gemini 2.0 Flash model initialized successfully');
     return model;
   } catch (error) {
-    console.error('❌ Failed to initialize Gemini:', error);
+    const appError = new AppError(
+      `Failed to initialize Gemini: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      ErrorType.EXTERNAL_SERVICE,
+      ErrorSeverity.HIGH,
+      { apiKeyLength: apiKey?.length, error: error instanceof Error ? error.message : 'Unknown' },
+      'AI service initialization failed. Using fallback mode.'
+    );
+    logError(appError, {
+      action: 'initialize_gemini',
+      component: 'GeminiAIService'
+    });
     return null;
   }
 };
@@ -67,52 +97,100 @@ export class GeminiAIService {
    * 📝 Analizza le note terapeutiche di un cliente
    */
   static async analizzaNoteTerapeutiche(clientId: string, noteIds?: string[]): Promise<NotesAnalysis> {
-    try {
-      console.log(`🤖 Starting notes analysis for client ${clientId}`);
+    return await safeAsync(
+      async () => {
+        console.log(`🤖 Starting notes analysis for client ${clientId}`);
 
-      // Usa la tabella 'notes' che esiste invece di 'therapist_notes'
-      let query = supabase
-        .from('notes')
-        .select('*')
-        .eq('user_id', clientId)
-        .order('created_at', { ascending: false });
+        // Validate input
+        if (!clientId) {
+          throw new AppError(
+            'Client ID is required for notes analysis',
+            ErrorType.VALIDATION,
+            ErrorSeverity.MEDIUM,
+            { clientId },
+            'Unable to analyze notes: missing client information.'
+          );
+        }
 
-      if (noteIds && noteIds.length > 0) {
-        query = query.in('id', noteIds);
-      } else {
-        query = query.limit(10); // Ultime 10 note
-      }
+        // Fetch notes with retry logic
+        const { data: note, error } = await withRetry(async () => {
+          let query = supabase
+            .from('notes')
+            .select('*')
+            .eq('user_id', clientId)
+            .order('created_at', { ascending: false });
 
-      const { data: note, error } = await query;
+          if (noteIds && noteIds.length > 0) {
+            query = query.in('id', noteIds);
+          } else {
+            query = query.limit(10);
+          }
 
-      if (error) {
-        console.warn('⚠️ Error fetching notes:', error);
+          const result = await query;
+          if (result.error) {
+            throw new AppError(
+              `Database error fetching notes: ${result.error.message}`,
+              ErrorType.DATABASE,
+              ErrorSeverity.MEDIUM,
+              { clientId, noteIds, supabaseError: result.error }
+            );
+          }
+          return result;
+        }, {
+          maxAttempts: 3,
+          shouldRetry: (error) => {
+            return error instanceof AppError && 
+                   (error.type === ErrorType.NETWORK || error.type === ErrorType.DATABASE);
+          }
+        });
+
+        if (!note || note.length === 0) {
+          logError(new AppError(
+            'No notes found for analysis',
+            ErrorType.VALIDATION,
+            ErrorSeverity.LOW,
+            { clientId, noteCount: 0 }
+          ), {
+            action: 'analyze_notes',
+            component: 'GeminiAIService',
+            additionalData: { clientId }
+          });
+          return this.generaAnalisiVuota();
+        }
+
+        // Prepara il contenuto per l'analisi
+        const contenutoNote = note.map(nota => ({
+          data: nota.created_at,
+          titolo: 'Note Entry',
+          contenuto: nota.content,
+          tag: []
+        }));
+
+        const model = this.getModel();
+        if (model) {
+          return await this.analizzaConGemini(contenutoNote, model);
+        } else {
+          return this.analizzaConFallback(contenutoNote);
+        }
+      },
+      {
+        action: 'analyze_therapeutic_notes',
+        component: 'GeminiAIService',
+        additionalData: { clientId, noteIds }
+      },
+      this.generaAnalisiVuota() // fallback value
+    ).then(result => {
+      if (result.error) {
+        // Log error but return fallback analysis
+        logError(result.error, {
+          action: 'analyze_therapeutic_notes',
+          component: 'GeminiAIService',
+          additionalData: { clientId, noteIds }
+        });
         return this.generaAnalisiVuota();
       }
-
-      if (!note || note.length === 0) {
-        return this.generaAnalisiVuota();
-      }
-
-      // Prepara il contenuto per l'analisi
-      const contenutoNote = note.map(nota => ({
-        data: nota.created_at,
-        titolo: 'Note Entry',
-        contenuto: nota.content,
-        tag: []
-      }));
-
-      const model = this.getModel();
-      if (model) {
-        return await this.analizzaConGemini(contenutoNote, model);
-      } else {
-        return this.analizzaConFallback(contenutoNote);
-      }
-
-    } catch (error) {
-      console.error('❌ Error analyzing notes:', error);
-      return this.generaAnalisiVuota();
-    }
+      return result.data!;
+    });
   }
 
   /**
@@ -141,121 +219,236 @@ export class GeminiAIService {
           therapeuticContact: !!contattoTerapeutico
         });
 
-        try {
-          console.log('🤖 Generating chat response for:', messaggioUtente.substring(0, 50) + '...');
-          const model = this.getModel();
-          console.log('🔍 Gemini model status:', model ? 'Available' : 'Not available');
-
-          const contattoEmotivo = this.analizzaContestoEmotivo(messaggioUtente);
-          console.log('🧠 Emotional context analyzed:', contattoEmotivo);
-          
-          let noteRilevanti: any[] = [];
-          if (clientId && contattoTerapeutico) {
-            // Usa la tabella 'notes' che esiste invece di 'therapist_notes'
-            const { data, error } = await supabase
-              .from('notes')
-              .select('*')
-              .eq('user_id', clientId)
-              .limit(5);
-              
-            if (error) {
-              console.warn('⚠️ Error fetching notes for chat context:', error);
-            } else {
-              noteRilevanti = data || [];
+        const { data: response, error } = await safeAsync(
+          async () => {
+            // Validate input
+            if (!messaggioUtente || messaggioUtente.trim().length === 0) {
+              throw new AppError(
+                'Message is required for chat response',
+                ErrorType.VALIDATION,
+                ErrorSeverity.MEDIUM,
+                { messageLength: messaggioUtente?.length || 0 },
+                'Please enter a message to get a response.'
+              );
             }
-            console.log('📝 Relevant notes found:', noteRilevanti.length);
-          }
 
-          span.setAttribute("relevant_notes_count", noteRilevanti.length);
-          span.setAttribute("emotional_intensity", contattoEmotivo.intensita || 'unknown');
+            if (messaggioUtente.length > 4000) {
+              throw new AppError(
+                'Message too long for processing',
+                ErrorType.VALIDATION,
+                ErrorSeverity.MEDIUM,
+                { messageLength: messaggioUtente.length },
+                'Message is too long. Please try a shorter message.'
+              );
+            }
 
-          let response: ChatResponse;
-          if (model) {
-            console.log('✅ Using Gemini AI for response');
-            span.setAttribute("ai_model_used", "gemini");
-            response = await this.generaRispostaChatConGemini(messaggioUtente, contattoEmotivo, noteRilevanti, model);
-          } else {
-            console.log('⚠️ Gemini model not available, using fallback');
-            span.setAttribute("ai_model_used", "fallback");
-            response = this.generaRispostaChatFallback(messaggioUtente, contattoEmotivo);
-          }
+            console.log('🤖 Generating chat response for:', messaggioUtente.substring(0, 50) + '...');
+            const model = this.getModel();
+            console.log('🔍 Gemini model status:', model ? 'Available' : 'Not available');
 
-          span.setAttribute("response_length", response.contenuto.length);
-          span.setAttribute("urgency_level", response.metadata.livelloUrgenza);
-          span.setAttribute("success", true);
+            const contattoEmotivo = this.analizzaContestoEmotivo(messaggioUtente);
+            console.log('🧠 Emotional context analyzed:', contattoEmotivo);
+            
+            let noteRilevanti: any[] = [];
+            if (clientId && contattoTerapeutico) {
+              const { data: notes, error: notesError } = await safeAsync(async () => {
+                const result = await supabase
+                  .from('notes')
+                  .select('*')
+                  .eq('user_id', clientId)
+                  .limit(5);
+                
+                if (result.error) {
+                  throw new AppError(
+                    `Error fetching notes for chat context: ${result.error.message}`,
+                    ErrorType.DATABASE,
+                    ErrorSeverity.LOW,
+                    { clientId, supabaseError: result.error }
+                  );
+                }
+                
+                return result.data || [];
+              }, {
+                action: 'fetch_chat_context_notes',
+                component: 'GeminiAIService',
+                additionalData: { clientId }
+              });
 
-          logger.info("Successfully generated chat response", {
-            responseLength: response.contenuto.length,
-            urgencyLevel: response.metadata.livelloUrgenza,
-            emotionsDetected: response.metadata.emozioniRilevate.length,
-            strategiesSuggested: response.metadata.strategieSuggerite.length
-          });
+              if (notesError) {
+                logError(notesError, {
+                  action: 'fetch_chat_context_notes',
+                  component: 'GeminiAIService',
+                  additionalData: { clientId }
+                });
+              } else {
+                noteRilevanti = notes || [];
+              }
+              console.log('📝 Relevant notes found:', noteRilevanti.length);
+            }
 
-          return response;
-        } catch (error) {
+            span.setAttribute("relevant_notes_count", noteRilevanti.length);
+            span.setAttribute("emotional_intensity", contattoEmotivo.intensita || 'unknown');
+
+            let response: ChatResponse;
+            if (model) {
+              console.log('✅ Using Gemini AI for response');
+              span.setAttribute("ai_model_used", "gemini");
+              response = await this.generaRispostaChatConGemini(messaggioUtente, contattoEmotivo, noteRilevanti, model);
+            } else {
+              console.log('⚠️ Gemini model not available, using fallback');
+              span.setAttribute("ai_model_used", "fallback");
+              response = this.generaRispostaChatFallback(messaggioUtente, contattoEmotivo);
+            }
+
+            span.setAttribute("response_length", response.contenuto.length);
+            span.setAttribute("urgency_level", response.metadata.livelloUrgenza);
+            span.setAttribute("success", true);
+
+            logger.info("Successfully generated chat response", {
+              responseLength: response.contenuto.length,
+              urgencyLevel: response.metadata.livelloUrgenza,
+              emotionsDetected: response.metadata.emozioniRilevate.length,
+              strategiesSuggested: response.metadata.strategieSuggerite.length
+            });
+
+            return response;
+          },
+          {
+            action: 'generate_chat_response',
+            component: 'GeminiAIService',
+            additionalData: { 
+              messageLength: messaggioUtente?.length || 0,
+              clientId,
+              therapeuticContact: contattoTerapeutico
+            }
+          },
+          // Fallback response
+          this.generaRispostaChatFallback(
+            messaggioUtente || 'empty message', 
+            { intensita: 'medium', emozioni: ['neutral'], trigger: [] }
+          )
+        );
+
+        if (error) {
           span.setAttribute("success", false);
-          span.setAttribute("error", error instanceof Error ? error.message : 'Unknown error');
+          span.setAttribute("error", error.message);
           
           logger.error('Error generating chat response', {
-            messageLength: messaggioUtente.length,
-            error: error instanceof Error ? error.message : 'Unknown error',
-            hasClientId: !!clientId
+            messageLength: messaggioUtente?.length || 0,
+            error: error.message,
+            errorType: error.type
           });
-          
-          Sentry.captureException(error);
-          return this.generaRispostaChatFallback(messaggioUtente, { emozioni: ['neutral'], triggers: [], intensita: 'bassa' });
+
+          // Return fallback response even if there was an error
+          return response!;
         }
+
+        return response!;
       }
     );
   }
 
   /**
-   * 📊 Genera riassunto progressi periodico
+   * 📊 Genera riassunto progressi con error handling
    */
   static async generaRiassuntoProgressi(clientId: string, giorni: number = 30): Promise<string> {
-    try {
-      console.log(`📊 Generating progress summary for ${giorni} days for client ${clientId}`);
+    const { data: summary, error } = await safeAsync(
+      async () => {
+        if (!clientId) {
+          throw new AppError(
+            'Client ID is required for progress summary',
+            ErrorType.VALIDATION,
+            ErrorSeverity.MEDIUM,
+            { clientId },
+            'Unable to generate progress summary: missing client information.'
+          );
+        }
 
-      const dataInizio = new Date();
-      dataInizio.setDate(dataInizio.getDate() - giorni);
+        if (giorni <= 0 || giorni > 365) {
+          throw new AppError(
+            'Invalid time period for progress summary',
+            ErrorType.VALIDATION,
+            ErrorSeverity.MEDIUM,
+            { giorni },
+            'Time period must be between 1 and 365 days.'
+          );
+        }
 
-      // Recupera dati multipli con le tabelle che esistono realmente
-      const [noteResult, assessmentResult, monitoringResult] = await Promise.all([
-        supabase
-          .from('notes')
-          .select('*')
-          .eq('user_id', clientId)
-          .gte('created_at', dataInizio.toISOString()),
-        
-        supabase
-          .from('assessment_results')
-          .select('*')
-          .gte('completed_at', dataInizio.toISOString()),
-        
-        supabase
-          .from('monitoring_entries')
-          .select('*')
-          .eq('client_id', clientId)
-          .gte('entry_date', dataInizio.toISOString().split('T')[0])
-      ]);
+        const dataInizio = new Date();
+        dataInizio.setDate(dataInizio.getDate() - giorni);
 
-      const datiCompleti = {
-        note: noteResult.data || [],
-        assessment: assessmentResult.data || [],
-        monitoraggio: monitoringResult.data || []
-      };
+        // Fetch data with retry logic
+        const datiProgressi = await withRetry(async () => {
+          const [
+            { data: mood, error: moodError },
+            { data: journal, error: journalError },
+            { data: assessments, error: assessmentsError }
+          ] = await Promise.all([
+            supabase
+              .from('mood_entries')
+              .select('*')
+              .eq('user_id', clientId)
+              .gte('created_at', dataInizio.toISOString()),
+            supabase
+              .from('journal_entries')
+              .select('*')
+              .eq('user_id', clientId)
+              .gte('created_at', dataInizio.toISOString()),
+            supabase
+              .from('assessments')
+              .select('*')
+              .eq('user_id', clientId)
+              .gte('created_at', dataInizio.toISOString())
+          ]);
 
-      const model = this.getModel();
-      if (model) {
-        return await this.generaRiassuntoConGemini(datiCompleti, giorni, model);
-      } else {
-        return this.generaRiassuntoFallback(datiCompleti, giorni);
-      }
+          // Check for database errors
+          if (moodError || journalError || assessmentsError) {
+            const errors = [moodError, journalError, assessmentsError].filter(Boolean);
+            throw new AppError(
+              `Database errors fetching progress data: ${errors.map(e => e!.message).join(', ')}`,
+              ErrorType.DATABASE,
+              ErrorSeverity.MEDIUM,
+              { clientId, giorni, errors }
+            );
+          }
 
-    } catch (error) {
-      console.error('❌ Error generating summary:', error);
-      return 'Unable to generate progress summary at the moment.';
+          return {
+            mood: mood || [],
+            journal: journal || [],
+            assessments: assessments || []
+          };
+        }, {
+          maxAttempts: 3,
+          shouldRetry: (error) => {
+            return error instanceof AppError && 
+                   (error.type === ErrorType.NETWORK || error.type === ErrorType.DATABASE);
+          }
+        });
+
+        const model = this.getModel();
+        if (model) {
+          return await this.generaRiassuntoConGemini(datiProgressi, giorni, model);
+        } else {
+          return this.generaRiassuntoFallback(datiProgressi, giorni);
+        }
+      },
+      {
+        action: 'generate_progress_summary',
+        component: 'GeminiAIService',
+        additionalData: { clientId, giorni }
+      },
+      `Progress summary for the last ${giorni} days is currently unavailable. Please try again later.` // fallback
+    );
+
+    if (error) {
+      logError(error, {
+        action: 'generate_progress_summary',
+        component: 'GeminiAIService',
+        additionalData: { clientId, giorni }
+      });
     }
+
+    return summary!;
   }
 
   // === METODI PRIVATI ===

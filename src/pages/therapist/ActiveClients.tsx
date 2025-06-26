@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Users, Search, Filter, Activity, Calendar, AlertCircle, TrendingUp } from 'lucide-react';
+import { Users, Search, Filter, Activity, Calendar, AlertCircle, TrendingUp, Plus, Star, Zap } from 'lucide-react';
+import GoldenPathWizard from '@/components/onboarding/GoldenPathWizard';
+import EmptyState from '../../components/ui/EmptyState';
 
 interface Client {
   id: string;
@@ -19,6 +21,7 @@ const ActiveClients: React.FC = () => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'pending' | 'on-hold'>('all');
+  const [showGoldenPath, setShowGoldenPath] = useState(false);
 
   // Demo data aligned with actual Supabase database clients
   const demoClients: Client[] = [
@@ -120,6 +123,13 @@ const ActiveClients: React.FC = () => {
           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
             {filteredClients.length} clients
           </span>
+          <button
+            onClick={() => setShowGoldenPath(true)}
+            className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:scale-105 flex items-center shadow-lg"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Client
+          </button>
         </div>
       </div>
 
@@ -154,6 +164,41 @@ const ActiveClients: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Empty State for New Users */}
+      {filteredClients.length === 0 && !searchTerm && filterStatus === 'all' && (
+        <EmptyState
+          type="clients"
+          title="🚀 Ready to Start Your Journey?"
+          description="Add your first client and experience the power of AI-enhanced therapy management. Our guided setup will have you ready in under 5 minutes."
+          primaryAction={{
+            label: 'Start Golden Path (5 min)',
+            onClick: () => setShowGoldenPath(true),
+            variant: 'default',
+            icon: <Zap className="w-5 h-5" />
+          }}
+          secondaryActions={[
+            {
+              label: 'Quick Add Client',
+              onClick: () => setShowGoldenPath(true),
+              variant: 'outline',
+              icon: <Plus className="w-4 h-4" />
+            }
+          ]}
+          sampleData={{
+            title: 'What You\'ll Get',
+            items: [
+              '✓ Quick Setup - Add client details in minutes',
+              '✓ AI Treatment Plan - Generate personalized approach',
+              '✓ Progress Tracking - Monitor outcomes with analytics',
+              '✓ Risk Assessment - Early warning alerts',
+              '✓ Automated Notes - AI-powered session summaries',
+              '✓ Smart Scheduling - Intelligent appointment management'
+            ]
+          }}
+          userRole="therapist"
+        />
+      )}
 
       {/* Clients Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -227,19 +272,49 @@ const ActiveClients: React.FC = () => {
         ))}
       </div>
 
-      {/* Empty State */}
-      {filteredClients.length === 0 && (
-        <div className="text-center py-12">
-          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No client found</h3>
-          <p className="text-gray-500">
-            {searchTerm || filterStatus !== 'all' 
-              ? 'Try modifying the search filters.'
-              : 'No active clients at the moment.'
+      {/* Empty State for Search/Filter Results */}
+      {filteredClients.length === 0 && (searchTerm || filterStatus !== 'all') && (
+        <EmptyState
+          type="search"
+          title="No clients found"
+          description="We couldn't find any clients matching your search criteria. Try adjusting your filters or search terms."
+          primaryAction={{
+            label: 'Clear Search',
+            onClick: () => setSearchTerm(''),
+            variant: 'outline',
+            icon: <Search className="w-4 h-4" />
+          }}
+          secondaryActions={[
+            {
+              label: 'Clear Filters',
+              onClick: () => setFilterStatus('all'),
+              variant: 'outline',
+              icon: <Filter className="w-4 h-4" />
+            },
+            {
+              label: 'Add New Client',
+              onClick: () => setShowGoldenPath(true),
+              variant: 'default',
+              icon: <Plus className="w-4 h-4" />
             }
-          </p>
-        </div>
+          ]}
+          userRole="therapist"
+        />
       )}
+      
+      {/* Golden Path Wizard */}
+      <GoldenPathWizard
+        isOpen={showGoldenPath}
+        onClose={() => setShowGoldenPath(false)}
+        onComplete={(clientData) => {
+          console.log('Golden Path completed with client:', clientData);
+          setShowGoldenPath(false);
+          // Show success message
+          setTimeout(() => {
+            alert('🎉 Congratulations! Your new client has been successfully added with an AI-powered treatment plan.');
+          }, 500);
+        }}
+      />
     </div>
   );
 };

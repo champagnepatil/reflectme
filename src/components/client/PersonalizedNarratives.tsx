@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, RotateCcw, BookOpen, Heart, Sparkles, Clock, Volume2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, BookOpen, Heart, Sparkles, Clock, Volume2, Brain, Target, TrendingUp, Plus, Lightbulb } from 'lucide-react';
 import GenAIService, { PersonalizedNarrative, ClientProfile } from '../../services/genAIService';
+import EmptyState from '../ui/EmptyState';
 
 interface PersonalizedNarrativesProps {
   clientProfile: ClientProfile;
@@ -18,6 +19,7 @@ const PersonalizedNarratives: React.FC<PersonalizedNarrativesProps> = ({ clientP
   const [isGenerating, setIsGenerating] = useState(false);
   const [narrativeType, setNarrativeType] = useState<'story' | 'meditation' | 'visualization' | 'allegory'>('story');
   const [selectedChallenge, setSelectedChallenge] = useState<string>('');
+  const [showHelp, setShowHelp] = useState(false);
 
   const genAIService = new GenAIService();
 
@@ -333,17 +335,37 @@ const PersonalizedNarratives: React.FC<PersonalizedNarrativesProps> = ({ clientP
       )}
 
       {narratives.length === 0 && (
-        <Card className="text-center py-12">
-          <CardContent>
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="h-8 w-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Narratives Yet</h3>
-            <p className="text-gray-600">
-              Generate your first personalized narrative to begin your therapeutic journey.
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          type="journal"
+          title="No Narratives Yet"
+          description="Generate your first personalized narrative to begin your therapeutic journey. Our AI creates meaningful stories based on your progress and experiences."
+          primaryAction={{
+            label: 'Generate First Narrative',
+            onClick: () => generateNewNarrative(),
+            variant: 'default',
+            icon: <Sparkles className="w-5 h-5" />
+          }}
+          secondaryActions={[
+            {
+              label: 'Learn More',
+              onClick: () => setShowHelp(true),
+              variant: 'outline',
+              icon: <Lightbulb className="w-4 h-4" />
+            }
+          ]}
+          sampleData={{
+            title: 'Narrative Benefits',
+            items: [
+              '📖 Personalized therapeutic stories',
+              '🧠 AI-generated insights and reflections',
+              '💡 Coping strategies and perspectives',
+              '🎯 Goal-oriented narrative development',
+              '📈 Progress tracking through storytelling',
+              '❤️ Emotional healing and self-discovery'
+            ]
+          }}
+          userRole="client"
+        />
       )}
     </div>
   );

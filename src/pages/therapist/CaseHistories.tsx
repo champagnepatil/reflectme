@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTherapy } from '../../contexts/TherapyContext';
 import { FileText, Plus, Search, Calendar, User, AlertTriangle, Eye, Edit, Trash2 } from 'lucide-react';
+import EmptyState from '../../components/ui/EmptyState';
 
 const CaseHistories: React.FC = () => {
   const { clients } = useTherapy();
   const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
 
   console.log('📋 Case Histories - Clients loaded:', {
     count: clients.length,
@@ -95,15 +97,43 @@ const CaseHistories: React.FC = () => {
 
       {/* Case Histories List */}
       {filteredHistories.length === 0 && clients.length > 0 ? (
-        <div className="card p-12 text-center">
-          <FileText className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-neutral-800 mb-2">
-            No matching case histories found
-          </h2>
-          <p className="text-neutral-600 mb-6">
-            Try adjusting your search terms
-          </p>
-        </div>
+        <EmptyState
+          type="search"
+          title="No matching case histories found"
+          description="We couldn't find any case histories matching your search criteria. Try adjusting your search terms or create a new case history."
+          primaryAction={{
+            label: 'Create Case History',
+            onClick: () => navigate('/therapist/case-histories/new'),
+            variant: 'default',
+            icon: <Plus className="w-5 h-5" />
+          }}
+          secondaryActions={[
+            {
+              label: 'Clear Search',
+              onClick: () => setSearchTerm(''),
+              variant: 'outline',
+              icon: <Search className="w-4 h-4" />
+            },
+            {
+              label: 'View All Histories',
+              onClick: () => setSearchTerm(''),
+              variant: 'outline',
+              icon: <FileText className="w-4 h-4" />
+            }
+          ]}
+          sampleData={{
+            title: 'Case History Features',
+            items: [
+              '📝 Comprehensive client documentation',
+              '🧠 AI-powered insights and analysis',
+              '📊 Progress tracking and outcomes',
+              '🎯 Treatment plan recommendations',
+              '⚠️ Risk assessment and alerts',
+              '📈 Predictive analytics for outcomes'
+            ]
+          }}
+          userRole="therapist"
+        />
       ) : filteredHistories.length === 0 && clients.length === 0 ? (
         <div className="card p-12 text-center">
           <FileText className="w-16 h-16 text-neutral-300 mx-auto mb-4" />

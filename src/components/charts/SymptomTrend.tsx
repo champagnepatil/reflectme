@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Activity, AlertTriangle, BarChart3, Target } from 'lucide-react';
 import { SymptomTrendData } from '@/types/assessment';
 import { SCALES, calculateClinicallySignificantChange, getSeverityColor } from '@/utils/scales';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import EmptyState from '../ui/EmptyState';
 // Badge component not available - using inline styles
 
 interface SymptomTrendProps {
@@ -16,6 +17,9 @@ interface SymptomTrendProps {
   className?: string;
   onDataUpdate?: (newData: SymptomTrendData[]) => void;
   showBiometrics?: boolean; // NEW: Toggle biometrics overlay
+  onStartTracking?: () => void;
+  onViewInstruments?: () => void;
+  onLearnMore?: () => void;
 }
 
 interface BiometricData {
@@ -30,7 +34,10 @@ export const SymptomTrend: React.FC<SymptomTrendProps> = ({
   data,
   className = '',
   onDataUpdate,
-  showBiometrics = false
+  showBiometrics = false,
+  onStartTracking,
+  onViewInstruments,
+  onLearnMore
 }) => {
   const [realtimeData, setRealtimeData] = useState<SymptomTrendData[]>(data);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -209,17 +216,46 @@ export const SymptomTrend: React.FC<SymptomTrendProps> = ({
     return lines;
   };
 
-  if (sortedData.length === 0) {
+  if (data.length === 0) {
     return (
-      <div className={`card p-6 ${className}`}>
-        <h3 className="text-lg font-semibold text-neutral-900 mb-4">
-          {scale.name} - Trend
-        </h3>
-        <div className="text-center py-8 text-neutral-500">
-          <p>No data available for this instrument</p>
-          <p className="text-sm mt-2">Assessment results will appear here</p>
-        </div>
-      </div>
+      <EmptyState
+        type="analytics"
+        title="No Data Available"
+        description="No symptom data available for this instrument. Start tracking symptoms to see meaningful trends and insights."
+        primaryAction={{
+          label: 'Start Tracking',
+          onClick: () => onStartTracking?.(),
+          variant: 'default',
+          icon: <Activity className="w-5 h-5" />
+        }}
+        secondaryActions={[
+          {
+            label: 'View Other Instruments',
+            onClick: () => onViewInstruments?.(),
+            variant: 'outline',
+            icon: <BarChart3 className="w-4 h-4" />
+          },
+          {
+            label: 'Learn More',
+            onClick: () => onLearnMore?.(),
+            variant: 'outline',
+            icon: <Target className="w-4 h-4" />
+          }
+        ]}
+        sampleData={{
+          title: 'Tracking Benefits',
+          items: [
+            '📊 Visual trend analysis over time',
+            '🎯 Identify patterns and triggers',
+            '📈 Measure treatment effectiveness',
+            '⚠️ Early warning for symptom changes',
+            '🧠 AI-powered insights and recommendations',
+            '📝 Automated progress reports'
+          ]
+        }}
+        userRole="therapist"
+        className="p-4"
+      />
     );
   }
 

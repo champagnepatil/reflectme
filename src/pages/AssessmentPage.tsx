@@ -3,10 +3,11 @@ import { AssessmentForm } from '@/components/monitoring/AssessmentForm';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Toaster } from 'sonner';
-import { ArrowLeft, ClipboardList, User, Calendar, BarChart3, Plus, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ClipboardList, User, Calendar, BarChart3, Plus, CheckCircle, Target, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { normalizeClientId, getClientDisplayName } from '@/utils/clientUtils';
 import { useAuth } from '@/contexts/AuthContext';
+import EmptyState from '../components/ui/EmptyState';
 
 interface AssessmentData {
   patientId: string;
@@ -24,6 +25,9 @@ export function AssessmentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [assessmentResults, setAssessmentResults] = useState<any[]>([]);
   const [availableAssessments, setAvailableAssessments] = useState<string[]>(['PHQ-9', 'GAD-7', 'WHODAS-2.0']);
+  const [showAssessmentModal, setShowAssessmentModal] = useState(false);
+  const [showInstrumentsModal, setShowInstrumentsModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   const scale = searchParams.get('scale') || 'phq9';
   
@@ -396,13 +400,43 @@ export function AssessmentPage() {
               </h2>
               
               {assessmentResults.length === 0 ? (
-                <div className="text-center py-8">
-                  <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Results Available</h3>
-                  <p className="text-gray-600">
-                    No assessment results found for this client. Assign an assessment to get started.
-                  </p>
-                </div>
+                <EmptyState
+                  type="assessments"
+                  title="No Assessment Results Available"
+                  description="No assessment results found for this client. Schedule an assessment to start tracking progress and generating insights."
+                  primaryAction={{
+                    label: 'Schedule Assessment',
+                    onClick: () => setShowAssessmentModal(true),
+                    variant: 'default',
+                    icon: <Target className="w-5 h-5" />
+                  }}
+                  secondaryActions={[
+                    {
+                      label: 'View Available Instruments',
+                      onClick: () => setShowInstrumentsModal(true),
+                      variant: 'outline',
+                      icon: <ClipboardList className="w-4 h-4" />
+                    },
+                    {
+                      label: 'Learn More',
+                      onClick: () => setShowHelpModal(true),
+                      variant: 'outline',
+                      icon: <Brain className="w-4 h-4" />
+                    }
+                  ]}
+                  sampleData={{
+                    title: 'Assessment Benefits',
+                    items: [
+                      '📊 Track treatment progress over time',
+                      '🎯 Identify areas needing attention',
+                      '📈 Measure intervention effectiveness',
+                      '⚠️ Early detection of risk factors',
+                      '🧠 AI-powered insights and recommendations',
+                      '📝 Automated scoring and interpretation'
+                    ]
+                  }}
+                  userRole="therapist"
+                />
               ) : (
                 <div className="space-y-4">
                   {assessmentResults.map((result) => (

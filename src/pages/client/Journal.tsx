@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTherapy } from '../../contexts/TherapyContext';
 import { SpeechJournalMood } from '../../components/SpeechJournalMood';
@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Share2
 } from 'lucide-react';
+import EmptyState from '../../components/ui/EmptyState';
 
 interface JournalEntry {
   id: string;
@@ -407,29 +408,55 @@ const Journal: React.FC = () => {
             </motion.div>
           ))
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl p-12 shadow-sm border border-gray-200 text-center"
-          >
-            <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Entries Found</h3>
-            <p className="text-gray-600 mb-6">
-              {searchTerm || selectedMoodFilter 
-                ? "Try adjusting your search or filter criteria"
-                : "Start journaling to track your thoughts and mood over time"
+          <EmptyState
+            type="journal"
+            title={searchTerm || selectedMoodFilter ? "No Entries Found" : "Start Your Healing Journey"}
+            description={searchTerm || selectedMoodFilter 
+              ? "We couldn't find any entries matching your search criteria. Try adjusting your filters or search terms."
+              : "Journaling is a powerful tool for self-reflection and growth. Our AI-enhanced journal provides insights into your patterns and suggests coping strategies."
+            }
+            primaryAction={!searchTerm && !selectedMoodFilter ? {
+              label: 'Write Your First Entry',
+              onClick: () => setShowAddForm(true),
+              variant: 'default',
+              icon: <Plus className="w-5 h-5" />
+            } : {
+              label: 'Clear Search',
+              onClick: () => {
+                setSearchTerm('');
+                setSelectedMoodFilter(null);
+              },
+              variant: 'outline',
+              icon: <Search className="w-4 h-4" />
+            }}
+            secondaryActions={!searchTerm && !selectedMoodFilter ? [
+              {
+                label: 'Voice Journal',
+                onClick: () => setShowVoiceJournal(true),
+                variant: 'outline',
+                icon: <Mic className="w-4 h-4" />
               }
-            </p>
-            {!searchTerm && !selectedMoodFilter && (
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Write Your First Entry
-              </button>
-            )}
-          </motion.div>
+            ] : [
+              {
+                label: 'Write New Entry',
+                onClick: () => setShowAddForm(true),
+                variant: 'default',
+                icon: <Plus className="w-4 h-4" />
+              }
+            ]}
+            sampleData={!searchTerm && !selectedMoodFilter ? {
+              title: 'Journal Entry Ideas',
+              items: [
+                '✨ How are you feeling right now and why?',
+                '🌅 What are three things you\'re grateful for today?',
+                '🎯 What would make today feel successful?',
+                '💭 What thoughts have been on your mind lately?',
+                '🌱 What\'s one small step you can take toward your goals?',
+                '🤝 How have your relationships been this week?'
+              ]
+            } : undefined}
+            userRole="client"
+          />
         )}
       </div>
     </div>

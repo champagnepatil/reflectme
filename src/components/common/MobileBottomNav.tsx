@@ -82,7 +82,7 @@ const MobileBottomNav: React.FC = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-2xl md:hidden">
-      <div className="grid grid-cols-4 h-20">
+      <div className="grid grid-cols-4 h-16 sm:h-20">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -91,8 +91,9 @@ const MobileBottomNav: React.FC = () => {
             <Link
               key={item.href}
               to={item.href}
+              aria-label={item.label}
               className={`
-                flex flex-col items-center justify-center p-2 relative transition-all duration-200
+                flex flex-col items-center justify-center p-2 relative transition-all duration-200 min-h-[44px] min-w-[44px]
                 ${active 
                   ? 'text-white' 
                   : 'text-gray-500'
@@ -114,9 +115,9 @@ const MobileBottomNav: React.FC = () => {
               {/* Content */}
               <div className="relative z-10 flex flex-col items-center">
                 <div className="mb-1">
-                  <span className="text-lg">{item.emoji}</span>
+                  <span className="text-base sm:text-lg">{item.emoji}</span>
                 </div>
-                <span className={`text-xs font-medium ${
+                <span className={`text-xs sm:text-sm font-medium ${
                   active ? 'text-white' : item.color
                 }`}>
                   {item.label}
@@ -124,7 +125,9 @@ const MobileBottomNav: React.FC = () => {
                 
                 {/* Notification Badge */}
                 {(item.href === '/client/chat' || item.href === '/therapist/clients') && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                    <span className="text-[10px] text-white font-bold">!</span>
+                  </div>
                 )}
               </div>
             </Link>
