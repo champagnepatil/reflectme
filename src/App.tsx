@@ -18,10 +18,6 @@ import Welcome from './pages/Welcome';
 import EmailVerification from './pages/EmailVerification';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import Demo from './pages/Demo';
-import HeroDemo from './pages/HeroDemo';
-import EnhancedAIMCPDemo from './pages/EnhancedAIMCPDemo';
-import GenAIDemoPage from './pages/GenAIDemoPage';
 import Login from './pages/Login';
 
 // Therapist Pages
@@ -304,26 +300,6 @@ function App() {
                                   <PrivacyPolicy />
                                 </ErrorBoundary>
                               } />
-                              <Route path="/demo" element={
-                                <ErrorBoundary componentName="Demo">
-                                  <Demo />
-                                </ErrorBoundary>
-                              } />
-                              <Route path="/hero-demo" element={
-                                <ErrorBoundary componentName="HeroDemo">
-                                  <HeroDemo />
-                                </ErrorBoundary>
-                              } />
-                              <Route path="/enhanced-ai-mcp-demo" element={
-                                <ErrorBoundary componentName="EnhancedAIMCPDemo">
-                                  <EnhancedAIMCPDemo />
-                                </ErrorBoundary>
-                              } />
-                              <Route path="/gen-ai-demo" element={
-                                <ErrorBoundary componentName="GenAIDemoPage">
-                                  <GenAIDemoPage />
-                                </ErrorBoundary>
-                              } />
                 
                 {/* Assessment Route (standalone) */}
                               <Route path="/assessment/:clientId" element={
@@ -585,18 +561,22 @@ function App() {
                                 </ErrorBoundary>
                               } />
 
-                {/* Development AI Test Panel */}
+                {/* Development AI Test Panel - Only for admins */}
                 {import.meta.env.MODE === 'development' && (
                   <>
                                   <Route path="/ai-test" element={
-                                    <ErrorBoundary componentName="AITestPanel">
-                                      <AITestPanel />
-                                    </ErrorBoundary>
+                                    <AdminRoute>
+                                      <ErrorBoundary componentName="AITestPanel">
+                                        <AITestPanel />
+                                      </ErrorBoundary>
+                                    </AdminRoute>
                                   } />
                                   <Route path="/gemini-test" element={
-                                    <ErrorBoundary componentName="GeminiTest">
-                                      <GeminiTest />
-                                    </ErrorBoundary>
+                                    <AdminRoute>
+                                      <ErrorBoundary componentName="GeminiTest">
+                                        <GeminiTest />
+                                      </ErrorBoundary>
+                                    </AdminRoute>
                                   } />
                   </>
                 )}

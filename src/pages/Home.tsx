@@ -6,7 +6,7 @@ import Footer from '../components/common/Footer';
 import WaitlistCTA from '../components/waitlist/WaitlistCTA';
 import NotificationHistory from '../components/waitlist/NotificationHistory';
 import { useAuth } from '../contexts/AuthContext';
-import { Heart, MessageCircle, Brain, Shield, Clock, Users, ArrowRight, Bell } from 'lucide-react';
+import { Heart, MessageCircle, Brain, Shield, Clock, Users, ArrowRight, Bell, LogIn } from 'lucide-react';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -45,38 +45,64 @@ const Home: React.FC = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <button 
-                  onClick={() => navigate('/client')}
-                  className="group px-10 py-4 bg-white text-primary-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center"
-                >
-                  <Heart className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                  Zentia Companion
-                  <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-                </button>
-                
-                <button 
-                  onClick={() => {
-                    // Scroll to waitlist section
-                    const waitlistSection = document.querySelector('[data-waitlist-section]');
-                    if (waitlistSection) {
-                      waitlistSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="group px-10 py-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-2xl font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all duration-300 shadow-large flex items-center justify-center"
-                >
-                  <Bell className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                  Join the Waitlist
-                  <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-                </button>
-                
-                <button 
-                  onClick={() => navigate('/therapist')}
-                  className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-primary-600 transition-all duration-300 flex items-center justify-center"
-                >
-                  <Users className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                  Zentia Professional
-                  <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-                </button>
+                {user ? (
+                  // User is logged in - show access buttons
+                  <>
+                    <button 
+                      onClick={() => navigate('/client')}
+                      className="group px-10 py-4 bg-white text-primary-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center"
+                    >
+                      <Heart className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                      Zentia Companion
+                      <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    
+                    <button 
+                      onClick={() => navigate('/therapist')}
+                      className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-primary-600 transition-all duration-300 flex items-center justify-center"
+                    >
+                      <Users className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                      Zentia Professional
+                      <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </>
+                ) : (
+                  // User is not logged in - show login/register buttons
+                  <>
+                    <button 
+                      onClick={() => navigate('/login')}
+                      className="group px-10 py-4 bg-white text-primary-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center"
+                    >
+                      <LogIn className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                      Sign In
+                      <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    
+                    <button 
+                      onClick={() => navigate('/register')}
+                      className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-primary-600 transition-all duration-300 flex items-center justify-center"
+                    >
+                      <Users className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                      Get Started
+                      <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    
+                    <button 
+                      onClick={() => {
+                        // Scroll to waitlist section
+                        const waitlistSection = document.querySelector('[data-waitlist-section]');
+                        if (waitlistSection) {
+                          waitlistSection.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                      className="group px-10 py-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-2xl font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all duration-300 shadow-large flex items-center justify-center"
+                    >
+                      <Bell className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                      Join Waitlist
+                      <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           </div>
@@ -153,7 +179,7 @@ const Home: React.FC = () => {
             </motion.div>
           </div>
         </div>
-            </section>
+      </section>
 
       {/* Benefits Section */}
       <section className="py-24 px-6 bg-white">
@@ -272,23 +298,49 @@ const Home: React.FC = () => {
                 Join thousands who are already experiencing the benefits of personalized digital therapy support.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <button 
-                  onClick={() => navigate('/client')}
-                  className="group px-10 py-4 bg-white text-teal-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center"
-                >
-                  <Heart className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                  Zentia Companion
-                  <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-                </button>
-                
-                <button 
-                  onClick={() => navigate('/therapist')}
-                  className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-teal-600 transition-all duration-300 flex items-center justify-center"
-                >
-                  <Users className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                  Zentia Professional
-                  <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-                </button>
+                {user ? (
+                  // User is logged in
+                  <>
+                    <button 
+                      onClick={() => navigate('/client')}
+                      className="group px-10 py-4 bg-white text-teal-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center"
+                    >
+                      <Heart className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                      Zentia Companion
+                      <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    
+                    <button 
+                      onClick={() => navigate('/therapist')}
+                      className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-teal-600 transition-all duration-300 flex items-center justify-center"
+                    >
+                      <Users className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                      Zentia Professional
+                      <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </>
+                ) : (
+                  // User is not logged in
+                  <>
+                    <button 
+                      onClick={() => navigate('/register')}
+                      className="group px-10 py-4 bg-white text-teal-600 rounded-2xl font-semibold hover:bg-white/95 transition-all duration-300 shadow-large flex items-center justify-center"
+                    >
+                      <Heart className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                      Get Started Today
+                      <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    
+                    <button 
+                      onClick={() => navigate('/login')}
+                      className="group px-10 py-4 border-2 border-white text-white rounded-2xl font-semibold hover:bg-white hover:text-teal-600 transition-all duration-300 flex items-center justify-center"
+                    >
+                      <LogIn className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                      Sign In
+                      <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           </div>
