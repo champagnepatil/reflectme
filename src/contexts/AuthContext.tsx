@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const mapUserWithProfile = async (authUser: User): Promise<AuthUser | null> => {
     if (!authUser) return null;
 
-    const isDemo = authUser.email?.endsWith('@mindtwin.demo') || false;
+    const isDemo = authUser.email?.endsWith('@mindtwin.demo') || authUser.email?.endsWith('@zentia.app') || false;
     const role = isDemo 
       ? authUser.email?.includes('therapist') 
         ? 'therapist' 
@@ -57,9 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isDemo) {
       return {
         id: authUser.id,
-        name: authUser.user_metadata?.name || (role === 'patient' ? 'Demo Client' : 'Demo Therapist'),
+        name: authUser.user_metadata?.name || (role === 'patient' ? 'Demo Client' : role === 'therapist' ? 'Demo Therapist' : 'Demo Admin'),
         email: authUser.email || '',
-        role: role as 'therapist' | 'patient',
+        role: role as 'therapist' | 'patient' | 'admin',
         avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${authUser.email}`,
         isDemo: true,
       };
@@ -518,33 +518,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // For demo accounts, create a mock session instead of real auth
-      const isDemoAccount = email.endsWith('@mindtwin.demo');
+      const isDemoAccount = email.endsWith('@mindtwin.demo') || email.endsWith('@zentia.app');
       if (isDemoAccount) {
         console.log('🎭 Demo account detected - creating mock session');
         
-        if (password !== 'demo123456') {
-          throw new AppError(
-            'Invalid demo account password',
-            ErrorType.AUTHENTICATION,
-            ErrorSeverity.MEDIUM,
-            { email },
-            'Demo account password is incorrect. Use: demo123456'
-          );
-        }
-        
+        // Check for specific demo credentials
+        let isValidDemo = false;
         let role: 'therapist' | 'patient' | 'admin' = 'patient';
         let name = 'Demo User';
         
-        // Determine role and name based on email
-        if (email.includes('therapist')) {
+        // Check for new Zentia demo credentials
+        if (email === 'demo.therapist@zentia.app' && password === 'ZentiaDemo2024!') {
+          isValidDemo = true;
           role = 'therapist';
           name = 'Demo Therapist';
-        } else if (email.includes('admin')) {
-          role = 'admin';
-          name = 'Demo Admin';
-        } else {
+        } else if (email === 'demo.client@zentia.app' && password === 'ZentiaClient2024!') {
+          isValidDemo = true;
           role = 'patient';
           name = 'Demo Client';
+        } else if (email === 'admin@zentia.app' && password === 'ZentiaAdmin2024!') {
+          isValidDemo = true;
+          role = 'admin';
+          name = 'Demo Admin';
+        } else if (email.endsWith('@mindtwin.demo') && password === 'demo123456') {
+          // Legacy demo support
+          isValidDemo = true;
+          if (email.includes('therapist')) {
+            role = 'therapist';
+            name = 'Demo Therapist';
+          } else if (email.includes('admin')) {
+            role = 'admin';
+            name = 'Demo Admin';
+          } else {
+            role = 'patient';
+            name = 'Demo Client';
+          }
+        }
+        
+        if (!isValidDemo) {
+          throw new AppError(
+            'Invalid demo account credentials',
+            ErrorType.AUTHENTICATION,
+            ErrorSeverity.MEDIUM,
+            { email },
+            'Demo credentials are incorrect. Please check the documentation for correct demo credentials.'
+          );
         }
         
         // Create mock demo user
