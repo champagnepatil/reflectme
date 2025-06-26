@@ -949,12 +949,21 @@ Ensure the content feels fresh, unique, and valuable to users seeking mental hea
 
   // Utility method for parsing list items
   private parseListItems(text: string): string[] {
-    return text
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line && (line.startsWith('-') || line.startsWith('*') || line.startsWith('•')))
-      .map(line => line.replace(/^[-*•]\s*/, ''))
-      .filter(line => line.length > 0);
+    if (!text || typeof text !== 'string') {
+      return [];
+    }
+    
+    try {
+      return text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line && (line.startsWith('-') || line.startsWith('*') || line.startsWith('•')))
+        .map(line => line.replace(/^[-*•]\s*/, ''))
+        .filter(line => line.length > 0);
+    } catch (error) {
+      console.error('Error parsing list items:', error);
+      return [];
+    }
   }
 
   // Additional utility methods

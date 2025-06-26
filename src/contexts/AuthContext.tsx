@@ -241,6 +241,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       }
 
+      // Check if user already exists
+      const { data: existingUser } = await supabase.auth.admin.getUserByEmail(email);
+      if (existingUser.user) {
+        throw new AppError(
+          'User already registered',
+          ErrorType.AUTHENTICATION,
+          ErrorSeverity.MEDIUM,
+          { email },
+          'An account with this email already exists. Please sign in instead.'
+        );
+      }
+
       // Try to sign up with retry logic
       const signUpResult = await withRetry(async () => {
         const { data, error } = await supabase.auth.signUp({
@@ -257,8 +269,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) {
           // Handle specific Supabase errors
           if (error.message.includes('User already registered')) {
-            console.log('👤 User already exists, attempting sign in');
-            return await signIn(email, password);
+            throw new AppError(
+              'User already registered',
+              ErrorType.AUTHENTICATION,
+              ErrorSeverity.MEDIUM,
+              { email },
+              'An account with this email already exists. Please sign in instead.'
+            );
           }
           
           if (error.message.includes('Invalid email')) {
@@ -305,6 +322,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const firstName = nameParts[0] || '';
           const lastName = nameParts.slice(1).join(' ') || '';
 
+          // Check if profile already exists
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', signUpResult.user!.id)
+            .single();
+
+          if (existingProfile) {
+            console.log('Profile already exists, skipping creation');
+            return;
+          }
+
           const { error: profileError } = await supabase
             .from('profiles')
             .insert([
@@ -318,6 +347,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             ]);
 
           if (profileError) {
+            // If it's a duplicate key error, the profile might have been created by a trigger
+            if (profileError.message.includes('duplicate key value')) {
+              console.log('Profile already exists (duplicate key), continuing...');
+              return;
+            }
+            
             throw new AppError(
               `Profile creation failed: ${profileError.message}`,
               ErrorType.DATABASE,
