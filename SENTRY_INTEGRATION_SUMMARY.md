@@ -219,3 +219,207 @@ The Sentry integration is production-ready with:
 ---
 
 **🎉 Zentia now has enterprise-grade monitoring and error tracking, ensuring the highest quality experience for mental health clients and therapists!** 
+
+# Zentia Mental Health Platform - Enhanced Sentry Integration Summary
+
+## Overview
+Comprehensive Sentry integration implemented across the Zentia mental health platform with specialized monitoring for the AI Safety & Memory Layer (Phase-Guard). This integration provides enterprise-grade error tracking, performance monitoring, and structured logging specifically designed for safety-critical mental health applications.
+
+## Core Sentry Configuration (`src/instrument.ts`)
+
+### Enhanced Features
+- **Console Logging Integration**: Automatic capture of console.log, console.error, console.warn, and console.info
+- **Privacy-Compliant Data Filtering**: Automatic redaction of PHI/sensitive data (SSNs, emails)
+- **HIPAA-Compliant Request Filtering**: Client/therapist ID anonymization
+- **Browser Tracing**: Full performance monitoring for user interactions
+- **Session Replay**: Debug user sessions with privacy considerations
+- **User Feedback Integration**: Customized for mental health context
+
+### Privacy & Security
+```javascript
+beforeSend(event) {
+  // Remove potential PHI/sensitive content from error messages
+  error.value = error.value.replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[SSN_REDACTED]');
+  error.value = error.value.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL_REDACTED]');
+  
+  // Filter out sensitive URLs
+  event.request.url = event.request.url.replace(/\/client\/\d+/g, '/client/[ID]');
+  event.request.url = event.request.url.replace(/\/therapist\/\d+/g, '/therapist/[ID]');
+}
+```
+
+## AI Safety & Memory Layer Monitoring
+
+### 1. AI Orchestrator (`packages/ai/orchestrator.ts`)
+**Comprehensive monitoring for safety-critical AI operations:**
+
+#### Query Rewriting Monitoring
+- **Operation**: `ai.query_rewrite`
+- **Attributes**: client_id, original_query_length, semantic_context_count, rewritten_query_length
+- **Logging**: Query transformation tracking with fallback handling
+
+#### Output Guard Monitoring
+- **Operation**: `ai.safety.output_guard`
+- **Attributes**: client_id, response_length, safety_violation, violation_severity
+- **Critical Features**:
+  - Crisis keyword detection tracking
+  - OpenAI moderation result logging
+  - Fail-safe error handling (blocks unsafe content if safety check fails)
+
+#### Crisis Alert Generation
+- **Operation**: `ai.safety.alert_therapist`
+- **Attributes**: client_id, alert_reason, alert_severity, alert_created
+- **Critical Features**:
+  - Fatal-level logging for alert creation failures
+  - Re-throw errors to ensure calling code knows alert failed
+
+### 2. Chat API (`apps/web/app/api/chat/route.ts`)
+**End-to-end conversation monitoring:**
+
+#### Request Processing
+- **Operation**: `http.server` - POST /api/chat
+- **Attributes**: client_id, message_length, success, response_blocked, turn_id
+- **Features**:
+  - Complete chat pipeline tracking
+  - Safety validation monitoring
+  - Crisis detection logging
+  - Performance metrics
+
+#### Error Handling
+- Structured error logging with stack traces
+- Guardrail event logging for API errors
+- Safe response generation on failures
+
+### 3. Enhanced GenAI Service (`src/services/genAIService.ts`)
+**AI content generation monitoring:**
+
+#### Personalized Narrative Generation
+- **Operation**: `ai.generation` - Generate Personalized Narrative
+- **Attributes**: narrative_type, client_mood, challenge_count, content_length
+- **Features**:
+  - Theme extraction tracking
+  - Content personalization metrics
+  - Generation duration monitoring
+
+#### Role Play Scenario Generation
+- **Operation**: `ai.generation` - Generate Role Play Scenario
+- **Attributes**: scenario_type, difficulty, client_mood, content_length
+- **Features**:
+  - Scenario complexity tracking
+  - Success/failure monitoring
+  - Content quality metrics
+
+### 4. Therapist Dashboard Components
+
+#### SafetyDashboard (`src/components/therapist/SafetyDashboard.tsx`)
+- **Dashboard View Tracking**: `ui.load` - Safety Dashboard View
+- **Quick Action Monitoring**: `ui.click` - Safety Dashboard Quick Action
+- **Features**:
+  - Therapist navigation patterns
+  - Safety feature usage analytics
+  - Dashboard engagement metrics
+
+#### AlertBadge (`src/components/therapist/AlertBadge.tsx`)
+- **Alert Fetching**: `db.query` - Fetch Alert Count
+- **Click Tracking**: `ui.click` - Alert Badge Click
+- **Features**:
+  - Real-time alert monitoring
+  - Critical alert prioritization
+  - Therapist response tracking
+
+## Comprehensive Utility Functions (`src/utils/sentryUtils.ts`)
+
+### AI Safety Event Tracking
+```javascript
+trackAISafetyEvent('crisis_detection', {
+  clientId: 'client_123',
+  severity: 'critical',
+  keyword: 'suicide',
+  blocked: true
+});
+```
+
+### AI Generation Monitoring
+```javascript
+const result = await trackAIGeneration('narrative', 
+  () => generatePersonalizedNarrative(profile, 'meditation'),
+  { clientId: 'client_123', contentType: 'meditation' }
+);
+```
+
+### Crisis Alert Monitoring
+```javascript
+trackCrisisAlert('keyword_detected', {
+  clientId: 'client_123',
+  severity: 'critical',
+  keyword: 'self harm',
+  therapistId: 'therapist_456'
+});
+```
+
+### Database Operation Tracking
+```javascript
+const alerts = await trackDatabaseOperation('alert_fetch',
+  () => supabase.from('alerts').select('*'),
+  { table: 'alerts', therapistId: 'therapist_456' }
+);
+```
+
+### Performance Metrics
+```javascript
+trackPerformanceMetric('ai_generation_time', 2500, {
+  operation: 'narrative_generation',
+  threshold: 3000
+});
+```
+
+### User Journey Tracking
+```javascript
+trackUserJourney('crisis_support', {
+  userId: 'client_123',
+  userType: 'client',
+  sessionDuration: 1800
+});
+```
+
+### Contextual Error Capture
+```javascript
+captureContextualError(error, {
+  operation: 'chat_generation',
+  clientId: 'client_123',
+  severity: 'high',
+  additionalData: { turnId: 'turn_789' }
+});
+```
+
+## Key Monitoring Capabilities
+
+### 1. Safety-Critical Operations
+- **Input/Output Guardrails**: Complete safety pipeline monitoring
+- **Crisis Detection**: Keyword-based alert generation tracking
+- **Therapist Notifications**: Alert delivery and response monitoring
+- **Content Moderation**: OpenAI API integration tracking
+
+### 2. AI Performance Analytics
+- **Generation Times**: Track AI response performance
+- **Content Quality**: Monitor narrative/content generation success
+- **Context Utilization**: Semantic search and retrieval tracking
+- **Safety Compliance**: Guardrail effectiveness monitoring
+
+### 3. Clinical Workflow Monitoring
+- **Therapist Dashboard Usage**: Safety feature engagement
+- **Alert Management**: Crisis response workflows
+- **Client Interaction Patterns**: Chat and assessment monitoring
+- **System Health**: Performance and availability tracking
+
+### 4. Privacy & Compliance
+- **PHI Data Filtering**: Automatic sensitive data redaction
+- **HIPAA Compliance**: Request anonymization and secure logging
+- **Access Control**: Therapist-client relationship monitoring
+- **Audit Trail**: Complete interaction history for compliance
+
+## Structured Logging Examples
+
+### Crisis Alert (Fatal Level)
+```
+FATAL: CRITICAL: Failed to create therapist alert

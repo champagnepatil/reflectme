@@ -1,0 +1,23 @@
+{
+  "name": "@zentia/ai-orchestrator",
+  "version": "1.0.0",
+  "description": "AI Safety & Memory Layer for Zentia Mental Health Platform",
+  "main": "orchestrator.ts",
+  "types": "orchestrator.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.2.1",
+    "@supabase/supabase-js": "^2.39.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.7",
+    "typescript": "^5.3.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  }
+}

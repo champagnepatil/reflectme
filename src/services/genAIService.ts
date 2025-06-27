@@ -232,6 +232,24 @@ Return a complete, personalized ${narrativeType} that feels custom-made for this
     scenarioType: string,
     difficulty: 'beginner' | 'intermediate' | 'advanced' = 'intermediate'
   ): Promise<RolePlayScenario> {
+    const { logger } = Sentry;
+    
+    return Sentry.startSpan(
+      {
+        op: "ai.generation",
+        name: "Generate Role Play Scenario",
+      },
+      async (span) => {
+        span.setAttribute("scenario_type", scenarioType);
+        span.setAttribute("difficulty", difficulty);
+        span.setAttribute("client_mood", clientProfile.mood);
+        
+        logger.info("Starting role play scenario generation", {
+          scenarioType,
+          difficulty,
+          clientMood: clientProfile.mood,
+          challengeCount: clientProfile.challenges.length
+        });
     const prompt = `
 Create a dynamic role-playing scenario for therapeutic practice.
 
@@ -264,31 +282,51 @@ Include:
 Make it feel like a real conversation that helps build confidence.
 `;
 
-    try {
-      const response = await GeminiAIService.generaRispostaChat(prompt);
-      const content = response.contenuto;
-      
-      return {
-        id: Date.now().toString(),
-        title: `${scenarioType} Practice Session`,
-        description: this.extractDescription(content),
-        context: this.extractContext(content),
-        objective: this.extractObjective(content),
-        difficulty,
-        aiPersona: {
-          role: this.extractAIRole(content),
-          personality: this.extractPersonality(content),
-          initialResponse: this.extractInitialResponse(content),
-          adaptationRules: this.extractAdaptationRules(content)
-        },
-        userGuidance: this.extractUserGuidance(content),
-        successMetrics: this.extractSuccessMetrics(content),
-        created: new Date().toISOString()
-      };
-    } catch (error) {
-      console.error('Error generating role-play scenario:', error);
-      throw new Error('Failed to generate role-play scenario');
-    }
+        try {
+          const response = await GeminiAIService.generaRispostaChat(prompt);
+          const content = response.contenuto;
+          
+          span.setAttribute("content_length", content.length);
+          span.setAttribute("success", true);
+          
+          logger.info("Successfully generated role play scenario", {
+            contentLength: content.length,
+            scenarioType,
+            difficulty
+          });
+          
+          return {
+            id: Date.now().toString(),
+            title: `${scenarioType} Practice Session`,
+            description: this.extractDescription(content),
+            context: this.extractContext(content),
+            objective: this.extractObjective(content),
+            difficulty,
+            aiPersona: {
+              role: this.extractAIRole(content),
+              personality: this.extractPersonality(content),
+              initialResponse: this.extractInitialResponse(content),
+              adaptationRules: this.extractAdaptationRules(content)
+            },
+            userGuidance: this.extractUserGuidance(content),
+            successMetrics: this.extractSuccessMetrics(content),
+            created: new Date().toISOString()
+          };
+        } catch (error) {
+          span.setAttribute("success", false);
+          span.setAttribute("error", error instanceof Error ? error.message : 'Unknown error');
+          
+          logger.error('Error generating role-play scenario', {
+            scenarioType,
+            difficulty,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+          
+          Sentry.captureException(error);
+          throw new Error('Failed to generate role-play scenario');
+        }
+      }
+    );
   }
 
   // 3. AUTOMATED CLINICAL NOTE SUMMARIZATION & SYNTHESIS (Therapist-side)

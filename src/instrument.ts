@@ -10,6 +10,10 @@ Sentry.init({
     Sentry.browserTracingIntegration(),
     // Session replay for debugging user sessions
     Sentry.replayIntegration(),
+    // Console logging integration for automatic log capture
+    Sentry.consoleLoggingIntegration({ 
+      levels: ["log", "error", "warn", "info"] 
+    }),
     // User feedback integration for mental health platform
     Sentry.feedbackIntegration({
       colorScheme: "system",
