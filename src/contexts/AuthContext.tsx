@@ -241,18 +241,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       }
 
-      // Check if user already exists
-      const { data: existingUser } = await supabase.auth.admin.getUserByEmail(email);
-      if (existingUser.user) {
-        throw new AppError(
-          'User already registered',
-          ErrorType.AUTHENTICATION,
-          ErrorSeverity.MEDIUM,
-          { email },
-          'An account with this email already exists. Please sign in instead.'
-        );
-      }
-
       // Try to sign up with retry logic
       const signUpResult = await withRetry(async () => {
         const { data, error } = await supabase.auth.signUp({
